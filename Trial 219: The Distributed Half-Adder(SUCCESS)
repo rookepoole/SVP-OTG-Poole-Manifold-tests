@@ -1,0 +1,109 @@
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+
+# --- 1. ENGINE CONSTANTS ---
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+GRID_SIZE = 150 # Expanded to fit both logic gates safely
+device = torch.device("cpu")
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+# Pure, Stable Propagation Kernel
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+print("Poole Manifold Research | Trial 219: The Distributed Half-Adder...")
+
+def run_distributed_adder(f, inhibitor_mask, threshold_mask):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0)
+
+        # Apply Physical Walls (-15.0)
+        potential[inhibitor_mask] -= 15.0
+
+        # Apply The Pressure Valve (-2.0) for the Carry gate
+        potential[threshold_mask] -= 2.0
+
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+
+        total_phi = potential + resonance
+
+    birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+    survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+
+    return (birth | survive).float()
+
+# --- 2. INITIALIZATION ---
+torch.manual_seed(137)
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+z_mid = GRID_SIZE // 2
+
+# Gate Centers
+mid1 = 50  # Zone 1: XOR Gate (Sum)
+mid2 = 100 # Zone 2: AND Gate (Carry)
+
+inhibitor_mask = torch.ones_like(field).bool()
+threshold_mask = torch.zeros_like(field).bool()
+
+# ==========================================
+# ZONE 1: THE XOR GATE (SUM)
+# ==========================================
+# Inputs & Outputs
+inhibitor_mask[0, 0, mid1-3:mid1+3, 10:90, z_mid-2:z_mid+2] = False # Horizontal
+inhibitor_mask[0, 0, 10:90, mid1-3:mid1+3, z_mid-2:z_mid+2] = False # Vertical
+
+# The Venturi Chokes (To kill 1+1 bleed)
+inhibitor_mask[0, 0, mid1-3:mid1-1, mid1+5:mid1+10, z_mid-2:z_mid+2] = True # Top wall of Right Sum
+inhibitor_mask[0, 0, mid1+1:mid1+3, mid1+5:mid1+10, z_mid-2:z_mid+2] = True # Bottom wall of Right Sum
+inhibitor_mask[0, 0, mid1+5:mid1+10, mid1-3:mid1-1, z_mid-2:z_mid+2] = True # Left wall of Bottom Sum
+inhibitor_mask[0, 0, mid1+5:mid1+10, mid1+1:mid1+3, z_mid-2:z_mid+2] = True # Right wall of Bottom Sum
+
+# ==========================================
+# ZONE 2: THE AND GATE (CARRY)
+# ==========================================
+# Inputs
+inhibitor_mask[0, 0, mid2-3:mid2+3, 10:140, z_mid-2:z_mid+2] = False # Horizontal
+inhibitor_mask[0, 0, 10:140, mid2-3:mid2+3, z_mid-2:z_mid+2] = False # Vertical
+
+# The Carry Channel (Diagonal Output)
+for i in range(40):
+    r = mid2 + i
+    c = mid2 + i
+    if r < GRID_SIZE and c < GRID_SIZE:
+        inhibitor_mask[0, 0, r-3:r+3, c-3:c+3, z_mid-2:z_mid+2] = False
+
+# The Pressure Valve (-2.0 sponge covering the AND intersection)
+threshold_mask[0, 0, mid2-4:mid2+4, mid2-4:mid2+4, z_mid-2:z_mid+2] = True
+
+
+# ==========================================
+# FIRING THE LOGIC: 1 + 1 = 10 (Binary 2)
+# ==========================================
+# We fire all inputs simultaneously to test both gates processing the double collision.
+field[0, 0, mid1-1:mid1+1, 12:15, z_mid-1:z_mid+1] = 1.0 # Input A -> XOR
+field[0, 0, 12:15, mid1-1:mid1+1, z_mid-1:z_mid+1] = 1.0 # Input B -> XOR
+
+field[0, 0, mid2-1:mid2+1, 12:15, z_mid-1:z_mid+1] = 1.0 # Input A -> AND
+field[0, 0, 12:15, mid2-1:mid2+1, z_mid-1:z_mid+1] = 1.0 # Input B -> AND
+
+history = []
+print("Executing Distributed Half-Adder: 1 + 1...")
+for t in range(301):
+    field = run_distributed_adder(field, inhibitor_mask, threshold_mask)
+    if t % 75 == 0:
+        history.append(field[0, 0, :, :, z_mid].clone().numpy())
+
+# --- 3. VISUALIZATION ---
+num_frames = len(history)
+fig, axes = plt.subplots(1, num_frames, figsize=(6*num_frames, 6), facecolor='black')
+for i, data in enumerate(history):
+    axes[i].imshow(data, cmap='inferno')
+    axes[i].set_title(f"Gen {i*75}", color='white')
+    axes[i].axis('off')
+plt.show()
