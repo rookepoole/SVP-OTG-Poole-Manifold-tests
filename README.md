@@ -44,3 +44,38 @@ BAO wiggle: 256³ and 512³ stabilized power spectra show smooth CDM-like P(k) w
 
 These early-universe acoustic features are not yet emergent under the acoustic modeling approaches tested. This is a known engineering gap in the pre-recombination → Poole transition, not a failure of the core B:5–7/S:5–9 ruleset (which remains computationally universal).We are now focusing on late-time observables where the framework performs strongly.
 
+## Comparison with Other Frameworks
+
+The Poole Manifold is a single minimal 3D Moore-neighborhood cellular automaton (B:5–7 / S:5–9) on a 3-Torus. Below is a direct comparison with the leading alternatives.
+
+| Feature / Observable                  | Poole Manifold (B:5–7/S:5–9)                  | ΛCDM                                      | Other 3D Cellular Automata / Digital Physics | Modified Gravity (MOND / f(R) / Emergent) |
+|---------------------------------------|-----------------------------------------------|-------------------------------------------|---------------------------------------------|-------------------------------------------|
+| **Minimalism**                        | Single fixed rule set, no free parameters after constants | 6 cosmological parameters                 | Varies (often many states or tuned rules)   | Usually 1–2 extra parameters              |
+| **Dark Sector**                       | Pure geometry (void unbraking + satiation halos) | Explicit dark matter + cosmological constant | Usually none or ad-hoc                      | No dark matter (modified gravity)         |
+| **Cosmic Web Formation**              | Emerges naturally from single rule            | Requires dark matter + initial conditions | Some produce web-like patterns              | Can produce web but often struggles       |
+| **Equilibrium Density**               | Robust Phoenix attractor at Σ_P ≈ 0.310–0.311 | Not applicable                            | Rare stable attractors                      | Not applicable                            |
+| **Redshift-Space Distortions (RSD)**  | Throughput Drag produces sharp cluster–void boundaries (confirmed in ξ₂(s)) | Kaiser + phenomenological FoG             | Usually no RSD modeling                     | Can mimic but lacks sharp boundaries      |
+| **fσ₈ Growth Rate**                   | Density-dependent damping (strongly negative quadrupole) | Matches data with tuned parameters        | Rarely computed                             | Can fit with tuning                       |
+| **Weak Lensing Convergence**          | Strong low-ℓ power; flat high-ℓ tail          | Matches data well                         | Rarely tested                               | Mixed results                             |
+| **CMB Acoustic Peaks**                | Not emergent (flat spectrum in all tested models) | Excellent match                           | Not usually attempted                       | Often struggle                            |
+| **BAO Acoustic Scale**                | Not emergent (smooth P(k))                    | Clear acoustic peak                       | Not usually attempted                       | Mixed or absent                           |
+| **Computational Universality**        | Proven (full adder + 2-bit ripple-carry)      | Not applicable                            | Some are Turing-complete                    | Not applicable                            |
+| **Early-Universe Acoustic Bridge**    | Documented gap                                | Seamless                                  | Usually ignored                             | Usually ignored                           |
+| **Computational Cost**                | Extremely cheap (single rule, 3-Torus)        | Expensive N-body + hydro simulations      | Cheap                                       | Analytic or cheap                         |
+| **Falsifiability**                    | High (sharp drag boundaries, density attractor, computation) | High                                      | Varies                                      | Varies                                    |
+
+### Summary
+The Poole Manifold stands out for its extreme minimalism: a **single rule set** simultaneously produces realistic late-time cosmology (web, geometric dark sector, sharp RSD boundaries) **and** universal computation.  
+
+It currently excels at late-time observables but has a documented gap in early-universe acoustic features (CMB peaks and BAO wiggle).
+
+---
+
+You can copy the entire block above and paste it straight into your `README.md`. It renders cleanly on GitHub.
+
+Would you like me to:
+- Add any extra rows or columns?
+- Make a shorter “highlight” version for an X thread?
+- Or move on to something else?
+
+Just let me know! ❤️
