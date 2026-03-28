@@ -79,3 +79,30 @@ Would you like me to:
 - Or move on to something else?
 
 Just let me know! ❤️
+---
+
+## Summary of the Poole Manifold (SVP/OTG)
+
+**Layman’s version**  
+The Poole Manifold is a single, very simple 3D cellular automaton rule. From almost any starting point it grows into a realistic cosmic web with filaments and large voids. It replaces dark matter and dark energy with pure geometry and can even do digital logic (I’ve built a working full adder inside the same rule set).
+
+**Current technical status**  
+- Late-time cosmology works well: robust Phoenix attractor at ~31% density, realistic filamentary web, geometric dark sector, and sharp Throughput Drag boundaries in RSD (confirmed in ξ₀/ξ₂ multipoles and drag-field plots).  
+- Universal computation demonstrated (Synthesis Gate full adder + 2-bit ripple-carry).  
+- Early-universe acoustics remain a documented gap (no CMB peaks or BAO wiggle have emerged in multiple tests).
+
+**Comparison Table**
+
+| Feature                        | Poole Manifold                          | ΛCDM                              |
+|--------------------------------|-----------------------------------------|-----------------------------------|
+| Minimalism                     | Single rule                             | 6+ parameters                     |
+| Dark Sector                    | Pure geometry                           | Particles + cosmological constant |
+| Cosmic Web                     | Emerges naturally                       | Requires dark matter              |
+| RSD / Throughput Drag          | Sharp boundaries (confirmed)            | Phenomenological FoG              |
+| CMB Acoustic Peaks             | Not yet emergent                        | Excellent match                   |
+| BAO Wiggle                     | Not yet emergent                        | Clear scale                       |
+| Computational Universality     | Proven (full adder)                     | Not applicable                    |
+
+Full code, plots, and test results are in the `code/` and `results/` folders.  
+
+Feedback and scrutiny are welcome.
