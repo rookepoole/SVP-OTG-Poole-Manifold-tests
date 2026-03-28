@@ -1,0 +1,173 @@
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+
+# --- 1. ENGINE CONSTANTS ---
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+GRID_SIZE = 300 # EXPANDED GRID FOR 2-BIT ARCHITECTURE
+device = torch.device("cpu")
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+print("Poole Manifold Research | Trial 248: The Thermodynamic Sieve (1 + 1 = 10)...")
+
+def run_manifold(f, inhibitor_mask, threshold_mask, amplifier_mask):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0)
+
+        potential[inhibitor_mask] -= 15.0
+        potential[threshold_mask] -= 2.0
+        potential[amplifier_mask] += 1.0
+
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+
+        total_phi = potential + resonance
+
+    birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+    survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+
+    return (birth | survive).float()
+
+# ==========================================
+# CLASS: THE SIEVE POOLE FULL-ADDER
+# ==========================================
+class PooleFullAdder:
+    def __init__(self, origin_y, origin_x, z_mid):
+        self.oy = origin_y
+        self.ox = origin_x
+        self.z = z_mid
+
+    def stamp(self, inh, thr, amp):
+        oy, ox, z = self.oy, self.ox, self.z
+
+        # 1. MAIN PLUMBING PIPES (Wide Open - Reverted to Trial 242)
+        inh[0, 0, oy-3:oy+3, ox-40:ox-4, z-2:z+2] = False # Input A
+        inh[0, 0, oy-40:oy-4, ox-3:ox+3, z-2:z+2] = False # Input B
+        inh[0, 0, oy-3:oy+3, ox+4:ox+140, z-2:z+2] = False # Sum 1
+        inh[0, 0, oy-4:oy+4, ox-4:ox+4, z-2:z+2] = False # Hollow Intersection
+
+        # 2. HA1: THE SYNTHESIS INPUTS (Proven Flawless)
+        thr[0, 0, oy-3:oy+3, ox-8:ox-4, z-2:z+2] = True # Cold Wall Repulsor
+        amp[0, 0, oy-3:oy+3, ox-16:ox-8, z-2:z+2] = True # A Injector
+
+        inh[0, 0, oy:oy+4, ox-3:ox-2, z-2:z+2] = True # Chamfer Ramp
+        inh[0, 0, oy+1:oy+4, ox-2:ox-1, z-2:z+2] = True
+        inh[0, 0, oy+2:oy+4, ox-1:ox, z-2:z+2] = True
+        inh[0, 0, oy+3:oy+4, ox:ox+1, z-2:z+2] = True
+
+        # 3. NEW: THE THERMODYNAMIC SIEVE
+        # The Sum Filter (2 units thick, creates baseline resistance)
+        thr[0, 0, oy-3:oy+3, ox+4:ox+6, z-2:z+2] = True
+
+        # The Carry Blowout Panel (4 units thick, only yields to overpressure)
+        for i in range(40):
+            inh[0, 0, oy+4+i-3:oy+4+i+3, ox+4+i-3:ox+4+i+3, z-2:z+2] = False
+        thr[0, 0, oy+4:oy+8, ox+4:ox+8, z-2:z+2] = True
+
+        # 4. DOWNSTREAM VACUUMS (Only pulls fluid that survives the sieve)
+        amp[0, 0, oy-3:oy+3, ox+6:ox+20, z-2:z+2] = True # Sum Thermal River
+        amp[0, 0, oy+8:oy+14, ox+8:ox+14, z-2:z+2] = True # Carry Booster
+
+        inh[0, 0, oy-40:oy+140, ox+97:ox+103, z-2:z+2] = False # Cin Vertical Track
+
+        # ==========================================
+        # 5. DOWNSTREAM LOGIC (Isolated Check Valve)
+        # ==========================================
+        inh[0, 0, oy-3:oy-1, ox+50:ox+52, z-2:z+2] = True
+        inh[0, 0, oy+1:oy+3, ox+50:ox+52, z-2:z+2] = True
+        thr[0, 0, oy-1:oy+1, ox+50:ox+52, z-2:z+2] = True
+        amp[0, 0, oy-2:oy+2, ox+45:ox+49, z-2:z+2] = True
+        amp[0, 0, oy-2:oy+2, ox+70:ox+75, z-2:z+2] = True
+
+        # CIN DELAY LINE & DEFIBRILLATOR
+        inh[0, 0, oy+55:oy+65, ox+97:ox+103, z-2:z+2] = True
+        inh[0, 0, oy+60:oy+66, ox+97:ox+112, z-2:z+2] = False
+        inh[0, 0, oy+54:oy+66, ox+106:ox+112, z-2:z+2] = False
+        inh[0, 0, oy+54:oy+60, ox+97:ox+112, z-2:z+2] = False
+        amp[0, 0, oy+45:oy+47, ox+98:ox+102, z-2:z+2] = True
+
+        # HA2: SECOND HALF-ADDER
+        amp[0, 0, oy-8:oy-4, ox+98:ox+102, z-2:z+2] = True
+        amp[0, 0, oy-2:oy+2, ox+104:ox+108, z-2:z+2] = True
+
+        inh[0, 0, oy-3:oy-1, ox+105:ox+115, z-2:z+2] = True
+        inh[0, 0, oy+1:oy+3, ox+105:ox+115, z-2:z+2] = True
+        inh[0, 0, oy-15:oy-5, ox+97:ox+99, z-2:z+2] = True
+        inh[0, 0, oy-15:oy-5, ox+101:ox+103, z-2:z+2] = True
+        for i in range(40):
+            inh[0, 0, oy-i-3:oy-i+3, ox+100+i-3:ox+100+i+3, z-2:z+2] = False
+
+# --- 2. INITIALIZATION ---
+torch.manual_seed(137)
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+z_mid = GRID_SIZE // 2
+
+inhibitor_mask = torch.ones_like(field).bool()
+threshold_mask = torch.zeros_like(field).bool()
+amplifier_mask = torch.zeros_like(field).bool()
+
+# ==========================================
+# STAMPING THE MACRO-ARCHITECTURE
+# ==========================================
+# Stamp Bit 0
+bit0 = PooleFullAdder(origin_y=50, origin_x=50, z_mid=z_mid)
+bit0.stamp(inhibitor_mask, threshold_mask, amplifier_mask)
+
+# Stamp Bit 1
+bit1 = PooleFullAdder(origin_y=180, origin_x=50, z_mid=z_mid)
+bit1.stamp(inhibitor_mask, threshold_mask, amplifier_mask)
+
+# Build the Ripple Bus
+inhibitor_mask[0, 0, 85:95, 85:155, z_mid-2:z_mid+2] = False
+inhibitor_mask[0, 0, 85:180, 147:153, z_mid-2:z_mid+2] = False
+amplifier_mask[0, 0, 85:95, 120:130, z_mid-2:z_mid+2] = True
+amplifier_mask[0, 0, 120:130, 147:153, z_mid-2:z_mid+2] = True
+
+# ==========================================
+# FIRING THE LOGIC: 1 + 1 = 10
+# ==========================================
+field[0, 0, 48:52, 12:15, z_mid-1:z_mid+1] = 1.0
+field[0, 0, 12:15, 48:52, z_mid-1:z_mid+1] = 1.0
+
+history = []
+print("Executing Thermodynamic Sieve Test (1 + 1 = 10)...")
+for t in range(801):
+    field = run_manifold(field, inhibitor_mask, threshold_mask, amplifier_mask)
+
+    if t == 300:
+        print("\n--- GEN 300: BIT 0 RESOLUTION ---")
+        bit0_sum = int(field[0, 0, 45:55, 65:80, z_mid].sum().item())
+        bit0_carry = int(field[0, 0, 85:95, 100:115, z_mid].sum().item())
+        print(f"Bit 0 Sum Channel (Should be empty): {bit0_sum}")
+        print(f"Bit 0 Ripple Bus (Should be active): {bit0_carry}")
+
+    if t == 700:
+        print("\n--- GEN 700: BIT 1 RESOLUTION ---")
+        bit1_sum = int(field[0, 0, 175:185, 115:130, z_mid].sum().item())
+        print(f"Bit 1 Final Sum Output: {bit1_sum}")
+
+        if bit0_carry > 0 and bit1_sum > 0:
+            print("Status: FLAWLESS CARRY - The 1+1 collision overwhelmed the sieve.")
+        else:
+            print("Status: CONTAINMENT FAILURE.")
+        print("----------------------------------\n")
+
+    if t % 100 == 0:
+        history.append(field[0, 0, :, :, z_mid].clone().numpy())
+
+# --- 3. VISUALIZATION ---
+num_frames = len(history)
+fig, axes = plt.subplots(1, num_frames, figsize=(5*num_frames, 5), facecolor='black')
+for i, data in enumerate(history):
+    axes[i].imshow(data, cmap='inferno')
+    axes[i].set_title(f"Gen {i*100}", color='white')
+    axes[i].axis('off')
+plt.show()
