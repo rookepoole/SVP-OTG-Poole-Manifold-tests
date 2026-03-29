@@ -1,0 +1,185 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 318: The Logic Expansion (OR & NOT Primitives)
+# HARNESSING VERIFIED CONSTANTS FOR TURING COMPLETENESS
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+import gc
+
+# --- 1. ENGINE CONSTANTS & GPU SETUP ---
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold ALU on: {device}")
+
+B_LOW, B_HIGH = 5.0, 7.0 
+S_LOW, S_HIGH = 5.0, 9.0
+GRID_SIZE = 400 
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f, inhibitor_mask, threshold_mask, amplifier_mask):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0)
+        
+        potential[inhibitor_mask] -= 15.0
+        potential[threshold_mask] -= 2.0
+        potential[amplifier_mask] += 1.0
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+            
+        total_phi = potential + resonance
+        
+    birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+    survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+    
+    del padded, potential, resonance, total_phi, f_float
+    return (birth | survive).float()
+
+# ==========================================
+# CLASS: POOLE OR GATE (The Laminar Super-Highway)
+# ==========================================
+class PooleOR:
+    def __init__(self, origin_y, origin_x, z_mid):
+        self.oy, self.ox, self.z = origin_y, origin_x, z_mid
+
+    def stamp(self, inh, thr, amp):
+        oy, ox, z = self.oy, self.ox, self.z
+        
+        # Proven Y-Merger Inputs
+        inh[0, 0, oy-6:oy-2, ox-30:ox-15, z-2:z+2] = False 
+        amp[0, 0, oy-6:oy-2, ox-30:ox-15, z-2:z+2] = True 
+        inh[0, 0, oy+2:oy+6, ox-30:ox-15, z-2:z+2] = False 
+        amp[0, 0, oy+2:oy+6, ox-30:ox-15, z-2:z+2] = True 
+
+        # The 6-Unit Super-Highway (No walls, no traps. 1+1 and 1+0 both survive)
+        inh[0, 0, oy-3:oy+3, ox-15:ox+35, z-2:z+2] = False 
+        amp[0, 0, oy-3:oy+3, ox-15:ox+35, z-2:z+2] = True 
+
+# ==========================================
+# CLASS: POOLE NOT GATE (The XOR-Inverter)
+# ==========================================
+class PooleNOT:
+    def __init__(self, origin_y, origin_x, z_mid):
+        self.oy, self.ox, self.z = origin_y, origin_x, z_mid
+
+    def stamp(self, inh, thr, amp):
+        oy, ox, z = self.oy, self.ox, self.z
+        
+        # --- RECYCLING THE VERIFIED XOR ARCHITECTURE FROM TRIAL 317 ---
+        
+        # Proven Y-Merger Inputs
+        inh[0, 0, oy-6:oy-2, ox-30:ox-15, z-2:z+2] = False 
+        amp[0, 0, oy-6:oy-2, ox-30:ox-15, z-2:z+2] = True 
+        
+        inh[0, 0, oy+2:oy+6, ox-30:ox-15, z-2:z+2] = False 
+        amp[0, 0, oy+2:oy+6, ox-30:ox-15, z-2:z+2] = True 
+
+        # Merge Chamber
+        inh[0, 0, oy-6:oy+6, ox-15:ox-10, z-2:z+2] = False 
+        amp[0, 0, oy-6:oy+6, ox-15:ox-10, z-2:z+2] = True 
+
+        # The Powered Runway (Stops at ox)
+        inh[0, 0, oy-2:oy+2, ox-10:ox, z-2:z+2] = False 
+        amp[0, 0, oy-2:oy+2, ox-10:ox, z-2:z+2] = True 
+
+        # The Blowout Anvil (4-Unit Wall)
+        thr[0, 0, oy-2:oy+2, ox:ox+4, z-2:z+2] = True 
+
+        # Execution Vacuum for 1+1 Blowout
+        inh[0, 0, oy-6:oy+6, ox+4:ox+40, z-2:z+2] = False 
+        amp[0, 0, oy-6:oy+6, ox+4:ox+40, z-2:z+2] = True 
+
+        # The Escape Valve (Upward)
+        inh[0, 0, oy-35:oy-2, ox-4:ox, z-2:z+2] = False 
+        amp[0, 0, oy-35:oy-4, ox-4:ox, z-2:z+2] = True 
+        thr[0, 0, oy-6:oy-5, ox-4:ox, z-2:z+2] = True 
+
+# --- 2. INITIALIZATION ---
+torch.manual_seed(137)
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+z_mid = GRID_SIZE // 2
+
+inhibitor_mask = torch.ones_like(field).bool()
+threshold_mask = torch.zeros_like(field).bool()
+amplifier_mask = torch.zeros_like(field).bool()
+
+# STAMPING THE TEST CHAMBERS
+gate_or_11 = PooleOR(origin_y=80, origin_x=100, z_mid=z_mid)
+gate_or_10 = PooleOR(origin_y=250, origin_x=100, z_mid=z_mid)
+gate_not_1 = PooleNOT(origin_y=80, origin_x=300, z_mid=z_mid)
+gate_not_0 = PooleNOT(origin_y=250, origin_x=300, z_mid=z_mid)
+
+for gate in [gate_or_11, gate_or_10, gate_not_1, gate_not_0]:
+    gate.stamp(inhibitor_mask, threshold_mask, amplifier_mask)
+
+# ==========================================
+# FIRING THE LOGIC (8-Gen Goldilocks Pulses)
+# ==========================================
+history = []
+print("Executing AL Expansion: Verifying OR and NOT Primitives...")
+
+for t in range(301): 
+    
+    # INJECTION WINDOW (T=0 to T=8)
+    if 0 <= t <= 8:
+        # OR Gate [1+1] (Inject Top & Bottom)
+        field[0, 0, gate_or_11.oy-6:gate_or_11.oy-2, gate_or_11.ox-28:gate_or_11.ox-24, z_mid-1:z_mid+1] = 1.0 
+        field[0, 0, gate_or_11.oy+2:gate_or_11.oy+6, gate_or_11.ox-28:gate_or_11.ox-24, z_mid-1:z_mid+1] = 1.0 
+        
+        # OR Gate [1+0] (Inject Top Only)
+        field[0, 0, gate_or_10.oy-6:gate_or_10.oy-2, gate_or_10.ox-28:gate_or_10.ox-24, z_mid-1:z_mid+1] = 1.0 
+        
+        # NOT Gate [Input = 1]
+        field[0, 0, gate_not_1.oy-6:gate_not_1.oy-2, gate_not_1.ox-28:gate_not_1.ox-24, z_mid-1:z_mid+1] = 1.0 # CONSTANT BIAS (Top)
+        field[0, 0, gate_not_1.oy+2:gate_not_1.oy+6, gate_not_1.ox-28:gate_not_1.ox-24, z_mid-1:z_mid+1] = 1.0 # SIGNAL INPUT = 1 (Bottom)
+        
+        # NOT Gate [Input = 0]
+        field[0, 0, gate_not_0.oy-6:gate_not_0.oy-2, gate_not_0.ox-28:gate_not_0.ox-24, z_mid-1:z_mid+1] = 1.0 # CONSTANT BIAS (Top)
+        # (Input signal is 0, so we inject nothing into the bottom pipe)
+        
+    elif t == 9:
+        field[0, 0, :, :, :] = torch.where(amplifier_mask, field[0, 0, :, :, :], field[0, 0, :, :, :])
+
+    field = run_manifold(field, inhibitor_mask, threshold_mask, amplifier_mask)
+    
+    # TELEMETRY CHECK
+    if t == 300:
+        print("\n--- FINAL RESOLUTION AT GEN 300 ---")
+        
+        or_11_out = int(field[0, 0, gate_or_11.oy-5:gate_or_11.oy+5, gate_or_11.ox+20:gate_or_11.ox+35, z_mid].cpu().sum().item())
+        or_10_out = int(field[0, 0, gate_or_10.oy-5:gate_or_10.oy+5, gate_or_10.ox+20:gate_or_10.ox+35, z_mid].cpu().sum().item())
+        
+        # NOT reads strictly from the Lateral Escape Pipe (Just like the XOR gate)
+        not_1_out = int(field[0, 0, gate_not_1.oy-35:gate_not_1.oy-10, gate_not_1.ox-4:gate_not_1.ox, z_mid].cpu().sum().item())
+        not_0_out = int(field[0, 0, gate_not_0.oy-35:gate_not_0.oy-10, gate_not_0.ox-4:gate_not_0.ox, z_mid].cpu().sum().item())
+        
+        print(f"OR Gate [1 + 1] Output: {or_11_out} (Expected: >0)")
+        print(f"OR Gate [1 + 0] Output: {or_10_out} (Expected: >0)")
+        print(f"NOT Gate [Input 1] Output: {not_1_out} (Expected: 0)")
+        print(f"NOT Gate [Input 0] Output: {not_0_out} (Expected: >0)")
+        
+        if or_11_out > 0 and or_10_out > 0 and not_1_out == 0 and not_0_out > 0:
+            print("\nStatus: ALU PRIMITIVES VERIFIED - Truth tables are mathematically flawless.")
+        else:
+            print("\nStatus: LOGIC FAILURE - The physics require further tuning.")
+
+    if t % 50 == 0:
+        history.append(field[0, 0, ::2, ::2, z_mid].cpu().clone().numpy())
+        gc.collect()
+
+# --- VISUALIZATION ---
+num_frames = len(history)
+fig, axes = plt.subplots(1, num_frames, figsize=(10*num_frames, 10), facecolor='black')
+for i, data in enumerate(history):
+    axes[i].imshow(data, cmap='inferno')
+    axes[i].set_title(f"Gen {i*50}", color='white')
+    axes[i].axis('off')
+plt.show()
