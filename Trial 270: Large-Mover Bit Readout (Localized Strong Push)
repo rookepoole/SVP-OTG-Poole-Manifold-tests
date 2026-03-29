@@ -1,0 +1,92 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 270: Large-Mover Bit Readout (Localized Strong Push)
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.ndimage import label, center_of_mass, sum as ndi_sum
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Running on: {device}")
+
+GRID_SIZE = 160
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_poole(f):
+    with torch.no_grad():
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        neigh = F.conv3d(padded, kernel, padding=0)
+        birth = (f == 0) & (neigh >= 5) & (neigh <= 7)
+        survive = (f == 1) & (neigh >= 5) & (neigh <= 9)
+        return (birth | survive).float()
+
+# Stabilize
+torch.manual_seed(137)
+field = (torch.rand((1,1,GRID_SIZE,GRID_SIZE,GRID_SIZE), device=device) > 0.5).float()
+print("Stabilizing...")
+for t in range(800):
+    field = run_poole(field)
+    if t % 200 == 0:
+        print(f"Gen {t} — density: {field.mean().item():.4f}")
+
+print(f"Stabilized density: {field.mean().item():.4f}\n")
+
+print("Large-mover memory block — localized push + bit readout...")
+
+TRACK_EVERY = 20
+MIN_MASS = 1000000
+pre_push_x = None
+post_push_x = None
+
+for t in range(800):
+    field = run_poole(field)
+    
+    if t % TRACK_EVERY == 0:
+        binary = field[0,0].cpu().numpy() > 0.5
+        labeled, num = label(binary)
+        if num == 0:
+            continue
+        masses = ndi_sum(binary, labeled, range(1, num+1))
+        centroids = np.array(center_of_mass(binary, labeled, range(1, num+1)))
+        
+        idx = np.argmax(masses)
+        mass = masses[idx]
+        cent = centroids[idx]
+        
+        if mass >= MIN_MASS:
+            current_x = cent[0]
+            if t % 100 == 0:
+                print(f"Gen {t} — Largest mover mass {mass:.0f} | x = {current_x:.2f}")
+            
+            # Record pre-push
+            if t == 300:
+                pre_push_x = current_x
+                
+                # LOCALIZED strong directional push (+x)
+                x, y, z = int(cent[0]), int(cent[1]), int(cent[2])
+                field[0,0, x-10:x+10, y-10:y+10, z-10:z+10] += 2.0   # stronger but local
+                print(">>> LOCALIZED +X PUSH FIRED at Gen 300 <<<")
+            
+            # Record post-push and read bit
+            if t == 500 and post_push_x is None:
+                post_push_x = current_x
+                bit_value = 1 if post_push_x > GRID_SIZE / 2 else 0
+                print(f">>> BIT READOUT: x = {post_push_x:.2f} → Bit = {bit_value} <<<")
+
+print("\nLarge-mover memory block test complete.")
+if pre_push_x is not None and post_push_x is not None:
+    print(f"Pre-push x: {pre_push_x:.2f} | Post-push x: {post_push_x:.2f} | Δx = {post_push_x - pre_push_x:.2f}")
+
+# Final visualization
+mid = field[0,0, :, :, GRID_SIZE//2].cpu().numpy()
+plt.figure(figsize=(8,8), facecolor='black')
+plt.imshow(mid, cmap='inferno')
+plt.axis('off')
+plt.title("Final mid-slice after localized push")
+plt.show()
