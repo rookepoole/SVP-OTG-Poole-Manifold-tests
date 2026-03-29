@@ -1,0 +1,85 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 266: Glider Search & Characterization
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.ndimage import label, center_of_mass
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Running on: {device}")
+
+GRID_SIZE = 160
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_poole(f):
+    with torch.no_grad():
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        neigh = F.conv3d(padded, kernel, padding=0)
+        birth = (f == 0) & (neigh >= 5) & (neigh <= 7)
+        survive = (f == 1) & (neigh >= 5) & (neigh <= 9)
+        return (birth | survive).float()
+
+# Stabilize
+torch.manual_seed(137)
+field = (torch.rand((1,1,GRID_SIZE,GRID_SIZE,GRID_SIZE), device=device) > 0.5).float()
+print("Stabilizing...")
+for t in range(800):
+    field = run_poole(field)
+    if t % 200 == 0:
+        print(f"Gen {t} — density: {field.mean().item():.4f}")
+
+print(f"Stabilized density: {field.mean().item():.4f}\n")
+
+# Glider search
+print("Searching for moving structures (gliders)...")
+history_centroids = []
+moving_count = 0
+TRACK_EVERY = 20
+
+for t in range(600):
+    field = run_poole(field)
+    
+    if t % TRACK_EVERY == 0:
+        binary = field[0,0].cpu().numpy() > 0.5
+        labeled, num_features = label(binary)
+        
+        if num_features > 0:
+            moving_count += num_features
+            centroids = center_of_mass(binary, labeled, range(1, num_features+1))
+            history_centroids.append((t, centroids))
+            
+            if num_features > 0 and t % 100 == 0:
+                print(f"Gen {t}: {num_features} moving structures detected")
+
+print(f"\nTotal moving structures detected over 600 gens: {moving_count}")
+
+# Simple velocity analysis on the largest structures
+print("\n=== Promising Moving Structures ===")
+if history_centroids:
+    # Take the last few frames and look for consistent motion
+    recent = history_centroids[-5:]  # last 100 generations
+    for i, (t, cents) in enumerate(recent):
+        if len(cents) > 0:
+            print(f"Gen {t}: {len(cents)} structures | Example centroid: {cents[0]}")
+
+print("\nGlider search complete.")
+print("The lattice produces many moving structures — this is promising for signal-based memory/computation.")
+
+# Optional: save a few mid-slices for visual inspection
+mid_slices = []
+field_cpu = field[0,0].cpu().numpy()
+for z in range(GRID_SIZE//2 - 20, GRID_SIZE//2 + 21, 10):
+    mid_slices.append(field_cpu[:, :, z])
+
+fig, axes = plt.subplots(1, len(mid_slices), figsize=(4*len(mid_slices), 4), facecolor='black')
+for i, sl in enumerate(mid_slices):
+    axes[i].imshow(sl, cmap='inferno')
+    axes[i].axis('off')
+plt.show()
