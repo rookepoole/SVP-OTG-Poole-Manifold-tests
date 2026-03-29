@@ -1,0 +1,110 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 267: Improved Glider Tracker (Coherent Motion Filter)
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.ndimage import label, center_of_mass, sum as ndi_sum
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Running on: {device}")
+
+GRID_SIZE = 160
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_poole(f):
+    with torch.no_grad():
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        neigh = F.conv3d(padded, kernel, padding=0)
+        birth = (f == 0) & (neigh >= 5) & (neigh <= 7)
+        survive = (f == 1) & (neigh >= 5) & (neigh <= 9)
+        return (birth | survive).float()
+
+# Stabilize
+torch.manual_seed(137)
+field = (torch.rand((1,1,GRID_SIZE,GRID_SIZE,GRID_SIZE), device=device) > 0.5).float()
+print("Stabilizing...")
+for t in range(800):
+    field = run_poole(field)
+    if t % 200 == 0:
+        print(f"Gen {t} — density: {field.mean().item():.4f}")
+
+print(f"Stabilized density: {field.mean().item():.4f}\n")
+
+# Improved glider tracker
+print("Tracking coherent moving structures (gliders)...")
+TRACK_EVERY = 10
+MIN_MASS = 5          # ignore tiny noise
+VELOCITY_TOLERANCE = 0.5
+
+previous_centroids = []
+previous_masses = []
+promising_gliders = []
+
+for t in range(800):
+    field = run_poole(field)
+    
+    if t % TRACK_EVERY == 0:
+        binary = field[0,0].cpu().numpy() > 0.5
+        labeled, num = label(binary)
+        
+        if num == 0:
+            continue
+        
+        centroids = np.array(center_of_mass(binary, labeled, range(1, num+1)))
+        masses = ndi_sum(binary, labeled, range(1, num+1))
+        
+        # Filter large enough objects
+        mask = masses >= MIN_MASS
+        centroids = centroids[mask]
+        masses = masses[mask]
+        
+        if len(centroids) == 0:
+            continue
+        
+        # Look for velocity match with previous frame
+        if len(previous_centroids) > 0:
+            for i, c in enumerate(centroids):
+                dists = np.linalg.norm(previous_centroids - c, axis=1)
+                idx = np.argmin(dists)
+                if dists[idx] < VELOCITY_TOLERANCE:
+                    vx = c[0] - previous_centroids[idx][0]
+                    vy = c[1] - previous_centroids[idx][1]
+                    vz = c[2] - previous_centroids[idx][2]
+                    speed = np.sqrt(vx**2 + vy**2 + vz**2)
+                    if speed > 0.1:  # moving, not static
+                        promising_gliders.append({
+                            "gen": t,
+                            "mass": masses[i],
+                            "centroid": c,
+                            "velocity": (vx, vy, vz),
+                            "speed": speed
+                        })
+        
+        previous_centroids = centroids
+        previous_masses = masses
+        
+        if t % 100 == 0 and len(promising_gliders) > 0:
+            print(f"Gen {t}: {len(promising_gliders)} promising gliders so far")
+
+print(f"\nTotal promising gliders found: {len(promising_gliders)}")
+if promising_gliders:
+    print("\nTop 5 most promising:")
+    for g in sorted(promising_gliders, key=lambda x: x["mass"], reverse=True)[:5]:
+        print(f"Gen {g['gen']} | Mass {g['mass']:.0f} | Vel {g['velocity']} | Speed {g['speed']:.2f}")
+
+print("\nGlider tracking complete.")
+
+# Visual mid-slice for inspection
+mid = field[0,0, :, :, GRID_SIZE//2].cpu().numpy()
+plt.figure(figsize=(8,8), facecolor='black')
+plt.imshow(mid, cmap='inferno')
+plt.axis('off')
+plt.title("Mid-slice at final generation")
+plt.show()
