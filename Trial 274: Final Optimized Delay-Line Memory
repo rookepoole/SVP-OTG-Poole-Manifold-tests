@@ -1,0 +1,102 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 274: Final Optimized Delay-Line Memory
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Running on: {device}")
+
+GRID_SIZE = 160
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_poole(f):
+    with torch.no_grad():
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        neigh = F.conv3d(padded, kernel, padding=0)
+        birth = (f == 0) & (neigh >= 5) & (neigh <= 7)
+        survive = (f == 1) & (neigh >= 5) & (neigh <= 9)
+        return (birth | survive).float()
+
+# Stabilize
+torch.manual_seed(137)
+field = (torch.rand((1,1,GRID_SIZE,GRID_SIZE,GRID_SIZE), device=device) > 0.5).float()
+print("Stabilizing...")
+for t in range(600):
+    field = run_poole(field)
+    if t % 200 == 0:
+        print(f"Gen {t} — density: {field.mean().item():.4f}")
+
+print(f"Stabilized density: {field.mean().item():.4f}\n")
+
+print("Building MAX-TUNED delay-line memory...")
+
+oy, ox, oz = GRID_SIZE//2, GRID_SIZE//2, GRID_SIZE//2
+
+# Inhibitor walls
+inh = torch.zeros((1,1,GRID_SIZE,GRID_SIZE,GRID_SIZE), device=device, dtype=torch.bool)
+inh[0,0, oy-28:oy+28, ox-52:ox+52, oz-4:oz+4] = True
+inh[0,0, oy-28:oy+28, ox-52:ox-48, oz-4:oz+4] = False  # left opening
+inh[0,0, oy-28:oy+28, ox+48:ox+52, oz-4:oz+4] = False  # right opening
+
+# Very strong rail amplifiers
+amp = torch.zeros((1,1,GRID_SIZE,GRID_SIZE,GRID_SIZE), device=device, dtype=torch.bool)
+amp[0,0, oy-26:oy-12, ox-50:ox+50, oz-3:oz+3] = True
+amp[0,0, oy+12:oy+26, ox-50:ox+50, oz-3:oz+3] = True
+
+# Q sensor (right side)
+sensor_x = ox + 40
+sensor_y1 = oy - 12
+sensor_y2 = oy + 12
+
+print("Loop ready. Injecting MAX packet...")
+
+# Very wide starter packet
+field[0,0, oy-12:oy+12, ox-50:ox-36, oz-3:oz+3] = 1.0
+
+history_q = []
+for t in range(2000):
+    field[inh] = 0.0
+    field[amp] += 3.0                    # maximum boost
+    
+    # Corner boosters to help turns
+    if t % 80 == 0:
+        field[0,0, oy-26:oy-12, ox-50:ox-46, oz-3:oz+3] += 2.0
+        field[0,0, oy+12:oy+26, ox+46:ox+50, oz-3:oz+3] += 2.0
+    
+    field = run_poole(field)
+    
+    if t % 40 == 0:
+        q_mass = int(field[0,0, sensor_y1:sensor_y2, sensor_x:sensor_x+8, oz-3:oz+3].sum().item())
+        history_q.append((t, q_mass))
+        bit = 1 if q_mass > 12 else 0
+        print(f"Gen {t:4d} — Q mass: {q_mass:3d} → Bit = {bit}")
+
+print("\nFinal delay-line test complete.")
+
+# Plot
+plt.figure(figsize=(12,5), facecolor='black')
+gens, qvals = zip(*history_q)
+plt.plot(gens, qvals, color='cyan', linewidth=2)
+plt.axhline(y=12, color='red', linestyle='--', label='Bit threshold')
+plt.xlabel("Generation")
+plt.ylabel("Q sensor mass")
+plt.title("MAX-TUNED Circulating Delay-Line Memory")
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
+
+# Final mid-slice
+mid = field[0,0, :, :, oz].cpu().numpy()
+plt.figure(figsize=(8,8), facecolor='black')
+plt.imshow(mid, cmap='inferno')
+plt.axis('off')
+plt.title("Final mid-slice — packet circulation")
+plt.show()
