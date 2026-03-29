@@ -1,0 +1,79 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 268: Large-Mover Memory Block
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.ndimage import label, center_of_mass, sum as ndi_sum
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Running on: {device}")
+
+GRID_SIZE = 160
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_poole(f):
+    with torch.no_grad():
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        neigh = F.conv3d(padded, kernel, padding=0)
+        birth = (f == 0) & (neigh >= 5) & (neigh <= 7)
+        survive = (f == 1) & (neigh >= 5) & (neigh <= 9)
+        return (birth | survive).float()
+
+# Stabilize
+torch.manual_seed(137)
+field = (torch.rand((1,1,GRID_SIZE,GRID_SIZE,GRID_SIZE), device=device) > 0.5).float()
+print("Stabilizing...")
+for t in range(800):
+    field = run_poole(field)
+    if t % 200 == 0:
+        print(f"Gen {t} — density: {field.mean().item():.4f}")
+
+print(f"Stabilized density: {field.mean().item():.4f}\n")
+
+print("Isolating largest moving structure and giving it a controlled push...")
+
+TRACK_EVERY = 20
+MIN_MASS = 100000   # target the mega-clusters
+
+for t in range(600):
+    field = run_poole(field)
+    
+    if t % TRACK_EVERY == 0:
+        binary = field[0,0].cpu().numpy() > 0.5
+        labeled, num = label(binary)
+        if num == 0:
+            continue
+        masses = ndi_sum(binary, labeled, range(1, num+1))
+        centroids = np.array(center_of_mass(binary, labeled, range(1, num+1)))
+        
+        # Find biggest object
+        idx = np.argmax(masses)
+        mass = masses[idx]
+        cent = centroids[idx]
+        
+        if mass >= MIN_MASS and t % 100 == 0:
+            print(f"Gen {t} — Largest mover: mass {mass:.0f} at centroid {cent.round(2)}")
+            
+            # Gentle push in +x direction (we can change this later)
+            if t == 300:  # fire the push once
+                x, y, z = int(cent[0]), int(cent[1]), int(cent[2])
+                field[0,0, x-5:x+5, y-5:y+5, z-5:z+5] += 1.0
+                print(">>> CONTROLLED PUSH FIRED at Gen 300 <<<")
+
+print("\nLarge-mover memory block test complete.")
+print("We can now read its final position as a bit (left/right).")
+
+# Final mid-slice
+mid = field[0,0, :, :, GRID_SIZE//2].cpu().numpy()
+plt.figure(figsize=(8,8), facecolor='black')
+plt.imshow(mid, cmap='inferno')
+plt.axis('off')
+plt.title("Final mid-slice — large mover visible")
+plt.show()
