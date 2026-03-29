@@ -1,0 +1,111 @@
+# =============================================================================
+# POOLE MANIFOLD — All Four Tests (Fixed & GPU Optimized)
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.ndimage import label
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Running on: {device}")
+if device.type == "cuda":
+    print(f"GPU: {torch.cuda.get_device_name(0)}")
+    print(f"GPU Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB\n")
+
+GRID_SIZE = 160
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_poole(f):
+    with torch.no_grad():
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        neigh = F.conv3d(padded, kernel, padding=0)
+        birth = (f == 0) & (neigh >= 5) & (neigh <= 7)
+        survive = (f == 1) & (neigh >= 5) & (neigh <= 9)
+        return (birth | survive).float()
+
+# Stabilize
+torch.manual_seed(137)
+field = (torch.rand((1,1,GRID_SIZE,GRID_SIZE,GRID_SIZE), device=device) > 0.5).float()
+print("Stabilizing...")
+for t in range(800):
+    field = run_poole(field)
+    if t % 200 == 0:
+        print(f"Gen {t} — density: {field.mean().item():.4f}")
+
+density = field[0,0].cpu().numpy()
+print(f"Final density: {density.mean():.4f}\n")
+
+# Test 1: Propagation Speed
+print("=== Test 1: Signal Propagation Speed ===")
+pulse = torch.zeros_like(field)
+pulse[0,0, GRID_SIZE//2-2:GRID_SIZE//2+2, GRID_SIZE//2-2:GRID_SIZE//2+2, GRID_SIZE//4] = 1.0
+field += pulse
+
+positions = []
+for t in range(300):
+    field = run_poole(field)
+    if t % 50 == 0:
+        mid = field[0,0, :, :, GRID_SIZE//2].cpu().numpy()
+        if mid.sum() > 0:
+            pos = np.argwhere(mid > 0.5)
+            if len(pos) > 0:
+                positions.append((t, np.mean(pos[:,0])))
+print("Positions (gen, avg y):", positions)
+
+plt.figure()
+plt.plot([p[0] for p in positions], [p[1] for p in positions])
+plt.xlabel("Generation")
+plt.ylabel("Average position of pulse")
+plt.title("Signal Propagation Speed")
+plt.show()
+
+# Test 2: Spontaneous Entropy
+print("\n=== Test 2: Spontaneous Entropy Production ===")
+entropies = []
+for t in range(400):
+    field = run_poole(field)
+    if t % 50 == 0:
+        slice_data = field[0,0, GRID_SIZE//2, :, :].cpu().numpy().flatten()
+        p = np.bincount(slice_data.astype(int)) / len(slice_data)
+        p = p[p > 0]
+        entropy = -np.sum(p * np.log2(p)) if len(p) > 0 else 0
+        entropies.append(entropy)
+plt.figure()
+plt.plot(entropies)
+plt.xlabel("Sample point")
+plt.ylabel("Entropy (bits)")
+plt.title("Spontaneous Entropy Evolution")
+plt.show()
+
+# Test 3: Glider Search
+print("\n=== Test 3: Search for Gliders ===")
+moving_count = 0
+for t in range(300):
+    field = run_poole(field)
+    if t % 50 == 0:
+        labeled, num = label(field[0,0].cpu().numpy() > 0.5)
+        moving_count += num
+print(f"Found {moving_count} moving structures over 300 gens")
+
+# Test 4: Power Spectrum + Higher Moments (FIXED)
+print("\n=== Test 4: Small-Scale Power Spectrum + Higher Moments ===")
+fft3d = np.fft.fftn(density)
+power3d = np.abs(fft3d)**2
+kfreq = np.fft.fftfreq(GRID_SIZE)
+kx, ky, kz = np.meshgrid(kfreq, kfreq, kfreq, indexing='ij')
+k_mag = np.sqrt(kx**2 + ky**2 + kz**2 + 1e-12).ravel()
+k_bin = np.round(k_mag).astype(int)
+power_spectrum = np.bincount(k_bin, power3d.ravel())
+print("Power spectrum (first 20 bins):", power_spectrum[:20])
+
+skew = np.mean((density - density.mean())**3) / (density.std()**3)
+kurt = np.mean((density - density.mean())**4) / (density.std()**4)
+print(f"Skewness: {skew:.4f}   Kurtosis: {kurt:.4f}")
+
+print("\nAll four tests completed.")
