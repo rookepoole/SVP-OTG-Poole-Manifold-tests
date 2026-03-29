@@ -1,0 +1,120 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 281: Ultra-Local Adder Island (Final Integration Attempt)
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Running on: {device}")
+
+GRID_SIZE = 420
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_poole(f):
+    with torch.no_grad():
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        neigh = F.conv3d(padded, kernel, padding=0)
+        birth = (f == 0) & (neigh >= 5) & (neigh <= 7)
+        survive = (f == 1) & (neigh >= 5) & (neigh <= 9)
+        return (birth | survive).float()
+
+# Stabilize
+torch.manual_seed(137)
+field = (torch.rand((1,1,GRID_SIZE,GRID_SIZE,GRID_SIZE), device=device) > 0.5).float()
+print("Stabilizing...")
+for t in range(800):
+    field = run_poole(field)
+    if t % 200 == 0:
+        print(f"Gen {t} — density: {field.mean().item():.4f}")
+print(f"Stabilized density: {field.mean().item():.4f}\n")
+
+# ====================== MEMORY LOOP (Far Left) ======================
+oy_m = GRID_SIZE//2
+ox_m = GRID_SIZE//6
+oz = GRID_SIZE//2
+
+inh_mem = torch.zeros((1,1,GRID_SIZE,GRID_SIZE,GRID_SIZE), device=device, dtype=torch.bool)
+inh_mem[0,0, oy_m-28:oy_m+28, ox_m-52:ox_m+52, oz-4:oz+4] = True
+inh_mem[0,0, oy_m-28:oy_m+28, ox_m-52:ox_m-48, oz-4:oz+4] = False
+inh_mem[0,0, oy_m-28:oy_m+28, ox_m+48:ox_m+52, oz-4:oz+4] = False
+
+amp_mem = torch.zeros((1,1,GRID_SIZE,GRID_SIZE,GRID_SIZE), device=device, dtype=torch.bool)
+amp_mem[0,0, oy_m-26:oy_m-12, ox_m-50:ox_m+50, oz-3:oz+3] = True
+amp_mem[0,0, oy_m+12:oy_m+26, ox_m-50:ox_m+50, oz-3:oz+3] = True
+
+# ====================== ULTRA-LOCAL ADDER ISLAND (Far Right) ======================
+ox_a = GRID_SIZE * 5 // 6
+
+# Exact proven geometry from successful Trial 250
+inh_add = torch.zeros((1,1,GRID_SIZE,GRID_SIZE,GRID_SIZE), device=device, dtype=torch.bool)
+inh_add[0,0, oy_m-55:oy_m+55, ox_a-80:ox_a+80, oz-8:oz+8] = True
+
+# PRIVATE strong local boost field (only inside adder island)
+amp_add = torch.zeros((1,1,GRID_SIZE,GRID_SIZE,GRID_SIZE), device=device, dtype=torch.bool)
+amp_add[0,0, oy_m-45:oy_m+45, ox_a-45:ox_a+45, oz-5:oz+5] = True   # very strong private Thermal River
+
+# ====================== THICK BUFFER ======================
+buffer = torch.zeros((1,1,GRID_SIZE,GRID_SIZE,GRID_SIZE), device=device, dtype=torch.bool)
+buffer[0,0, :, GRID_SIZE//3:GRID_SIZE*2//3, :] = True
+
+print("\n=== FULL TRUTH TABLE — ULTRA-LOCAL ADDER ISLAND ===")
+truth_table = [(0,0,0),(0,0,1),(0,1,0),(0,1,1),(1,0,0),(1,0,1),(1,1,0),(1,1,1)]
+expected_sum   = [0,1,1,0,1,0,0,1]
+expected_carry = [0,0,0,1,0,1,1,1]
+
+results = []
+
+for idx, (A, B, Cin) in enumerate(truth_table):
+    field = run_poole(field)
+    
+    # Load Cin from memory
+    if Cin == 1:
+        field[0,0, oy_m-8:oy_m+8, ox_m-48:ox_m-38, oz-3:oz+3] = 1.0
+    
+    # Circulate memory
+    for _ in range(80):
+        field[inh_mem] = 0.0
+        field[amp_mem] += 3.0
+        field[buffer] = 0.0
+        field = run_poole(field)
+    
+    # Inject A and B using exact proven positions
+    field[0,0, oy_m-8:oy_m+8, ox_a-38:ox_a-32, oz-3:oz+3] = float(A)
+    field[0,0, oy_m-38:oy_m-32, ox_a-8:ox_a+8, oz-3:oz+3] = float(B)
+    
+    # Run adder with private ultra-strong local boost
+    for _ in range(400):
+        field[inh_add] = 0.0
+        field[amp_add] += 5.0          # maximum private boost
+        field[buffer] = 0.0
+        field = run_poole(field)
+    
+    # Exact read regions from successful Trial 250
+    sum_mass   = int(field[0,0, oy_m-8:oy_m+8,   ox_a+32:ox_a+42, oz-3:oz+3].sum().item())
+    carry_mass = int(field[0,0, oy_m+32:oy_m+42, ox_a+32:ox_a+42, oz-3:oz+3].sum().item())
+    
+    actual_sum   = 1 if sum_mass > 25 else 0
+    actual_carry = 1 if carry_mass > 25 else 0
+    
+    status = "PASS" if (actual_sum == expected_sum[idx] and actual_carry == expected_carry[idx]) else "FAIL"
+    
+    print(f"A={A} B={B} Cin={Cin} | Exp S={expected_sum[idx]} C={expected_carry[idx]} | Act S={actual_sum} C={actual_carry} | {status}")
+    results.append(status)
+
+print("\n=== TRUTH TABLE COMPLETE ===")
+print(f"{results.count('PASS')}/8 passed")
+
+# Final visualization
+mid = field[0,0, :, :, oz].cpu().numpy()
+plt.figure(figsize=(14,10), facecolor='black')
+plt.imshow(mid, cmap='inferno')
+plt.axis('off')
+plt.title("Final mid-slice — Memory (left) + Buffer + Ultra-Local Adder Island (right)")
+plt.show()
