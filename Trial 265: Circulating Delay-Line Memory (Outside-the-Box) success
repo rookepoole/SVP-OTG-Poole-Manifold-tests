@@ -1,0 +1,104 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 265: Circulating Delay-Line Memory (Outside-the-Box)
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Running on: {device}")
+if device.type == "cuda":
+    print(f"GPU: {torch.cuda.get_device_name(0)}")
+    print(f"GPU Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB\n")
+
+B_LOW, B_HIGH = 5.0, 7.0 
+S_LOW, S_HIGH = 5.0, 9.0
+GRID_SIZE = 200 
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+print("Poole Manifold Research | Trial 265: Circulating Delay-Line Memory...")
+
+def run_manifold(f, inh, thr, amp):
+    with torch.no_grad():
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0)
+        
+        potential[inh] -= 15.0
+        potential[thr] -= 2.0
+        potential[amp] += 1.0
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+            
+        total_phi = potential + resonance
+        
+    birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+    survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+    return (birth | survive).float()
+
+# Create a long circulating loop
+inhibitor_mask = torch.ones((1,1,GRID_SIZE,GRID_SIZE,GRID_SIZE), device=device).bool()
+threshold_mask = torch.zeros_like(inhibitor_mask)
+amplifier_mask = torch.zeros_like(inhibitor_mask)
+
+# Build the loop walls (rectangular ring in xy plane at z_mid)
+oy, ox, z = 100, 100, GRID_SIZE//2
+inh = inhibitor_mask
+amp = amplifier_mask
+
+# Horizontal rails
+inh[0,0, oy-4:oy+4, ox-50:ox+50, z-2:z+2] = False   # top rail
+inh[0,0, oy+46:oy+54, ox-50:ox+50, z-2:z+2] = False # bottom rail
+
+# Vertical rails
+inh[0,0, oy-4:oy+54, ox-54:ox-46, z-2:z+2] = False  # left rail
+inh[0,0, oy-4:oy+54, ox+46:ox+54, z-2:z+2] = False  # right rail
+
+# Global drive amplifiers to keep the packet circulating
+amp[0,0, oy-4:oy+4, ox-50:ox+50, z-2:z+2] = True      # top
+amp[0,0, oy+46:oy+54, ox-50:ox+50, z-2:z+2] = True    # bottom
+amp[0,0, oy-4:oy+54, ox-54:ox-46, z-2:z+2] = True      # left
+amp[0,0, oy-4:oy+54, ox+46:ox+54, z-2:z+2] = True      # right
+
+# Read sensor (right side)
+amp[0,0, oy+20:oy+28, ox+40:ox+48, z-2:z+2] = True
+
+history = []
+print("Executing Circulating Delay-Line Memory Test...")
+
+for t in range(1201): 
+    
+    # Inject a "1" bit at t=0 (packet into the loop)
+    if t == 0:
+        print("\n[T=0] Injecting '1' bit into loop...")
+        field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+        field[0,0, oy+20:oy+28, ox-48:ox-42, z-1:z+1] = 1.0   # start packet on left rail
+
+    # Optional second injection at t=600 to test overwriting
+    if t == 600:
+        print("\n[T=600] Injecting second packet (test overwrite)...")
+        field[0,0, oy+20:oy+28, ox-48:ox-42, z-1:z+1] = 1.0
+
+    field = run_manifold(field, inhibitor_mask, threshold_mask, amplifier_mask)
+    
+    if t % 200 == 0 and t > 0:
+        q_out = int(field[0,0, oy+20:oy+28, ox+40:ox+48, z_mid].cpu().sum().item())
+        print(f"Gen {t} — Q sensor reading: {q_out}  {'(bit present)' if q_out > 4 else '(bit absent)'}")
+
+    if t % 100 == 0:
+        history.append(field[0,0, :, :, z_mid].cpu().numpy())
+
+# Visualization
+num_frames = len(history)
+fig, axes = plt.subplots(1, num_frames, figsize=(8*num_frames, 8), facecolor='black')
+for i, data in enumerate(history):
+    axes[i].imshow(data, cmap='inferno')
+    axes[i].set_title(f"Gen {i*100}", color='white')
+    axes[i].axis('off')
+plt.show()
