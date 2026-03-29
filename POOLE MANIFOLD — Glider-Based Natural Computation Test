@@ -1,0 +1,94 @@
+# =============================================================================
+# POOLE MANIFOLD — Glider-Based Natural Computation Test
+# Using spontaneous gliders as signals (no fixed gates)
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from scipy.ndimage import label, center_of_mass
+import gc
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Glider-Based Natural Computation Test on: {device}")
+
+# --- Engine ---
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+GRID_SIZE = 256
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f):
+    with torch.no_grad():
+        padded = torch.nn.functional.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        potential = torch.nn.functional.conv3d(padded, kernel)
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        total_phi = potential + resonance
+        birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        return (birth | survive).float()
+
+# ====================== BOOTSTRAP ======================
+print("Stabilizing to Phoenix attractor...")
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+center = GRID_SIZE // 2
+field[0, 0, center-80:center+80, center-80:center+80, center-80:center+80] = (torch.rand(160,160,160, device=device) > 0.69).float()
+
+for t in range(800):
+    field = run_manifold(field)
+    if t % 100 == 0:
+        print(f"Gen {t} — density: {field.mean().item():.4f}")
+
+# ====================== GLIDER TRACKING & NATURAL LOGIC TEST ======================
+print("\n=== Starting Glider Tracking & Natural Computation Test ===")
+frames = []
+glider_log = []
+
+MIN_MASS = 8          # filter small noise
+TRACK_EVERY = 5
+
+for t in range(1200):
+    field = run_manifold(field)
+    
+    if t % TRACK_EVERY == 0:
+        slice_mid = field[0, 0, :, :, GRID_SIZE//2].cpu().numpy()
+        frames.append(slice_mid.copy())
+        
+        labeled, num = label(slice_mid > 0.5)
+        if num > 0:
+            masses = np.bincount(labeled.ravel())[1:]
+            centroids = center_of_mass(slice_mid, labeled, range(1, num+1))
+            
+            for i in range(num):
+                if masses[i] >= MIN_MASS:
+                    glider_log.append({
+                        'gen': t,
+                        'mass': int(masses[i]),
+                        'centroid': centroids[i]
+                    })
+
+print(f"Total gliders logged: {len(glider_log):,}")
+
+# ====================== ANIMATION ======================
+print("Rendering animation...")
+fig, ax = plt.subplots(figsize=(9, 9), facecolor='black')
+im = ax.imshow(frames[0], cmap='inferno', animated=True)
+ax.axis('off')
+title = ax.set_title("Poole Manifold • Natural Glider Evolution", color='white', fontsize=14)
+
+def animate(i):
+    im.set_array(frames[i])
+    return [im]
+
+ani = FuncAnimation(fig, animate, frames=len(frames), interval=60, blit=True)
+
+ani.save("poole_natural_gliders.mp4", writer='ffmpeg', fps=30, dpi=180)
+print("✅ Video saved as poole_natural_gliders.mp4")
+
+plt.close()
