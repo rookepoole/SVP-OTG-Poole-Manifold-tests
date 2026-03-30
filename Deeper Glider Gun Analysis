@@ -1,0 +1,124 @@
+# =============================================================================
+# POOLE MANIFOLD — Deeper Glider Gun Analysis
+# Tracks persistent structures and checks for periodicity
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.ndimage import label, center_of_mass
+import gc
+from collections import defaultdict
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Deeper Glider Gun Analysis on: {device}")
+
+# --- Engine ---
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+GRID_SIZE = 256
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f):
+    with torch.no_grad():
+        padded = torch.nn.functional.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        potential = torch.nn.functional.conv3d(padded, kernel)
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        total_phi = potential + resonance
+        birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        return (birth | survive).float()
+
+# ====================== STABILIZE ======================
+print("Stabilizing to Phoenix attractor...")
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+center = GRID_SIZE // 2
+field[0, 0, center-80:center+80, center-80:center+80, center-80:center+80] = (torch.rand(160,160,160, device=device) > 0.69).float()
+
+for t in range(800):
+    field = run_manifold(field)
+    if t % 100 == 0:
+        print(f"Gen {t} — density: {field.mean().item():.4f}")
+
+# ====================== DEEP GUN ANALYSIS ======================
+print("\n=== Deeper Glider Gun Analysis (2000 generations) ===")
+
+SNAPSHOT_EVERY = 20
+MIN_MASS = 20
+MAX_MASS = 200
+history = []                    # list of mid-slices for periodicity check
+gun_candidates = []
+
+for t in range(2000):
+    field = run_manifold(field)
+    
+    if t % SNAPSHOT_EVERY == 0:
+        slice_mid = field[0, 0, :, :, GRID_SIZE//2].cpu().numpy()
+        history.append(slice_mid.copy())
+        
+        labeled, num = label(slice_mid > 0.5)
+        if num > 0:
+            masses = np.bincount(labeled.ravel())[1:]
+            centroids = center_of_mass(slice_mid, labeled, range(1, num+1))
+            
+            for i in range(num):
+                mass = int(masses[i])
+                if MIN_MASS <= mass <= MAX_MASS:
+                    cx, cy = centroids[i]
+                    gun_candidates.append({
+                        'gen': t,
+                        'mass': mass,
+                        'centroid': (cx, cy),
+                        'slice_idx': len(history)-1
+                    })
+
+    if t % 200 == 0:
+        print(f"Gen {t} — candidates found so far: {len(gun_candidates)}")
+
+print(f"\nTotal gun-like candidates logged: {len(gun_candidates):,}")
+
+# ====================== PERIODICITY CHECK ======================
+print("\nChecking for periodicity in candidates...")
+periodic_guns = []
+
+for cand in gun_candidates:
+    idx = cand['slice_idx']
+    if idx + 10 >= len(history):
+        continue
+    # Compare current slice with slices N steps later
+    current = history[idx]
+    for period in [5, 10, 15, 20]:
+        if idx + period < len(history):
+            future = history[idx + period]
+            # Simple match: overlapping region similarity
+            overlap = np.sum(np.abs(current - future) < 0.1) / current.size
+            if overlap > 0.85:   # high similarity = possible periodic gun
+                periodic_guns.append({
+                    'gen': cand['gen'],
+                    'mass': cand['mass'],
+                    'period': period,
+                    'confidence': overlap
+                })
+                break
+
+print(f"Found {len(periodic_guns)} strong periodic candidates (possible glider guns)")
+
+# ====================== VISUALIZATION ======================
+# Show a few promising candidates
+if periodic_guns:
+    print("\nShowing a few promising periodic structures...")
+    for i, gun in enumerate(periodic_guns[:5]):
+        idx = gun['gen'] // SNAPSHOT_EVERY
+        if idx < len(history):
+            plt.figure(figsize=(6,6), facecolor='black')
+            plt.imshow(history[idx], cmap='inferno')
+            plt.title(f"Periodic Candidate (mass={gun['mass']}, period={gun['period']})", color='white')
+            plt.axis('off')
+            plt.show()
+
+print("\nDeeper glider gun analysis complete.")
