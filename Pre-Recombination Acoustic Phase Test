@@ -1,0 +1,87 @@
+# =============================================================================
+# POOLE MANIFOLD — Pre-Recombination Acoustic Phase Test
+# Loose plasma → strict Poole annealing + power spectrum (ℓ-space)
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+import imageio
+from tqdm import tqdm
+from scipy.fft import fft2, fftshift
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Pre-Recombination Acoustic Phase Test on: {device}")
+
+GRID_SIZE = 256
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f, b_low, b_high, s_low, s_high, resonance_strength):
+    with torch.no_grad():
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel)
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += resonance_strength * torch.exp(-((potential - p)**2) / 0.01)
+        total_phi = potential + resonance
+        birth = (f == 0) & (total_phi >= b_low) & (total_phi <= b_high)
+        survive = (f == 1) & (total_phi >= s_low) & (total_phi <= s_high)
+        return (birth | survive).float()
+
+# Nuclear bootstrap (pure noise)
+field = torch.rand((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+field = (field > 0.5).float()
+
+print(f"Initial density: {field.mean().item():.4f}")
+
+frames = []
+power_spectra = []
+densities = []
+
+print("Running plasma → Poole annealing (1200 generations)...")
+
+for t in tqdm(range(1200)):
+    # Annealing schedule: start loose plasma, tighten to strict Poole
+    progress = t / 800.0
+    b_low  = 4.0 + progress * 1.0      # 4.0 → 5.0
+    b_high = 8.0 - progress * 1.0      # 8.0 → 7.0
+    s_low  = 4.0 + progress * 1.0      # 4.0 → 5.0
+    s_high = 10.0 - progress * 1.0     # 10.0 → 9.0
+    res_strength = 0.8 - progress * 0.45   # 0.8 → 0.35
+
+    field = run_manifold(field, b_low, b_high, s_low, s_high, res_strength)
+    
+    if t % 8 == 0:
+        slice_mid = field[0,0,:,:,GRID_SIZE//2].cpu().numpy()
+        frames.append((slice_mid * 255).astype(np.uint8))
+        densities.append(field.mean().item())
+        
+        # Power spectrum (ℓ-space)
+        fft = fftshift(fft2(slice_mid))
+        power = np.abs(fft)**2
+        power_spectra.append(power.mean(axis=0))   # radial average proxy
+        
+    if t % 200 == 0:
+        print(f"Gen {t:4d} | Density: {field.mean().item():.4f} | B: {b_low:.1f}-{b_high:.1f} | S: {s_low:.1f}-{s_high:.1f}")
+
+# Save real time-lapse
+imageio.mimsave("acoustic_plasma_to_poole.mp4", frames, fps=30, codec='libx264')
+
+# Plot power spectrum evolution
+plt.figure(figsize=(12,6), facecolor='black')
+for i, ps in enumerate(power_spectra[::5]):   # downsample for clarity
+    plt.plot(ps, alpha=0.6, label=f"Gen {i*40}")
+plt.title("Power Spectrum Evolution (ℓ-space) during Annealing", color='white')
+plt.xlabel("Spatial frequency (ℓ)", color='white')
+plt.ylabel("Power", color='white')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
+
+print("\n✅ Acoustic Phase Test complete!")
+print("Video saved: acoustic_plasma_to_poole.mp4")
+print("Look for acoustic peaks in the power spectrum plot during the transition.")
