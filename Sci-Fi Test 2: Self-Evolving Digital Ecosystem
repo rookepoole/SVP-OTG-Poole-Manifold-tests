@@ -1,0 +1,120 @@
+# =============================================================================
+# POOLE MANIFOLD — Sci-Fi Test 2: Self-Evolving Digital Ecosystem
+# Competing replicators with mutation and natural selection
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Sci-Fi Test 2 — Self-Evolving Digital Ecosystem on: {device}")
+
+GRID_SIZE = 192
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+MUTATION_RATE = 0.08   # probability a copied genome mutates
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f):
+    with torch.no_grad():
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel)
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        total_phi = potential + resonance
+        birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        return (birth | survive).float()
+
+# Initialize
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+field = (torch.rand_like(field) > 0.69).float()
+
+# Seed 3 initial replicator "species" with slightly different genomes
+def seed_replicator(field, y, x, z, genome_id):
+    # Base probe body
+    field[0, 0, z:z+10, y:y+6, x:x+18] = 1.0
+    field[0, 0, z+2:z+8, y+2:y+4, x+2:x+16] = 0.0
+    # Genome packet (unique for each species)
+    if genome_id == 0:   # Species A
+        field[0, 0, z+3:z+5, y+8:y+10, x+4:x+12] = 1.0
+    elif genome_id == 1: # Species B (slightly different)
+        field[0, 0, z+3:z+5, y+8:y+10, x+6:x+14] = 1.0
+    else:                # Species C
+        field[0, 0, z+3:z+5, y+8:y+10, x+3:x+11] = 1.0
+
+seed_replicator(field, 50, 50, GRID_SIZE//2, 0)
+seed_replicator(field, 50, 90, GRID_SIZE//2, 1)
+seed_replicator(field, 50, 130, GRID_SIZE//2, 2)
+
+print("Evolving digital ecosystem seeded with 3 competing replicators...")
+print("Mutation rate set to", MUTATION_RATE)
+
+replication_counts = [0, 0, 0]  # per species
+diversity_history = []
+
+for gen in range(4500):
+    field = run_manifold(field)
+    
+    # Mutation & replication check (simple: any dense cluster can replicate with mutation)
+    if gen % 60 == 0:
+        # Find high-density regions and attempt replication with mutation
+        for _ in range(8):  # up to 8 replication attempts per cycle
+            y = np.random.randint(20, GRID_SIZE-40)
+            x = np.random.randint(20, GRID_SIZE-40)
+            z = GRID_SIZE//2
+            local_mass = field[0, 0, z:z+20, y:y+20, x:x+20].sum().item()
+            if local_mass > 800:
+                species = np.random.randint(0, 3)  # random parent species
+                replication_counts[species] += 1
+                # Copy with possible mutation
+                new_y = y + np.random.randint(-25, 25)
+                new_x = x + np.random.randint(-25, 25)
+                seed_replicator(field, new_y, new_x, z, species)
+                # Mutation: flip a few random cells in the new genome
+                if np.random.rand() < MUTATION_RATE:
+                    mut_y = new_y + 12 + np.random.randint(-3, 3)
+                    mut_x = new_x + 8 + np.random.randint(-4, 4)
+                    field[0, 0, z+3:z+5, mut_y:mut_y+2, mut_x:mut_x+8] = 1 - field[0, 0, z+3:z+5, mut_y:mut_y+2, mut_x:mut_x+8]
+
+    if gen % 50 == 0:
+        total_reps = sum(replication_counts)
+        diversity = len([c for c in replication_counts if c > 0])
+        diversity_history.append(diversity)
+        
+        slice_mid = field[0, 0, GRID_SIZE//2, :, :].cpu().numpy()
+        clear_output(wait=True)
+        fig, axs = plt.subplots(1, 2, figsize=(16, 7), facecolor='black')
+        
+        axs[0].imshow(slice_mid, cmap='inferno')
+        axs[0].set_title(f"Evolving Ecosystem (Gen {gen})", color='white')
+        axs[0].axis('off')
+        
+        axs[1].bar(['Species A', 'Species B', 'Species C'], replication_counts, color=['cyan', 'magenta', 'lime'])
+        axs[1].set_title(f"Replication Count | Diversity: {diversity}", color='white')
+        axs[1].set_ylabel("Cumulative replications", color='white')
+        axs[1].grid(True, alpha=0.3)
+        
+        plt.show()
+        
+        print(f"Gen {gen:4d} | Total replications: {total_reps} | Active species: {diversity}")
+
+print("\n✅ Self-Evolving Ecosystem Test complete!")
+print(f"Final replication counts: Species A={replication_counts[0]}, B={replication_counts[1]}, C={replication_counts[2]}")
+print(f"Final diversity: {len([c for c in replication_counts if c > 0])} species still active")
+
+# Final diversity plot
+plt.figure(figsize=(10, 5), facecolor='black')
+plt.plot(diversity_history, color='orange', linewidth=2)
+plt.title("Ecosystem Diversity Over Time", color='white')
+plt.xlabel("Generation / 50", color='white')
+plt.ylabel("Number of active species", color='white')
+plt.grid(True, alpha=0.3)
+plt.show()
