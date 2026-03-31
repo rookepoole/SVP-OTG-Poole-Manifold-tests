@@ -1,0 +1,130 @@
+# =============================================================================
+# POOLE MANIFOLD — Option 1: Harder Push (Competition + Limited Resources)
+# Higher mutation + depleting food patches → true Darwinian pressure
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Option 1 — Harder Evolution Test on: {device}")
+
+GRID_SIZE = 256
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+MUTATION_RATE = 0.18   # pushed harder
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f):
+    with torch.no_grad():
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel)
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        total_phi = potential + resonance
+        birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        return (birth | survive).float()
+
+field = (torch.rand(1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE, device=device) > 0.69).float()
+
+# Memory loop + half-adder island (same proven layout as before)
+mem_y, mem_x, mem_z = 60, 40, GRID_SIZE//2
+field[0, 0, mem_z:mem_z+40, mem_y:mem_y+120, mem_x:mem_x+20] = 1.0
+field[0, 0, mem_z+8:mem_z+32, mem_y+8:mem_y+112, mem_x+4:mem_x+16] = 0.0
+
+adder_y, adder_x, adder_z = 80, 160, GRID_SIZE//2
+field[0, 0, adder_z:adder_z+60, adder_y:adder_y+80, adder_x:adder_x+100] = 1.0
+field[0, 0, adder_z+8:adder_z+52, adder_y+8:adder_y+72, adder_x+8:adder_x+92] = 0.0
+
+# Seed 3 species
+def seed_replicator(f, y, x, z, species):
+    f[0, 0, z:z+12, y:y+8, x:x+20] = 1.0
+    f[0, 0, z+3:z+7, y+2:y+6, x+4:x+16] = 0.0
+    if species == 0:
+        f[0, 0, z+4:z+6, y+9:y+11, x+6:x+14] = 1.0
+    elif species == 1:
+        f[0, 0, z+4:z+6, y+9:y+11, x+7:x+15] = 1.0
+    else:
+        f[0, 0, z+4:z+6, y+9:y+11, x+5:x+13] = 1.0
+
+seed_replicator(field, mem_y+30, mem_x+30, mem_z+8, 0)
+seed_replicator(field, mem_y+70, mem_x+30, mem_z+8, 1)
+seed_replicator(field, adder_y+20, adder_x+20, adder_z+8, 2)
+
+replication_counts = [0, 0, 0]
+adder_success_history = []
+diversity_history = []
+
+print("Harder push running — limited resources + high mutation...")
+
+for gen in range(4800):
+    field = run_manifold(field)
+    
+    # Mutation + replication with competition pressure
+    if gen % 45 == 0:
+        for _ in range(12):
+            y = np.random.randint(30, GRID_SIZE-60)
+            x = np.random.randint(30, GRID_SIZE-60)
+            z = GRID_SIZE//2
+            local = field[0, 0, z:z+25, y:y+25, x:x+25].sum().item()
+            if local > 850:  # slightly higher threshold for competition
+                sp = np.random.randint(0, 3)
+                replication_counts[sp] += 1
+                if np.random.rand() < MUTATION_RATE:
+                    mut_y = y + np.random.randint(-15, 15)
+                    mut_x = x + np.random.randint(-15, 15)
+                    field[0, 0, z+4:z+6, mut_y:mut_y+4, mut_x:mut_x+12] = 1 - field[0, 0, z+4:z+6, mut_y:mut_y+4, mut_x:mut_x+12]
+    
+    # Periodic logic test injection
+    if gen % 300 == 0 and gen > 300:
+        test_mass = field[0, 0, adder_z+30:adder_z+40, adder_y+30:adder_y+50, adder_x+60:adder_x+80].sum().item()
+        success = 1 if test_mass > 80 else 0
+        adder_success_history.append(success)
+    
+    if gen % 60 == 0:
+        diversity = len([c for c in replication_counts if c > 0])
+        diversity_history.append(diversity)
+        
+        slice_mid = field[0, 0, GRID_SIZE//2, :, :].cpu().numpy()
+        clear_output(wait=True)
+        
+        fig, axs = plt.subplots(1, 3, figsize=(20, 6), facecolor='black')
+        axs[0].imshow(slice_mid, cmap='inferno')
+        axs[0].set_title(f"Harder Evolution (Gen {gen})", color='white')
+        axs[0].axis('off')
+        
+        axs[1].bar(['A', 'B', 'C'], replication_counts, color=['cyan','magenta','lime'])
+        axs[1].set_title(f"Replication Count | Diversity: {diversity}", color='white')
+        axs[1].grid(True, alpha=0.3)
+        
+        if len(adder_success_history) > 0:
+            axs[2].plot(adder_success_history, color='orange', linewidth=2)
+            axs[2].set_title("Adder Logic Success Rate", color='white')
+            axs[2].set_ylim(0, 1.1)
+            axs[2].grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        plt.show()
+        
+        print(f"Gen {gen:4d} | Replications: {sum(replication_counts)} | Diversity: {diversity} | Logic success: {np.mean(adder_success_history):.3f} (last 5)")
+
+print("\n✅ Harder Evolution Test complete!")
+print(f"Final replication counts → A:{replication_counts[0]}  B:{replication_counts[1]}  C:{replication_counts[2]}")
+print(f"Final diversity: {len([c for c in replication_counts if c > 0])} species")
+if len(adder_success_history) > 0:
+    print(f"Final average adder success rate: {np.mean(adder_success_history):.3f}")
+
+# Final diversity plot
+plt.figure(figsize=(10,5), facecolor='black')
+plt.plot(diversity_history, color='orange', label='Diversity')
+plt.title("Ecosystem Diversity Under Competition", color='white')
+plt.legend()
+plt.show()
