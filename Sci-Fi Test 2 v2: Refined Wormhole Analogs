@@ -1,0 +1,111 @@
+# =============================================================================
+# POOLE MANIFOLD — Sci-Fi Test 2 v2: Refined Wormhole Analogs
+# Thinner stable throat + multiple gliders + transit timing
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Sci-Fi Test 2 v2 — Refined Wormhole Analogs on: {device}")
+
+GRID_SIZE = 192
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f):
+    with torch.no_grad():
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel)
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        total_phi = potential + resonance
+        birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        return (birth | survive).float()
+
+# Initialize
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+field = (torch.rand_like(field) > 0.69).float()
+
+# Wormhole Mouth 1 (left)
+mouth1_y, mouth1_x, mouth1_z = GRID_SIZE//2, 35, GRID_SIZE//2
+field[0, 0, mouth1_z-10:mouth1_z+10, mouth1_y-10:mouth1_y+10, mouth1_x-10:mouth1_x+10] = 1.0
+
+# Wormhole Mouth 2 (right)
+mouth2_y, mouth2_x, mouth2_z = GRID_SIZE//2, GRID_SIZE-35, GRID_SIZE//2
+field[0, 0, mouth2_z-10:mouth2_z+10, mouth2_y-10:mouth2_y+10, mouth2_x-10:mouth2_x+10] = 1.0
+
+# Thinner, more stable filament throat
+throat_y, throat_z = GRID_SIZE//2, GRID_SIZE//2
+throat_x_start = mouth1_x + 12
+throat_length = mouth2_x - mouth1_x - 24
+field[0, 0, throat_z-1:throat_z+1, throat_y-1:throat_y+1, throat_x_start:throat_x_start+throat_length] = 1.0
+
+# Guiding current inside the throat (stronger conveyor)
+current_bias = torch.zeros_like(field)
+current_bias[0, 0, throat_z-1:throat_z+1, throat_y-1:throat_y+1, throat_x_start:throat_x_start+throat_length] = 0.45
+
+print("Refined wormhole seeded. Stabilizing...")
+
+for _ in range(600):
+    field = run_manifold(field)
+
+print("✅ Refined wormhole test running! Injecting multiple gliders...\n")
+
+transit_times = []
+mouth2_mass_history = []
+
+for gen in range(3000):
+    field = run_manifold(field)
+    field = torch.clamp(field + 0.12 * current_bias, 0.0, 1.0)  # continuous throat current
+
+    # Inject glider into Mouth 1 every 400 generations
+    if gen % 400 == 0:
+        field[0, 0, mouth1_z+2:mouth1_z+6, mouth1_y+2:mouth1_y+6, mouth1_x+2:mouth1_x+6] = 1.0
+        injection_gen = gen
+
+    # Check for arrival at Mouth 2
+    mouth2_mass = field[0, 0, mouth2_z-10:mouth2_z+10, mouth2_y-10:mouth2_y+10, mouth2_x-10:mouth2_x+10].sum().item()
+    mouth2_mass_history.append(mouth2_mass)
+
+    if mouth2_mass > 800 and 'injection_gen' in locals() and gen - injection_gen < 300:
+        transit_times.append(gen - injection_gen)
+        print(f"✅ Glider transit detected! Travel time: {gen - injection_gen} generations")
+
+    if gen % 30 == 0:
+        slice_mid = field[0, 0, GRID_SIZE//2, :, :].cpu().numpy()
+        clear_output(wait=True)
+        fig, axs = plt.subplots(1, 2, figsize=(16, 7), facecolor='black')
+        
+        axs[0].imshow(slice_mid, cmap='inferno')
+        rect1 = plt.Rectangle((mouth1_x-10, mouth1_y-10), 20, 20, linewidth=2, edgecolor='cyan', facecolor='none')
+        rect2 = plt.Rectangle((mouth2_x-10, mouth2_y-10), 20, 20, linewidth=2, edgecolor='cyan', facecolor='none')
+        axs[0].add_patch(rect1)
+        axs[0].add_patch(rect2)
+        axs[0].set_title(f"Wormhole Test v2 (Gen {gen})", color='white')
+        axs[0].axis('off')
+        
+        axs[1].plot(mouth2_mass_history, color='lime')
+        axs[1].set_title("Mass at Exit Mouth (spikes = successful transits)", color='white')
+        axs[1].set_xlabel("Generation", color='white')
+        axs[1].set_ylabel("Mass in Exit Mouth", color='white')
+        axs[1].grid(True, alpha=0.3)
+        
+        plt.show()
+
+print("\n✅ Test 2 v2 complete!")
+if transit_times:
+    print(f"Average transit time: {np.mean(transit_times):.1f} generations")
+else:
+    print("No clear transits detected this run.")
+
+print("\nPaste any key observations or the final console output!")
