@@ -1,0 +1,195 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 371: The 3D Fluid Half-Adder (Hudson Realigned)
+# HARNESSING SCALAR OPTICS & THE HIGH-FREQUENCY STIR
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+import gc
+import math
+
+# --- 1. ENGINE SETUP ---
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold ALU on: {device}")
+
+B_LOW, B_HIGH = 5.0, 7.0 
+S_LOW, S_HIGH = 5.0, 9.0
+GRID_SIZE = 400 
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f, inhibitor_mask, threshold_mask, amplifier_mask, t):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0)
+        
+        potential[inhibitor_mask] -= 15.0
+        potential[threshold_mask] -= 2.0
+        potential[amplifier_mask] += 1.0
+
+        # =================================================================
+        # HUDSON'S HARNESS (The Realignment)
+        # Cranking gamma to 5000 to crush the cap_eff and neutralize the bias floor.
+        # This violently scrubs fractional leakage from the deep-space voids.
+        # =================================================================
+        gamma = 5000.0
+        beta = 0.2
+        cap_eff = 5.035 / (1.0 + gamma)
+        
+        # Calculate the high-frequency drift tax
+        drift = cap_eff * (1.0 - math.exp(-((t**1.8)/10.0))) + beta * math.sin(gamma * t)
+        
+        # Apply the stir: if potential is just parasitic noise (< 1.0), shatter it.
+        potential = torch.where((potential > 0) & (potential < 1.0), potential - abs(drift), potential)
+        potential = torch.clamp(potential, min=0.0)
+        # =================================================================
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+            
+        total_phi = potential + resonance
+        
+    birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+    survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+    
+    del padded, potential, resonance, total_phi, f_float
+    return (birth | survive).float()
+
+# ==========================================
+# CLASS: POOLE HALF-ADDER (Scalar Optics)
+# ==========================================
+class PooleHalfAdder:
+    def __init__(self, origin_y, origin_x, z_mid):
+        self.oy = origin_y
+        self.ox = origin_x
+        self.z_carry = z_mid + 15  # Plane 1: AND Gate (Interference)
+        self.z_sum = z_mid - 15    # Plane 2: XOR Gate (Anvil)
+
+    def stamp(self, inh, thr, amp):
+        oy, ox = self.oy, self.ox
+        z_c, z_s = self.z_carry, self.z_sum
+        
+        # =========================================================
+        # PLANE 1: CARRY BIT - YOUNG'S INTERFERENCE GRATING
+        # =========================================================
+        # 1. Wide Input Runway (Merging A and B)
+        inh[0, 0, oy-6:oy+6, ox-30:ox-12, z_c-2:z_c+2] = False 
+        amp[0, 0, oy-6:oy+6, ox-30:ox-12, z_c-2:z_c+2] = True 
+
+        # 2. The Grating Wall (Solid Concrete)
+        inh[0, 0, oy-15:oy+15, ox-12:ox-10, z_c-2:z_c+2] = False
+        thr[0, 0, oy-15:oy+15, ox-12:ox-10, z_c-2:z_c+2] = True 
+
+        # 3. The Double Slits (Punching holes in the concrete)
+        # Slit 1 (Top)
+        thr[0, 0, oy-5:oy-3, ox-12:ox-10, z_c-2:z_c+2] = False 
+        amp[0, 0, oy-5:oy-3, ox-12:ox-10, z_c-2:z_c+2] = True 
+        # Slit 2 (Bottom)
+        thr[0, 0, oy+3:oy+5, ox-12:ox-10, z_c-2:z_c+2] = False 
+        amp[0, 0, oy+3:oy+5, ox-12:ox-10, z_c-2:z_c+2] = True 
+
+        # 4. The Interference Void (Unpowered Deep Space)
+        # Hudson's Law ensures 1+0 starves instantly here. 
+        inh[0, 0, oy-15:oy+15, ox-10:ox+8, z_c-2:z_c+2] = False 
+
+        # 5. The Focal Capture Tube (Powered)
+        # Exactly aligned with the central interference peak.
+        inh[0, 0, oy-2:oy+2, ox+8:ox+40, z_c-2:z_c+2] = False 
+        amp[0, 0, oy-2:oy+2, ox+8:ox+40, z_c-2:z_c+2] = True 
+
+        # =========================================================
+        # PLANE 2: SUM BIT - VERIFIED Y-MERGER (XOR GATE)
+        # =========================================================
+        inh[0, 0, oy-6:oy-2, ox-30:ox-15, z_s-2:z_s+2] = False 
+        amp[0, 0, oy-6:oy-2, ox-30:ox-15, z_s-2:z_s+2] = True 
+        inh[0, 0, oy+2:oy+6, ox-30:ox-15, z_s-2:z_s+2] = False 
+        amp[0, 0, oy+2:oy+6, ox-30:ox-15, z_s-2:z_s+2] = True 
+        
+        inh[0, 0, oy-6:oy+6, ox-15:ox-10, z_s-2:z_s+2] = False 
+        amp[0, 0, oy-6:oy+6, ox-15:ox-10, z_s-2:z_s+2] = True 
+        inh[0, 0, oy-2:oy+2, ox-10:ox, z_s-2:z_s+2] = False 
+        amp[0, 0, oy-2:oy+2, ox-10:ox, z_s-2:z_s+2] = True 
+
+        inh[0, 0, oy-35:oy-2, ox-4:ox, z_s-2:z_s+2] = False 
+        amp[0, 0, oy-35:oy-4, ox-4:ox, z_s-2:z_s+2] = True 
+        thr[0, 0, oy-6:oy-5, ox-4:ox, z_s-2:z_s+2] = True 
+
+        thr[0, 0, oy-2:oy+2, ox:ox+4, z_s-2:z_s+2] = True 
+
+        inh[0, 0, oy-6:oy+6, ox+4:ox+40, z_s-2:z_s+2] = False 
+        amp[0, 0, oy-6:oy+6, ox+4:ox+40, z_s-2:z_s+2] = True 
+
+# --- 2. INITIALIZATION ---
+torch.manual_seed(137)
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+z_mid = GRID_SIZE // 2
+inhibitor_mask = torch.ones_like(field).bool()
+threshold_mask = torch.zeros_like(field).bool()
+amplifier_mask = torch.zeros_like(field).bool()
+
+ha_11 = PooleHalfAdder(80, 100, z_mid)
+ha_10 = PooleHalfAdder(250, 100, z_mid)
+ha_01 = PooleHalfAdder(80, 300, z_mid)
+ha_00 = PooleHalfAdder(250, 300, z_mid)
+
+for ha in [ha_11, ha_10, ha_01, ha_00]:
+    ha.stamp(inhibitor_mask, threshold_mask, amplifier_mask)
+
+# --- 3. EXECUTION ---
+history = []
+print("Executing Trial 371: The 3D Fluid Half-Adder (Hudson Realigned)...")
+
+for t in range(301): 
+    if 0 <= t <= 8:
+        for ha, (ia, ib) in zip([ha_11, ha_10, ha_01, ha_00], [(1,1), (1,0), (0,1), (0,0)]):
+            if ia:
+                field[0, 0, ha.oy-6:ha.oy-2, ha.ox-28:ha.ox-24, ha.z_carry-1:ha.z_carry+1] = 1.0
+                field[0, 0, ha.oy-6:ha.oy-2, ha.ox-28:ha.ox-24, ha.z_sum-1:ha.z_sum+1] = 1.0
+            if ib:
+                field[0, 0, ha.oy+2:ha.oy+6, ha.ox-28:ha.ox-24, ha.z_carry-1:ha.z_carry+1] = 1.0
+                field[0, 0, ha.oy+2:ha.oy+6, ha.ox-28:ha.ox-24, ha.z_sum-1:ha.z_sum+1] = 1.0
+                
+    # Pass 't' into the manifold to drive Hudson's Law
+    field = run_manifold(field, inhibitor_mask, threshold_mask, amplifier_mask, t)
+    
+    if t % 50 == 0:
+        history.append(field[0, 0, ::2, ::2, :].max(dim=-1)[0].cpu().clone().numpy())
+        gc.collect()
+
+    if t == 300:
+        print("\n--- FINAL ARITHMETIC RESOLUTION ---")
+        def read(ha):
+            sum_val = int(field[0, 0, ha.oy-35:ha.oy-10, ha.ox-4:ha.ox, ha.z_sum].cpu().sum())
+            carry = int(field[0, 0, ha.oy-2:ha.oy+2, ha.ox+15:ha.ox+35, ha.z_carry].cpu().sum())
+            return carry, sum_val
+
+        for label, ha in zip(["1+1", "1+0", "0+1", "0+0"], [ha_11, ha_10, ha_01, ha_00]):
+            c, s = read(ha)
+            print(f"Test [{label}] -> Carry: {c} | Sum: {s}")
+            
+        print("\n--- DIAGNOSTIC ARRAYS: DOUBLE-SLIT INTERFERENCE ---")
+        diag_10_slit = int(field[0, 0, ha_10.oy-6:ha_10.oy+6, ha_10.ox-9:ha_10.ox-7, ha_10.z_carry].cpu().sum().item())
+        diag_11_slit = int(field[0, 0, ha_11.oy-6:ha_11.oy+6, ha_11.ox-9:ha_11.ox-7, ha_11.z_carry].cpu().sum().item())
+        diag_11_peak = int(field[0, 0, ha_11.oy-2:ha_11.oy+2, ha_11.ox-2:ha_11.ox+2, ha_11.z_carry].cpu().sum().item())
+        
+        print(f"Optics [1+0]: Fluid exiting the slits into the void: {diag_10_slit}")
+        print(f"Optics [1+1]: Fluid exiting the slits into the void: {diag_11_slit}")
+        print(f"Optics [1+1]: Constructive interference peak forming in center void: {diag_11_peak}")
+
+# --- VISUALIZATION ---
+num_frames = len(history)
+if num_frames > 0:
+    fig, axes = plt.subplots(1, num_frames, figsize=(10*num_frames, 10), facecolor='black')
+    if num_frames == 1:
+        axes = [axes] 
+    for i, data in enumerate(history):
+        axes[i].imshow(data, cmap='inferno')
+        axes[i].set_title(f"Gen {i*50}", color='white')
+        axes[i].axis('off')
+    plt.show()
