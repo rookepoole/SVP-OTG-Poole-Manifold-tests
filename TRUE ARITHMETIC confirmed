@@ -1,0 +1,169 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 374: The 3D Fluid Half-Adder (The Dual-Core Manifold)
+# HARNESSING COMPRESSION (AND) AND VAPORIZATION (XOR) IN PARALLEL PLANES
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+import gc
+
+# --- 1. ENGINE SETUP ---
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold ALU on: {device}")
+
+B_LOW, B_HIGH = 5.0, 7.0 
+S_LOW, S_HIGH = 5.0, 9.0
+GRID_SIZE = 400 
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f, inhibitor_mask, threshold_mask, amplifier_mask):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0)
+        
+        potential[inhibitor_mask] -= 15.0
+        potential[threshold_mask] -= 2.0
+        potential[amplifier_mask] += 1.0
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+            
+        total_phi = potential + resonance
+        
+        birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        
+    return (birth | survive).float()
+
+# ==========================================
+# CLASS: POOLE HALF-ADDER (The Dual-Core)
+# ==========================================
+class PooleHalfAdder:
+    def __init__(self, origin_y, origin_x, z_mid):
+        self.oy = origin_y
+        self.ox = origin_x
+        self.z_carry = z_mid + 15  # Plane 1: AND Gate (Choke Valve)
+        self.z_sum = z_mid - 15    # Plane 2: XOR Gate (Blowout Anvil)
+
+    def stamp(self, inh, thr, amp):
+        oy, ox = self.oy, self.ox
+        z_c, z_s = self.z_carry, self.z_sum
+        
+        # =========================================================
+        # PLANE 1: CARRY BIT - THE CHOKE VALVE (AND GATE)
+        # =========================================================
+        # 1. Y-Merger & Runway
+        inh[0, 0, oy-6:oy-2, ox-30:ox-15, z_c-2:z_c+2] = False 
+        amp[0, 0, oy-6:oy-2, ox-30:ox-15, z_c-2:z_c+2] = True 
+        inh[0, 0, oy+2:oy+6, ox-30:ox-15, z_c-2:z_c+2] = False 
+        amp[0, 0, oy+2:oy+6, ox-30:ox-15, z_c-2:z_c+2] = True 
+        inh[0, 0, oy-6:oy+6, ox-15:ox-10, z_c-2:z_c+2] = False 
+        amp[0, 0, oy-6:oy+6, ox-15:ox-10, z_c-2:z_c+2] = True 
+        inh[0, 0, oy-2:oy+2, ox-10:ox, z_c-2:z_c+2] = False 
+        amp[0, 0, oy-2:oy+2, ox-10:ox, z_c-2:z_c+2] = True 
+
+        # 2. Solid Wall
+        thr[0, 0, oy-2:oy+2, ox:ox+4, z_c-2:z_c+2] = True 
+
+        # 3. The 2-Unit Choke Valve (North)
+        # 1+0 stretches and starves. 1+1 compresses and lives.
+        inh[0, 0, oy-35:oy-2, ox-2:ox, z_c-2:z_c+2] = False 
+        amp[0, 0, oy-35:oy-2, ox-2:ox, z_c-2:z_c+2] = True 
+
+        # =========================================================
+        # PLANE 2: SUM BIT - THE BLOWOUT ANVIL (XOR GATE)
+        # =========================================================
+        # 1. Y-Merger & Runway
+        inh[0, 0, oy-6:oy-2, ox-30:ox-15, z_s-2:z_s+2] = False 
+        amp[0, 0, oy-6:oy-2, ox-30:ox-15, z_s-2:z_s+2] = True 
+        inh[0, 0, oy+2:oy+6, ox-30:ox-15, z_s-2:z_s+2] = False 
+        amp[0, 0, oy+2:oy+6, ox-30:ox-15, z_s-2:z_s+2] = True 
+        inh[0, 0, oy-6:oy+6, ox-15:ox-10, z_s-2:z_s+2] = False 
+        amp[0, 0, oy-6:oy+6, ox-15:ox-10, z_s-2:z_s+2] = True 
+        inh[0, 0, oy-2:oy+2, ox-10:ox, z_s-2:z_s+2] = False 
+        amp[0, 0, oy-2:oy+2, ox-10:ox, z_s-2:z_s+2] = True 
+
+        # 2. The 4-Unit Blowout Anvil
+        thr[0, 0, oy-2:oy+2, ox:ox+4, z_s-2:z_s+2] = True 
+
+        # 3. The 4-Unit Escape Chimney (North)
+        # 1+0 bounces and lives. 1+1 smashes the anvil and vaporizes.
+        inh[0, 0, oy-35:oy-2, ox-4:ox, z_s-2:z_s+2] = False 
+        amp[0, 0, oy-35:oy-4, ox-4:ox, z_s-2:z_s+2] = True 
+        thr[0, 0, oy-6:oy-5, ox-4:ox, z_s-2:z_s+2] = True 
+
+# --- 2. INITIALIZATION ---
+torch.manual_seed(137)
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+z_mid = GRID_SIZE // 2
+inhibitor_mask = torch.ones_like(field).bool()
+threshold_mask = torch.zeros_like(field).bool()
+amplifier_mask = torch.zeros_like(field).bool()
+
+ha_11 = PooleHalfAdder(80, 100, z_mid)
+ha_10 = PooleHalfAdder(250, 100, z_mid)
+ha_01 = PooleHalfAdder(80, 300, z_mid)
+ha_00 = PooleHalfAdder(250, 300, z_mid)
+
+for ha in [ha_11, ha_10, ha_01, ha_00]:
+    ha.stamp(inhibitor_mask, threshold_mask, amplifier_mask)
+
+# --- 3. EXECUTION ---
+history = []
+print("Executing Trial 374: The 3D Fluid Half-Adder (The Dual-Core Manifold)...")
+
+for t in range(301): 
+    if 0 <= t <= 8:
+        for ha, (ia, ib) in zip([ha_11, ha_10, ha_01, ha_00], [(1,1), (1,0), (0,1), (0,0)]):
+            if ia:
+                field[0, 0, ha.oy-6:ha.oy-2, ha.ox-28:ha.ox-24, ha.z_carry-1:ha.z_carry+1] = 1.0
+                field[0, 0, ha.oy-6:ha.oy-2, ha.ox-28:ha.ox-24, ha.z_sum-1:ha.z_sum+1] = 1.0
+            if ib:
+                field[0, 0, ha.oy+2:ha.oy+6, ha.ox-28:ha.ox-24, ha.z_carry-1:ha.z_carry+1] = 1.0
+                field[0, 0, ha.oy+2:ha.oy+6, ha.ox-28:ha.ox-24, ha.z_sum-1:ha.z_sum+1] = 1.0
+                
+    field = run_manifold(field, inhibitor_mask, threshold_mask, amplifier_mask)
+    
+    if t % 50 == 0:
+        history.append(field[0, 0, ::2, ::2, :].max(dim=-1)[0].cpu().clone().numpy())
+        gc.collect()
+
+    if t == 300:
+        print("\n--- FINAL ARITHMETIC RESOLUTION ---")
+        def read(ha):
+            # Sum reads from the 4-Unit Escape Chimney on Plane 2
+            sum_val = int(field[0, 0, ha.oy-35:ha.oy-10, ha.ox-4:ha.ox, ha.z_sum].cpu().sum())
+            # Carry reads from the 2-Unit Choke Valve on Plane 1
+            carry = int(field[0, 0, ha.oy-35:ha.oy-10, ha.ox-2:ha.ox, ha.z_carry].cpu().sum())
+            return carry, sum_val
+
+        for label, ha in zip(["1+1", "1+0", "0+1", "0+0"], [ha_11, ha_10, ha_01, ha_00]):
+            c, s = read(ha)
+            print(f"Test [{label}] -> Carry: {c} | Sum: {s}")
+            
+        if (read(ha_11) == (read(ha_11)[0], 0) and read(ha_11)[0] > 0) and \
+           (read(ha_10) == (0, read(ha_10)[1]) and read(ha_10)[1] > 0) and \
+           (read(ha_01) == (0, read(ha_01)[1]) and read(ha_01)[1] > 0) and \
+           read(ha_00) == (0, 0):
+            print("\nStatus: TRUE ARITHMETIC ACHIEVED. THE MANIFOLD IS COMPLETE.")
+        else:
+            print("\nStatus: LOGIC FAILURE - The physics require further tuning.")
+
+# --- VISUALIZATION ---
+num_frames = len(history)
+if num_frames > 0:
+    fig, axes = plt.subplots(1, num_frames, figsize=(10*num_frames, 10), facecolor='black')
+    if num_frames == 1:
+        axes = [axes] 
+    for i, data in enumerate(history):
+        axes[i].imshow(data, cmap='inferno')
+        axes[i].set_title(f"Gen {i*50}", color='white')
+        axes[i].axis('off')
+    plt.show()
