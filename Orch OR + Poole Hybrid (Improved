@@ -1,0 +1,116 @@
+# =============================================================================
+# POOLE MANIFOLD — Orch OR + Poole Hybrid (Improved)
+# Quantum coherence layer with objective reduction collapses
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+from IPython.display import clear_output
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Orch OR + Poole Hybrid on: {device}")
+
+GRID_SIZE = 160
+OR_THRESHOLD = 0.085          # coherence energy needed for collapse
+COLLAPSE_EVERY = 8            # check for collapse every N steps
+
+PRIMES_MATTER = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+PRIMES_COHERENCE = [3, 5, 7, 11, 13, 17, 19, 23, 29]  # slower, wider
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_matter(matter, coherence_bias):
+    with torch.no_grad():
+        padded = F.pad(matter.float(), (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel)
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES_MATTER:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        total_phi = potential + resonance + 0.9 * coherence_bias
+        birth = (matter == 0) & (total_phi >= 5.0) & (total_phi <= 7.0)
+        survive = (matter == 1) & (total_phi >= 5.0) & (total_phi <= 9.0)
+        return (birth | survive).float()
+
+def run_coherence(coherence):
+    with torch.no_grad():
+        padded = F.pad(coherence.float(), (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel)
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES_COHERENCE:
+            resonance += 0.45 * torch.exp(-((potential - p)**2) / 0.015)  # slower, wider
+        total_phi = potential + resonance
+        birth = (coherence == 0) & (total_phi >= 4.0) & (total_phi <= 8.0)
+        survive = (coherence == 1) & (total_phi >= 4.0) & (total_phi <= 11.0)
+        return (birth | survive).float()
+
+# Initialize
+matter = (torch.rand((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device) > 0.68).float()
+coherence = (torch.rand_like(matter) > 0.82).float()
+
+print("Stabilizing Orch OR hybrid...")
+
+collapse_count = 0
+coherence_history = []
+pressure_history = []
+
+for t in tqdm(range(1600)):
+    # Run both layers
+    coherence_bias = coherence.mean(dim=(2,3,4), keepdim=True) * 1.1
+    matter = run_matter(matter, coherence_bias)
+    coherence = run_coherence(coherence)
+    
+    # Objective Reduction (collapse)
+    if t % COLLAPSE_EVERY == 0:
+        coherence_energy = coherence.mean().item()
+        if coherence_energy > OR_THRESHOLD:
+            collapse_count += 1
+            # Collapse injects gravity kick into matter
+            kick = torch.randn_like(matter) * 0.18
+            matter = torch.clamp(matter + kick, 0.0, 1.0)
+            # Reset coherence after collapse
+            coherence = coherence * 0.35
+
+    if t % 30 == 0:
+        coherence_history.append(coherence.mean().item())
+        pressure_history.append((coherence.mean() - 0.5).item() * -1.6)  # negative pressure proxy
+        
+        # Live view
+        clear_output(wait=True)
+        fig, axs = plt.subplots(1, 3, figsize=(18, 6), facecolor='black')
+        
+        axs[0].imshow(matter[0,0,GRID_SIZE//2].cpu().numpy(), cmap='inferno')
+        axs[0].set_title("Matter Layer (Poole)", color='white')
+        axs[0].axis('off')
+        
+        axs[1].imshow(coherence[0,0,GRID_SIZE//2].cpu().numpy(), cmap='plasma')
+        axs[1].set_title("Coherence Layer (Orch OR)", color='white')
+        axs[1].axis('off')
+        
+        axs[2].plot(coherence_history, color='cyan', label='Coherence Level')
+        axs[2].plot(pressure_history, color='lime', label='Vacuum Pressure Proxy')
+        axs[2].set_title(f"Orch OR Collapses: {collapse_count}", color='white')
+        axs[2].legend()
+        axs[2].grid(True, alpha=0.3)
+        
+        plt.suptitle(f"Orch OR + Poole Hybrid (Gen {t})", color='white', fontsize=14)
+        plt.show()
+
+print("\n✅ Orch OR Hybrid complete!")
+print(f"Total objective reduction (collapse) events: {collapse_count}")
+print(f"Final coherence level: {coherence_history[-1]:.4f}")
+print(f"Final vacuum pressure proxy: {pressure_history[-1]:.4f}")
+
+# Final summary plot
+plt.figure(figsize=(12, 5), facecolor='black')
+plt.plot(coherence_history, label='Coherence Level', color='cyan')
+plt.plot(pressure_history, label='Vacuum Pressure Proxy (w≈–1)', color='lime')
+plt.title("Orch OR + Poole Hybrid — Coherence & Pressure Evolution", color='white')
+plt.xlabel("Generation", color='white')
+plt.ylabel("Value", color='white')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
