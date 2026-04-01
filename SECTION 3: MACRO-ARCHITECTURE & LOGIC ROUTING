@@ -1,0 +1,45 @@
+# =============================================================================
+# SECTION 3: MACRO-ARCHITECTURE & LOGIC ROUTING
+# Assembling the Von Neumann Cascade on the Master Grid
+# =============================================================================
+
+# --- 3A. THE FLUIDIC OR GATE ---
+def stamp_or_gate(oy, ox, z_c, inh, amp):
+    """
+    A purely topological OR Gate. No thresholds, no concrete anvils.
+    Just a perfectly smooth, powered confluence basin that merges Carry signals
+    from either Sector Alpha (C1) or Sector Beta (C2).
+    """
+    inh[0, 0, oy-10:oy+10, ox:ox+15, z_c-2:z_c+2] = False
+    amp[0, 0, oy-10:oy+10, ox:ox+15, z_c-2:z_c+2] = True
+
+# --- 3B. MASTER GRID INSTANTIATION ---
+# We use a fixed seed to guarantee mathematically repeatable fluid collisions
+torch.manual_seed(137)
+
+# Initialize the 400x400x400 blank tensor vacuum
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+z_mid = GRID_SIZE // 2
+
+# Initialize the architectural masks
+# By default, the entire universe is unpowered inhibitor space (-15.0 Phi)
+inhibitor_mask = torch.ones_like(field).bool()   
+threshold_mask = torch.zeros_like(field).bool()  
+amplifier_mask = torch.zeros_like(field).bool()  
+
+# --- 3C. CHIP FABRICATION (STAMPING THE SECTORS) ---
+print("Fabricating Logic Sectors onto the Master Grid...")
+
+# Sector Alpha (HA1): Handles the initial A + B collision
+ha1 = PooleHalfAdder(origin_y=150, origin_x=150, z_mid=z_mid)
+
+# Sector Beta (HA2): Handles the S1 + C_in collision
+# Offset by 100 units South to keep the telemetry isolated
+ha2 = PooleHalfAdder(origin_y=250, origin_x=150, z_mid=z_mid)
+
+# Physically etch the geometry into the matrix masks
+ha1.stamp(inhibitor_mask, threshold_mask, amplifier_mask)
+ha2.stamp(inhibitor_mask, threshold_mask, amplifier_mask)
+
+# Sector Gamma (OR Gate): Placed down-stream (East) to catch C1 and C2
+stamp_or_gate(oy=200, ox=250, z_c=ha1.z_carry, inh=inhibitor_mask, amp=amplifier_mask)
