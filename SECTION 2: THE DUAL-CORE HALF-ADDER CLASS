@@ -1,0 +1,72 @@
+# =============================================================================
+# SECTION 2: THE DUAL-CORE HALF-ADDER CLASS
+# The modular logic block combining compression (AND) and vaporization (XOR).
+# =============================================================================
+
+class PooleHalfAdder:
+    def __init__(self, origin_y, origin_x, z_mid):
+        # Establish local coordinates for modular instantiation
+        self.oy = origin_y
+        self.ox = origin_x
+        # Separate the logic onto two parallel Z-planes to prevent interference
+        self.z_carry = z_mid + 15  # Plane 1: AND Gate
+        self.z_sum = z_mid - 15    # Plane 2: XOR Gate
+
+    def stamp(self, inh, thr, amp):
+        oy, ox = self.oy, self.ox
+        z_c, z_s = self.z_carry, self.z_sum
+        
+        # ---------------------------------------------------------
+        # PLANE 1: CARRY BIT (THE CHOKE VALVE) -> AND GATE
+        # ---------------------------------------------------------
+        # 1. Y-Merger & Runway
+        inh[0, 0, oy-6:oy-2, ox-30:ox-15, z_c-2:z_c+2] = False 
+        amp[0, 0, oy-6:oy-2, ox-30:ox-15, z_c-2:z_c+2] = True 
+        inh[0, 0, oy+2:oy+6, ox-30:ox-15, z_c-2:z_c+2] = False 
+        amp[0, 0, oy+2:oy+6, ox-30:ox-15, z_c-2:z_c+2] = True 
+        inh[0, 0, oy-6:oy+6, ox-15:ox-10, z_c-2:z_c+2] = False 
+        amp[0, 0, oy-6:oy+6, ox-15:ox-10, z_c-2:z_c+2] = True 
+        inh[0, 0, oy-2:oy+2, ox-10:ox, z_c-2:z_c+2] = False 
+        amp[0, 0, oy-2:oy+2, ox-10:ox, z_c-2:z_c+2] = True 
+        
+        # 2. Solid Wall & Narrow 2-Unit Escape Pipe
+        # Single wave (1+0) stretches and starves. Double wave (1+1) survives.
+        thr[0, 0, oy-2:oy+2, ox:ox+4, z_c-2:z_c+2] = True 
+        inh[0, 0, oy-35:oy-2, ox-2:ox, z_c-2:z_c+2] = False 
+        amp[0, 0, oy-35:oy-2, ox-2:ox, z_c-2:z_c+2] = True 
+
+        # ---------------------------------------------------------
+        # PLANE 2: SUM BIT (THE BLOWOUT ANVIL) -> XOR GATE
+        # ---------------------------------------------------------
+        # 1. Y-Merger & Runway
+        inh[0, 0, oy-6:oy-2, ox-30:ox-15, z_s-2:z_s+2] = False 
+        amp[0, 0, oy-6:oy-2, ox-30:ox-15, z_s-2:z_s+2] = True 
+        inh[0, 0, oy+2:oy+6, ox-30:ox-15, z_s-2:z_s+2] = False 
+        amp[0, 0, oy+2:oy+6, ox-30:ox-15, z_s-2:z_s+2] = True 
+        inh[0, 0, oy-6:oy+6, ox-15:ox-10, z_s-2:z_s+2] = False 
+        amp[0, 0, oy-6:oy+6, ox-15:ox-10, z_s-2:z_s+2] = True 
+        inh[0, 0, oy-2:oy+2, ox-10:ox, z_s-2:z_s+2] = False 
+        amp[0, 0, oy-2:oy+2, ox-10:ox, z_s-2:z_s+2] = True 
+        
+        # 2. Solid Anvil & Wide 4-Unit Escape Chimney
+        # Single wave (1+0) bounces and survives. Double wave (1+1) spikes past 9.0 and vaporizes.
+        thr[0, 0, oy-2:oy+2, ox:ox+4, z_s-2:z_s+2] = True 
+        inh[0, 0, oy-35:oy-2, ox-4:ox, z_s-2:z_s+2] = False 
+        amp[0, 0, oy-35:oy-4, ox-4:ox, z_s-2:z_s+2] = True 
+        thr[0, 0, oy-6:oy-5, ox-4:ox, z_s-2:z_s+2] = True  # Deflection Lip
+
+    def read_sensors(self, field):
+        """Reads the fluid mass inside the escape chimneys."""
+        sum_val = int(field[0, 0, self.oy-35:self.oy-10, self.ox-4:self.ox, self.z_sum].cpu().sum())
+        carry_val = int(field[0, 0, self.oy-35:self.oy-10, self.ox-2:self.ox, self.z_carry].cpu().sum())
+        return sum_val, carry_val
+
+    def inject_a(self, field):
+        """Injects a standard 8-mass fluid wave into Input A on both planes."""
+        field[0, 0, self.oy-6:self.oy-2, self.ox-28:self.ox-24, self.z_carry-1:self.z_carry+1] = 1.0
+        field[0, 0, self.oy-6:self.oy-2, self.ox-28:self.ox-24, self.z_sum-1:self.z_sum+1] = 1.0
+
+    def inject_b(self, field):
+        """Injects a standard 8-mass fluid wave into Input B on both planes."""
+        field[0, 0, self.oy+2:self.oy+6, self.ox-28:self.ox-24, self.z_carry-1:self.z_carry+1] = 1.0
+        field[0, 0, self.oy+2:self.oy+6, self.ox-28:self.ox-24, self.z_sum-1:self.z_sum+1] = 1.0
