@@ -1,0 +1,56 @@
+# =============================================================================
+# SECTION 5: VERIFICATION & TELEMETRY OUTPUT
+# Mathematical validation and visualization of the Trinity State
+# =============================================================================
+
+    # --- 5A. FINAL SENSOR READ & LOGIC VERIFICATION (Executes at T=400) ---
+    # (This block sits inside the main `for run_idx...` loop)
+    
+    final_sum, _ = ha2.read_sensors(field)
+    final_carry_out = int(field[0, 0, 190:210, 260:265, ha1.z_carry].cpu().sum())
+    
+    print(f" -> T=400: Resolution -> Carry_Out: {final_carry_out} | Sum: {final_sum}")
+    
+    # Binary Math Validation
+    expected_sum = (INPUT_A + INPUT_B + INPUT_C_IN) % 2
+    expected_carry = 1 if (INPUT_A + INPUT_B + INPUT_C_IN) >= 2 else 0
+    
+    # The engine outputs scalar mass (>0) for True, and starvation (0) for False
+    sum_check = "PASS" if (expected_sum == 1 and final_sum > 0) or (expected_sum == 0 and final_sum == 0) else "FAIL"
+    carry_check = "PASS" if (expected_carry == 1 and final_carry_out > 0) or (expected_carry == 0 and final_carry_out == 0) else "FAIL"
+    
+    if sum_check == "FAIL": total_sum_fails += 1
+    if carry_check == "FAIL": total_carry_fails += 1
+        
+    print(f" -> VERIFY: Sum Logic [{sum_check}] | Carry Logic [{carry_check}]\n")
+    
+    # Memory Management: Scrub the grid before the next quantum state is tested
+    del field
+    torch.cuda.empty_cache()
+    gc.collect()
+
+# --- 5B. MACRO-ARCHITECTURE DIAGNOSTIC REPORT ---
+# (This block executes after all 8 runs are complete, flush left)
+print("-" * 50)
+print("### FINAL ARITHMETIC DIAGNOSTIC ###")
+print(f"Total States Tested: 8")
+print(f"Total Sum Logic Failures: {total_sum_fails}")
+print(f"Total Carry Logic Failures: {total_carry_fails}")
+
+if total_sum_fails == 0 and total_carry_fails == 0:
+    print("\nStatus: 100% VERIFIED. MACRO-ARCHITECTURE IS MATHEMATICALLY FLAWLESS.")
+else:
+    print("\nStatus: LOGIC FAILURE DETECTED. Review telemetry.")
+
+# --- 5C. VISUAL TELEMETRY PLOTTING (The Trinity State) ---
+print("\nPlotting visual telemetry for State [1+1+1]...")
+num_frames = len(final_trinity_history)
+if num_frames > 0:
+    fig, axes = plt.subplots(1, num_frames, figsize=(5*num_frames, 5), facecolor='black')
+    if num_frames == 1: 
+        axes = [axes] 
+    for i, data in enumerate(final_trinity_history):
+        axes[i].imshow(data, cmap='inferno')
+        axes[i].set_title(f"Gen {i*50}", color='white')
+        axes[i].axis('off')
+    plt.show()
