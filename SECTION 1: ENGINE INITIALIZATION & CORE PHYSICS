@@ -1,0 +1,59 @@
+# =============================================================================
+# SECTION 1: ENGINE INITIALIZATION & CORE PHYSICS
+# The foundational laws of the Poole Manifold (OTG/SVP Framework)
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+import gc
+
+# --- 1A. HARDWARE ALLOCATION ---
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold ALU on: {device}")
+
+# --- 1B. GLOBAL CONSTANTS & TOPOLOGICAL THRESHOLDS ---
+B_LOW, B_HIGH = 5.0, 7.0   # Birth bounds for empty space
+S_LOW, S_HIGH = 5.0, 9.0   # Survival bounds for existing fluid
+GRID_SIZE = 400            # Master coordinate grid bounds
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23] # The Resonance Healing Array
+
+# --- 1C. THE SCALAR KERNEL ---
+# A 3x3x3 3D convolution kernel to calculate neighborhood density.
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0  # The cell does not count its own mass
+
+# --- 1D. THE CELLULAR AUTOMATON ENGINE ---
+def run_manifold(f, inhibitor_mask, threshold_mask, amplifier_mask):
+    """
+    Executes a single generational tick of the Scalar Vector Potential fluid.
+    Calculates local density, applies architectural modifiers, calculates
+    prime resonance, and enforces survival thresholds.
+    """
+    with torch.no_grad():
+        # Pad the grid for infinite-wrap boundaries
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='circular')
+        
+        # Calculate raw local potential (Phi)
+        potential = F.conv3d(padded, kernel, padding=0)
+        
+        # Apply terrain modifiers
+        potential[inhibitor_mask] -= 15.0  # Deep space / voids
+        potential[threshold_mask] -= 2.0   # Concrete / obstacles
+        potential[amplifier_mask] += 1.0   # Powered runways / tubes
+        
+        # Apply Prime Resonance (The Gaussian Healing Factor)
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+            
+        # Compile total localized density
+        total_phi = potential + resonance
+        
+        # Enforce Conway-style survival and birth logic based on density
+        birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        
+    return (birth | survive).float()
