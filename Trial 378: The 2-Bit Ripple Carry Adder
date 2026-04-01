@@ -1,0 +1,230 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 378: The 2-Bit Ripple Carry Adder
+# MULTI-VARIABLE ARITHMETIC WITH TEMPORAL SIGNAL CACHING
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+import gc
+import time
+
+# --- 1. ENGINE SETUP ---
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold ALU on: {device}")
+
+B_LOW, B_HIGH = 5.0, 7.0 
+S_LOW, S_HIGH = 5.0, 9.0
+GRID_SIZE = 600 # Expanded grid to fit dual processor cores
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f, inhibitor_mask, threshold_mask, amplifier_mask):
+    """Optimized Active Volume Tracking Engine"""
+    active_indices = torch.nonzero(f[0, 0])
+    if active_indices.numel() == 0: return f 
+
+    y_min = max(0, active_indices[:, 0].min().item() - 2)
+    y_max = min(GRID_SIZE, active_indices[:, 0].max().item() + 3)
+    x_min = max(0, active_indices[:, 1].min().item() - 2)
+    x_max = min(GRID_SIZE, active_indices[:, 1].max().item() + 3)
+    z_min = max(0, active_indices[:, 2].min().item() - 2)
+    z_max = min(GRID_SIZE, active_indices[:, 2].max().item() + 3)
+
+    f_sub = f[:, :, y_min:y_max, x_min:x_max, z_min:z_max]
+    inh_sub = inhibitor_mask[:, :, y_min:y_max, x_min:x_max, z_min:z_max]
+    thr_sub = threshold_mask[:, :, y_min:y_max, x_min:x_max, z_min:z_max]
+    amp_sub = amplifier_mask[:, :, y_min:y_max, x_min:x_max, z_min:z_max]
+
+    with torch.no_grad():
+        f_float = f_sub.float()
+        padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='constant', value=0)
+        potential = F.conv3d(padded, kernel, padding=0)
+        
+        potential[inh_sub] -= 15.0  
+        potential[thr_sub] -= 2.0   
+        potential[amp_sub] += 1.0   
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES: resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+            
+        total_phi = potential + resonance
+        
+        birth = (f_sub == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (f_sub == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        
+    f_new = torch.zeros_like(f)
+    f_new[:, :, y_min:y_max, x_min:x_max, z_min:z_max] = (birth | survive).float()
+    return f_new
+
+# --- 2. ARCHITECTURE CLASSES ---
+class PooleHalfAdder:
+    def __init__(self, origin_y, origin_x, z_mid):
+        self.oy, self.ox = origin_y, origin_x
+        self.z_carry, self.z_sum = z_mid + 15, z_mid - 15
+
+    def stamp(self, inh, thr, amp):
+        oy, ox, z_c, z_s = self.oy, self.ox, self.z_carry, self.z_sum
+        
+        # Plane 1: AND
+        inh[0, 0, oy-6:oy-2, ox-30:ox-15, z_c-2:z_c+2] = False; amp[0, 0, oy-6:oy-2, ox-30:ox-15, z_c-2:z_c+2] = True 
+        inh[0, 0, oy+2:oy+6, ox-30:ox-15, z_c-2:z_c+2] = False; amp[0, 0, oy+2:oy+6, ox-30:ox-15, z_c-2:z_c+2] = True 
+        inh[0, 0, oy-6:oy+6, ox-15:ox-10, z_c-2:z_c+2] = False; amp[0, 0, oy-6:oy+6, ox-15:ox-10, z_c-2:z_c+2] = True 
+        inh[0, 0, oy-2:oy+2, ox-10:ox, z_c-2:z_c+2] = False; amp[0, 0, oy-2:oy+2, ox-10:ox, z_c-2:z_c+2] = True 
+        thr[0, 0, oy-2:oy+2, ox:ox+4, z_c-2:z_c+2] = True 
+        inh[0, 0, oy-35:oy-2, ox-2:ox, z_c-2:z_c+2] = False; amp[0, 0, oy-35:oy-2, ox-2:ox, z_c-2:z_c+2] = True 
+
+        # Plane 2: XOR
+        inh[0, 0, oy-6:oy-2, ox-30:ox-15, z_s-2:z_s+2] = False; amp[0, 0, oy-6:oy-2, ox-30:ox-15, z_s-2:z_s+2] = True 
+        inh[0, 0, oy+2:oy+6, ox-30:ox-15, z_s-2:z_s+2] = False; amp[0, 0, oy+2:oy+6, ox-30:ox-15, z_s-2:z_s+2] = True 
+        inh[0, 0, oy-6:oy+6, ox-15:ox-10, z_s-2:z_s+2] = False; amp[0, 0, oy-6:oy+6, ox-15:ox-10, z_s-2:z_s+2] = True 
+        inh[0, 0, oy-2:oy+2, ox-10:ox, z_s-2:z_s+2] = False; amp[0, 0, oy-2:oy+2, ox-10:ox, z_s-2:z_s+2] = True 
+        thr[0, 0, oy-2:oy+2, ox:ox+4, z_s-2:z_s+2] = True 
+        inh[0, 0, oy-35:oy-2, ox-4:ox, z_s-2:z_s+2] = False; amp[0, 0, oy-35:oy-4, ox-4:ox, z_s-2:z_s+2] = True 
+        thr[0, 0, oy-6:oy-5, ox-4:ox, z_s-2:z_s+2] = True 
+
+    def read_sensors(self, field):
+        sum_val = int(field[0, 0, self.oy-35:self.oy-10, self.ox-4:self.ox, self.z_sum].cpu().sum())
+        carry_val = int(field[0, 0, self.oy-35:self.oy-10, self.ox-2:self.ox, self.z_carry].cpu().sum())
+        return sum_val, carry_val
+
+    def inject_a(self, field):
+        field[0, 0, self.oy-6:self.oy-2, self.ox-28:self.ox-24, self.z_carry-1:self.z_carry+1] = 1.0
+        field[0, 0, self.oy-6:self.oy-2, self.ox-28:self.ox-24, self.z_sum-1:self.z_sum+1] = 1.0
+
+    def inject_b(self, field):
+        field[0, 0, self.oy+2:self.oy+6, self.ox-28:self.ox-24, self.z_carry-1:self.z_carry+1] = 1.0
+        field[0, 0, self.oy+2:self.oy+6, self.ox-28:self.ox-24, self.z_sum-1:self.z_sum+1] = 1.0
+
+def stamp_or_gate(oy, ox, z_c, inh, amp):
+    inh[0, 0, oy-10:oy+10, ox:ox+15, z_c-2:z_c+2] = False
+    amp[0, 0, oy-10:oy+10, ox:ox+15, z_c-2:z_c+2] = True
+
+
+# --- 3. THE 2-BIT MACRO-ARCHITECTURE ---
+torch.manual_seed(137)
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+z_mid = GRID_SIZE // 2
+inhibitor_mask = torch.ones_like(field).bool()
+threshold_mask = torch.zeros_like(field).bool()
+amplifier_mask = torch.zeros_like(field).bool()
+
+# BIT 0 PROCESSOR
+ha0_alpha = PooleHalfAdder(origin_y=150, origin_x=150, z_mid=z_mid)
+ha0_beta  = PooleHalfAdder(origin_y=250, origin_x=150, z_mid=z_mid)
+ha0_alpha.stamp(inhibitor_mask, threshold_mask, amplifier_mask)
+ha0_beta.stamp(inhibitor_mask, threshold_mask, amplifier_mask)
+stamp_or_gate(oy=200, ox=250, z_c=ha0_alpha.z_carry, inh=inhibitor_mask, amp=amplifier_mask)
+
+# BIT 1 PROCESSOR (Shifted East)
+ha1_alpha = PooleHalfAdder(origin_y=150, origin_x=400, z_mid=z_mid)
+ha1_beta  = PooleHalfAdder(origin_y=250, origin_x=400, z_mid=z_mid)
+ha1_alpha.stamp(inhibitor_mask, threshold_mask, amplifier_mask)
+ha1_beta.stamp(inhibitor_mask, threshold_mask, amplifier_mask)
+stamp_or_gate(oy=200, ox=500, z_c=ha1_alpha.z_carry, inh=inhibitor_mask, amp=amplifier_mask)
+
+# --- 4. THE 600-GENERATION RIPPLE CASCADE ---
+# Testing State: 3 + 3 = 6
+A0, B0 = 1, 1  # Bit 0 Inputs
+A1, B1 = 1, 1  # Bit 1 Inputs
+
+print(f"Executing Trial 378: 2-Bit Ripple Carry Adder")
+print(f"Testing Arithmetic: [A1:A0] {A1}{A0} + [B1:B0] {B1}{B0}")
+print("-" * 50)
+
+# Memory Flags
+s0_val, c0_val, s1_val, c1_val = False, False, False, False
+c0_beta_val, c1_beta_val, ripple_carry = False, False, False
+SUM_0, SUM_1, FINAL_CARRY = 0, 0, 0
+
+history = []
+start_time = time.time()
+
+for t in range(601): 
+    # CLOCK 1 (T=0): Inject all base inputs
+    if 0 <= t <= 8:
+        if A0: ha0_alpha.inject_a(field)
+        if B0: ha0_alpha.inject_b(field)
+        if A1: ha1_alpha.inject_a(field)
+        if B1: ha1_alpha.inject_b(field)
+
+    field = run_manifold(field, inhibitor_mask, threshold_mask, amplifier_mask)
+    
+    # CLOCK 2 (T=200): First Stage Resolutions
+    if t == 200:
+        s0, c0 = ha0_alpha.read_sensors(field)
+        s1, c1 = ha1_alpha.read_sensors(field)
+        if s0 > 0: s0_val = True
+        if c0 > 0: c0_val = True
+        if s1 > 0: s1_val = True # CACHING BIT 1 SUM
+        if c1 > 0: c1_val = True
+
+        field[0, 0, ha0_alpha.oy-40:ha0_alpha.oy+10, ha0_alpha.ox-40:ha0_alpha.ox+10, :] = 0.0
+        field[0, 0, ha1_alpha.oy-40:ha1_alpha.oy+10, ha1_alpha.ox-40:ha1_alpha.ox+10, :] = 0.0
+
+    if 200 <= t <= 208:
+        if s0_val: ha0_beta.inject_b(field)
+        if c0_val: field[0, 0, 195:205, 250:255, ha0_alpha.z_carry-1:ha0_alpha.z_carry+1] = 1.0
+        if c1_val: field[0, 0, 195:205, 500:505, ha1_alpha.z_carry-1:ha1_alpha.z_carry+1] = 1.0
+
+    # CLOCK 3 (T=300): Bit 0 Secondary Carry
+    if t == 300:
+        s0_beta, c0_beta = ha0_beta.read_sensors(field)
+        if c0_beta > 0: c0_beta_val = True
+    if 300 <= t <= 308:
+        if c0_beta_val: field[0, 0, 195:205, 250:255, ha0_alpha.z_carry-1:ha0_alpha.z_carry+1] = 1.0
+
+    # CLOCK 4 (T=400): BIT 0 COMPLETION & THE RIPPLE
+    if t == 400:
+        SUM_0, _ = ha0_beta.read_sensors(field)
+        ripple_mass = int(field[0, 0, 190:210, 260:265, ha0_alpha.z_carry].cpu().sum())
+        if ripple_mass > 0: ripple_carry = True
+        print(f" -> T=400: Bit 0 Resolved. Sum_0: {1 if SUM_0 > 0 else 0} | Ripple Carry Out: {1 if ripple_carry else 0}")
+        field[0, 0, ha0_beta.oy-40:ha0_beta.oy+10, ha0_beta.ox-40:ha0_beta.ox+10, :] = 0.0
+
+    if 400 <= t <= 408:
+        if s1_val: ha1_beta.inject_b(field)      # Release cached S1
+        if ripple_carry: ha1_beta.inject_a(field) # Inject the Ripple!
+
+    # CLOCK 5 (T=500): Bit 1 Secondary Carry
+    if t == 500:
+        s1_beta, c1_beta = ha1_beta.read_sensors(field)
+        if c1_beta > 0: c1_beta_val = True
+    if 500 <= t <= 508:
+        if c1_beta_val: field[0, 0, 195:205, 500:505, ha1_alpha.z_carry-1:ha1_alpha.z_carry+1] = 1.0
+
+    if t % 50 == 0:
+        history.append(field[0, 0, ::2, ::2, :].max(dim=-1)[0].cpu().clone().numpy())
+
+# CLOCK 6 (T=600): FINAL RESOLUTION
+SUM_1, _ = ha1_beta.read_sensors(field)
+FINAL_CARRY = int(field[0, 0, 190:210, 510:515, ha1_alpha.z_carry].cpu().sum())
+
+print(f" -> T=600: Bit 1 Resolved.")
+print("-" * 50)
+
+# --- 5. MATH VERIFICATION ---
+b_sum_0 = 1 if SUM_0 > 0 else 0
+b_sum_1 = 1 if SUM_1 > 0 else 0
+b_carry = 1 if FINAL_CARRY > 0 else 0
+
+computed_decimal = (b_carry * 4) + (b_sum_1 * 2) + (b_sum_0 * 1)
+expected_decimal = ((A1*2) + A0) + ((B1*2) + B0)
+
+print(f"### FINAL DIAGNOSTIC (T={time.time()-start_time:.2f}s) ###")
+print(f"Binary Output: [Carry: {b_carry}] [Sum1: {b_sum_1}] [Sum0: {b_sum_0}] -> {b_carry}{b_sum_1}{b_sum_0}")
+print(f"Decimal Output: {computed_decimal}")
+
+if computed_decimal == expected_decimal: print("\nStatus: RIPPLE SUCCESS. 2-BIT ARITHMETIC VERIFIED.")
+else: print("\nStatus: RIPPLE FAILURE. Math mismatch.")
+
+num_frames = len(history)
+if num_frames > 0:
+    fig, axes = plt.subplots(1, num_frames, figsize=(3*num_frames, 3), facecolor='black')
+    for i, data in enumerate(history):
+        axes[i].imshow(data, cmap='inferno')
+        axes[i].axis('off')
+    plt.show()
