@@ -1,0 +1,93 @@
+# =============================================================================
+# SECTION 4: THE SYNCHRONIZED AUTOMATION LOOP (VON NEUMANN CASCADE)
+# Executing the 8-State Truth Table and managing the Temporal Handoffs
+# =============================================================================
+
+# --- 4A. THE 8-STATE TRUTH TABLE ---
+test_cases = [
+    (0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1),
+    (1, 0, 0), (1, 0, 1), (1, 1, 0), (1, 1, 1)
+]
+
+print("Executing Trial 376: Full-Adder Cascade | SYNCHRONIZED CLOCK MODE")
+print("Initializing all 8 Quantum States [A, B, C_in]...\n")
+print("-" * 50)
+
+# Tracking variables for the final diagnostic
+total_sum_fails = 0
+total_carry_fails = 0
+
+# We will save the visual history ONLY for the 1+1+1 Trinity State to save VRAM
+final_trinity_history = []
+
+# --- 4B. THE MAIN EXECUTION LOOP ---
+for run_idx, (INPUT_A, INPUT_B, INPUT_C_IN) in enumerate(test_cases):
+    print(f"[RUN {run_idx+1}/8] Injecting State: A={INPUT_A}, B={INPUT_B}, Cin={INPUT_C_IN}")
+    
+    # 1. Reset the Universe
+    torch.manual_seed(137)
+    field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+    z_mid = GRID_SIZE // 2
+    inhibitor_mask = torch.ones_like(field).bool()
+    threshold_mask = torch.zeros_like(field).bool()
+    amplifier_mask = torch.zeros_like(field).bool()
+
+    # 2. Re-Stamp the Architecture
+    ha1 = PooleHalfAdder(origin_y=150, origin_x=150, z_mid=z_mid)
+    ha2 = PooleHalfAdder(origin_y=250, origin_x=150, z_mid=z_mid)
+    ha1.stamp(inhibitor_mask, threshold_mask, amplifier_mask)
+    ha2.stamp(inhibitor_mask, threshold_mask, amplifier_mask)
+    stamp_or_gate(oy=200, ox=250, z_c=ha1.z_carry, inh=inhibitor_mask, amp=amplifier_mask)
+
+    # 3. State Flags for the Temporal Repeaters
+    inject_s1 = False
+    inject_c1 = False
+    inject_c2 = False
+
+    # 4. The 400-Generation Matrix Execution
+    for t in range(401): 
+        
+        # --- CLOCK CYCLE 1: INITIAL INJECTION (T=0 to 8) ---
+        if 0 <= t <= 8:
+            if INPUT_A: ha1.inject_a(field)
+            if INPUT_B: ha1.inject_b(field)
+
+        # Advance the physics engine by one tick
+        field = run_manifold(field, inhibitor_mask, threshold_mask, amplifier_mask)
+        
+        # --- CLOCK CYCLE 2: READ ALPHA SENSORS (T=200) ---
+        if t == 200:
+            s1, c1 = ha1.read_sensors(field)
+            if s1 > 0:
+                print(" -> T=200: S1 Signal Detected. Repeater online.")
+                inject_s1 = True
+            if c1 > 0:
+                print(" -> T=200: C1 Signal Detected. Routing to OR Gate.")
+                inject_c1 = True
+            
+            # Wipe the HA1 sector clean to prevent ambient fractional drift
+            field[0, 0, ha1.oy-40:ha1.oy+10, ha1.ox-40:ha1.ox+10, :] = 0.0
+
+        # --- CLOCK CYCLE 2: THE SYNCHRONIZED HANDOFF (T=200 to 208) ---
+        if 200 <= t <= 208:
+            # Inject S1 into HA2 Input B
+            if inject_s1: ha2.inject_b(field)
+            # Route C1 directly to the OR Gate
+            if inject_c1: field[0, 0, 195:205, 250:255, ha1.z_carry-1:ha1.z_carry+1] = 1.0 
+            # Inject C_in into HA2 Input A (Perfectly synced with S1)
+            if INPUT_C_IN: ha2.inject_a(field)
+
+        # --- CLOCK CYCLE 3: READ BETA SENSORS (T=300) ---
+        if t == 300:
+            s2, c2 = ha2.read_sensors(field)
+            if c2 > 0:
+                print(" -> T=300: C2 Signal Detected. Routing to OR Gate.")
+                inject_c2 = True
+                
+        # --- CLOCK CYCLE 3: ROUTE SECONDARY CARRY (T=300 to 308) ---
+        if 300 <= t <= 308:
+            if inject_c2: field[0, 0, 195:205, 250:255, ha1.z_carry-1:ha1.z_carry+1] = 1.0 
+                
+        # Save visual telemetry array (Only for Run 8 to save memory)
+        if run_idx == 7 and t % 50 == 0:
+            final_trinity_history.append(field[0, 0, ::2, ::2, :].max(dim=-1)[0].cpu().clone().numpy())
