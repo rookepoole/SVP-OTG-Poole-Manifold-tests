@@ -1,0 +1,178 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 388: The Everett Multiverse
+# PARALLEL REALITY CROSSTALK VIA PHANTOM GRAVITY BLEED
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+import time
+
+# --- 1. ENGINE SETUP & OPTIMIZED CORE PHYSICS ---
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold Multiverse Engine on: {device}")
+
+B_LOW, B_HIGH = 5.0, 7.0 
+S_LOW, S_HIGH = 5.0, 9.0
+GRID_SIZE = 400 
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold_multiverse(f_A, f_B, inh_A, amp_A, inh_B, amp_B):
+    # Process both universes simultaneously
+    active_A = torch.nonzero(f_A[0, 0])
+    active_B = torch.nonzero(f_B[0, 0])
+    
+    # Fast-pass if both are completely empty
+    if active_A.numel() == 0 and active_B.numel() == 0: 
+        return f_A, f_B
+
+    with torch.no_grad():
+        # --- CALCULATE POTENTIALS ---
+        pad_A = F.pad(f_A.float(), (1, 1, 1, 1, 1, 1), mode='constant', value=0)
+        pad_B = F.pad(f_B.float(), (1, 1, 1, 1, 1, 1), mode='constant', value=0)
+        
+        pot_A = F.conv3d(pad_A, kernel, padding=0)
+        pot_B = F.conv3d(pad_B, kernel, padding=0)
+        
+        pot_A[inh_A] -= 15.0; pot_A[amp_A] += 1.0   
+        pot_B[inh_B] -= 15.0; pot_B[amp_B] += 1.0   
+        
+        # --- THE MULTIVERSE MEMBRANE PATCH (CROSSTALK) ---
+        # If Universe A is experiencing extreme density/explosions, it bleeds phantom gravity into B
+        crosstalk_mask = pot_A > 10.0
+        pot_B[crosstalk_mask] += 3.0  # +3.0 is enough to push an empty amplifier (+1) into birth threshold (+4 -> Wait, we need +5. So +4.0 bleed!)
+        pot_B[crosstalk_mask] += 1.0  # Adjusting to +4.0 total phantom bleed to ensure spontaneous generation
+        
+        # --- RESONANCE & RESOLUTION ---
+        res_A = torch.zeros_like(pot_A)
+        res_B = torch.zeros_like(pot_B)
+        for p in PRIMES: 
+            res_A += 0.35 * torch.exp(-((pot_A - p)**2) / 0.01)
+            res_B += 0.35 * torch.exp(-((pot_B - p)**2) / 0.01)
+            
+        phi_A = pot_A + res_A
+        phi_B = pot_B + res_B
+        
+        birth_A = (f_A == 0) & (phi_A >= B_LOW) & (phi_A <= B_HIGH)
+        surv_A = (f_A == 1) & (phi_A >= S_LOW) & (phi_A <= S_HIGH)
+        
+        birth_B = (f_B == 0) & (phi_B >= B_LOW) & (phi_B <= B_HIGH)
+        surv_B = (f_B == 1) & (phi_B >= S_LOW) & (phi_B <= S_HIGH)
+        
+    f_new_A = (birth_A | surv_A).float()
+    f_new_B = (birth_B | surv_B).float()
+    
+    return f_new_A, f_new_B
+
+# --- 2. MULTIVERSE FABRICATION ---
+print("Executing Trial 388: Membrane Crosstalk (Parallel Realities)")
+print("-" * 50)
+
+torch.manual_seed(137)
+# Initialize two perfectly separated dimensional arrays
+field_A = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+field_B = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+
+z_mid = GRID_SIZE // 2
+
+# Masks for Universe A (The Reactor)
+inh_A = torch.zeros_like(field_A).bool()
+amp_A = torch.zeros_like(field_A).bool()
+# Build a highly confined concrete box to force violent internal pressure
+inh_A[0, 0, 180:220, 180:220, z_mid-5:z_mid+5] = True 
+inh_A[0, 0, 185:215, 185:215, z_mid-3:z_mid+3] = False # Hollow center
+
+# Masks for Universe B (The Ghost Ship)
+inh_B = torch.ones_like(field_B).bool() # Lethal vacuum everywhere
+amp_B = torch.zeros_like(field_B).bool()
+# Build a stable Resonance Chamber and a Pipe. It sits exactly where the reactor is in A.
+inh_B[0, 0, 190:210, 190:210, z_mid-2:z_mid+2] = False
+amp_B[0, 0, 190:210, 190:210, z_mid-2:z_mid+2] = True
+# An output pipe leading right
+inh_B[0, 0, 198:202, 210:300, z_mid-2:z_mid+2] = False
+amp_B[0, 0, 198:202, 210:300, z_mid-2:z_mid+2] = True
+
+
+# --- 3. THE CROSSTALK EXECUTION LOOP ---
+start_time = time.time()
+history_A = []
+history_B = []
+mass_A_log = []
+mass_B_log = []
+
+for t in range(301): 
+    
+    # Continuously pump mass into Universe A's reactor to cause extreme pressure spikes
+    if 10 <= t <= 60:
+        field_A[0, 0, 195:205, 195:205, z_mid-1:z_mid+1] = 1.0
+
+    field_A, field_B = run_manifold_multiverse(field_A, field_B, inh_A, amp_A, inh_B, amp_B)
+
+    # Telemetry Tracking
+    mass_A = int(field_A.sum().item())
+    mass_B = int(field_B.sum().item())
+    mass_A_log.append(mass_A)
+    mass_B_log.append(mass_B)
+
+    if t % 30 == 0:
+        print(f" -> T={t:03d} | Univ A Mass: {mass_A:05d} | Univ B Mass: {mass_B:05d}")
+        # Capture simultaneous snapshots
+        history_A.append(field_A[0, 0, 170:230, 170:320, z_mid-5:z_mid+5].max(dim=-1)[0].cpu().clone().numpy())
+        history_B.append(field_B[0, 0, 170:230, 170:320, z_mid-5:z_mid+5].max(dim=-1)[0].cpu().clone().numpy())
+
+# --- 4. TELEMETRY OUTPUT ---
+print("-" * 50)
+print(f"### MULTIVERSE DIAGNOSTIC (T={time.time()-start_time:.2f}s) ###")
+
+if mass_B_log[-1] > 0 and mass_B_log[0] == 0:
+    print("\nStatus: PHANTOM GRAVITY BLEED VERIFIED. DIMENSIONAL CROSSTALK ACHIEVED.")
+    print("Universe B successfully scavenged energy from Universe A to bootstrap a stable fluidic machine.")
+else:
+    print("\nStatus: MEMBRANE IMPENETRABLE. Universe B remains dead.")
+
+# Dual-Universe Telemetry Plot
+num_frames = len(history_A)
+if num_frames > 0:
+    fig, axes = plt.subplots(2, num_frames, figsize=(3*num_frames, 6), facecolor='black')
+    for i in range(num_frames):
+        axes[0, i].imshow(history_A[i], cmap='magma')
+        axes[0, i].set_title(f"Univ A (Gen {i*30})", color='white', fontsize=10)
+        axes[0, i].axis('off')
+        
+        axes[1, i].imshow(history_B[i], cmap='cyan')
+        axes[1, i].set_title(f"Univ B (Gen {i*30})", color='white', fontsize=10)
+        axes[1, i].axis('off')
+    plt.tight_layout()
+    plt.show()
+
+# Mass Correlation Graph
+plt.figure(figsize=(15, 4), facecolor='black')
+# Use twinx because Universe A's mass will be violently high, while B's will be precise and stable
+ax1 = plt.gca()
+ax2 = ax1.twinx()
+
+ax1.plot(mass_A_log, color='magenta', linewidth=2, label='Universe A (Reactor Mass)')
+ax1.fill_between(range(len(mass_A_log)), mass_A_log, color='magenta', alpha=0.2)
+ax2.plot(mass_B_log, color='cyan', linewidth=3, label='Universe B (Ghost Ship Mass)')
+
+ax1.set_title("Multiverse Phantom Bleed: Dimensional Crosstalk Over Time", color='white')
+ax1.set_xlabel("Generation (Time)", color='white')
+ax1.set_ylabel("Universe A Mass", color='magenta')
+ax2.set_ylabel("Universe B Mass", color='cyan')
+
+ax1.tick_params(colors='white')
+ax2.tick_params(colors='white')
+ax1.grid(True, color='gray', linestyle='--', alpha=0.3)
+ax1.set_facecolor('black')
+for spine in ax1.spines.values(): spine.set_color('gray')
+for spine in ax2.spines.values(): spine.set_color('gray')
+
+lines_1, labels_1 = ax1.get_legend_handles_labels()
+lines_2, labels_2 = ax2.get_legend_handles_labels()
+ax1.legend(lines_1 + lines_2, labels_1 + labels_2, facecolor='black', labelcolor='white', edgecolor='gray', loc='upper left')
+
+plt.show()
