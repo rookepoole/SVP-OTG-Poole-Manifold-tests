@@ -1,0 +1,212 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 382d: Half-Adder Demultiplexer (Garbage Collection)
+# SOFTWARE ROUTING VIA HARDWARE FLUSH CYCLES
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+import gc
+import time
+
+# --- 1. ENGINE SETUP & OPTIMIZED CORE PHYSICS ---
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold Demultiplexer on: {device}")
+
+B_LOW, B_HIGH = 5.0, 7.0 
+S_LOW, S_HIGH = 5.0, 9.0
+GRID_SIZE = 400 
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f, inhibitor_mask, threshold_mask, amplifier_mask):
+    active_indices = torch.nonzero(f[0, 0])
+    if active_indices.numel() == 0: return f 
+
+    y_min = max(0, active_indices[:, 0].min().item() - 2)
+    y_max = min(GRID_SIZE, active_indices[:, 0].max().item() + 3)
+    x_min = max(0, active_indices[:, 1].min().item() - 2)
+    x_max = min(GRID_SIZE, active_indices[:, 1].max().item() + 3)
+    z_min = max(0, active_indices[:, 2].min().item() - 2)
+    z_max = min(GRID_SIZE, active_indices[:, 2].max().item() + 3)
+
+    f_sub = f[:, :, y_min:y_max, x_min:x_max, z_min:z_max]
+    inh_sub = inhibitor_mask[:, :, y_min:y_max, x_min:x_max, z_min:z_max]
+    thr_sub = threshold_mask[:, :, y_min:y_max, x_min:x_max, z_min:z_max]
+    amp_sub = amplifier_mask[:, :, y_min:y_max, x_min:x_max, z_min:z_max]
+
+    with torch.no_grad():
+        f_float = f_sub.float()
+        padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='constant', value=0)
+        potential = F.conv3d(padded, kernel, padding=0)
+        
+        potential[inh_sub] -= 15.0  
+        potential[thr_sub] -= 2.0   
+        potential[amp_sub] += 1.0   
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES: resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+            
+        total_phi = potential + resonance
+        
+        birth = (f_sub == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (f_sub == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        
+    f_new = torch.zeros_like(f)
+    f_new[:, :, y_min:y_max, x_min:x_max, z_min:z_max] = (birth | survive).float()
+    return f_new
+
+# --- 2. THE SOFTWARE DECODER CLASS (HALF-ADDER CORE) ---
+class PooleInstructionDecoder:
+    def __init__(self, origin_y, origin_x, z_mid):
+        self.oy = origin_y
+        self.ox = origin_x
+        self.z_alu = z_mid + 15  # The Carry Plane (Instruction 1)
+        self.z_ram = z_mid - 15  # The Sum Plane (Instruction 0)
+
+    def stamp(self, inh, thr, amp):
+        oy, ox, z_c, z_s = self.oy, self.ox, self.z_alu, self.z_ram
+        
+        # Plane 1: AND Matrix (Routes to ALU Bus)
+        inh[0, 0, oy-6:oy-2, ox-30:ox-15, z_c-2:z_c+2] = False; amp[0, 0, oy-6:oy-2, ox-30:ox-15, z_c-2:z_c+2] = True 
+        inh[0, 0, oy+2:oy+6, ox-30:ox-15, z_c-2:z_c+2] = False; amp[0, 0, oy+2:oy+6, ox-30:ox-15, z_c-2:z_c+2] = True 
+        inh[0, 0, oy-6:oy+6, ox-15:ox-10, z_c-2:z_c+2] = False; amp[0, 0, oy-6:oy+6, ox-15:ox-10, z_c-2:z_c+2] = True 
+        inh[0, 0, oy-2:oy+2, ox-10:ox, z_c-2:z_c+2] = False; amp[0, 0, oy-2:oy+2, ox-10:ox, z_c-2:z_c+2] = True 
+        thr[0, 0, oy-2:oy+2, ox:ox+4, z_c-2:z_c+2] = True 
+        inh[0, 0, oy-35:oy-2, ox-2:ox, z_c-2:z_c+2] = False; amp[0, 0, oy-35:oy-2, ox-2:ox, z_c-2:z_c+2] = True 
+
+        # Plane 2: XOR Matrix (Routes to RAM Bus)
+        inh[0, 0, oy-6:oy-2, ox-30:ox-15, z_s-2:z_s+2] = False; amp[0, 0, oy-6:oy-2, ox-30:ox-15, z_s-2:z_s+2] = True 
+        inh[0, 0, oy+2:oy+6, ox-30:ox-15, z_s-2:z_s+2] = False; amp[0, 0, oy+2:oy+6, ox-30:ox-15, z_s-2:z_s+2] = True 
+        inh[0, 0, oy-6:oy+6, ox-15:ox-10, z_s-2:z_s+2] = False; amp[0, 0, oy-6:oy+6, ox-15:ox-10, z_s-2:z_s+2] = True 
+        inh[0, 0, oy-2:oy+2, ox-10:ox, z_s-2:z_s+2] = False; amp[0, 0, oy-2:oy+2, ox-10:ox, z_s-2:z_s+2] = True 
+        thr[0, 0, oy-2:oy+2, ox:ox+4, z_s-2:z_s+2] = True 
+        inh[0, 0, oy-35:oy-2, ox-4:ox, z_s-2:z_s+2] = False; amp[0, 0, oy-35:oy-4, ox-4:ox, z_s-2:z_s+2] = True 
+        thr[0, 0, oy-6:oy-5, ox-4:ox, z_s-2:z_s+2] = True 
+
+    def fire_system_clock(self, field):
+        """The constant heartbeat."""
+        field[0, 0, self.oy-6:self.oy-2, self.ox-28:self.ox-24, self.z_alu-1:self.z_alu+1] = 1.0
+        field[0, 0, self.oy-6:self.oy-2, self.ox-28:self.ox-24, self.z_ram-1:self.z_ram+1] = 1.0
+
+    def fire_instruction_1(self, field):
+        """The Software Code. Routes flow to ALU."""
+        field[0, 0, self.oy+2:self.oy+6, self.ox-28:self.ox-24, self.z_alu-1:self.z_alu+1] = 1.0
+        field[0, 0, self.oy+2:self.oy+6, self.ox-28:self.ox-24, self.z_ram-1:self.z_ram+1] = 1.0
+
+    def flush_gate(self, field):
+        """Firmware Garbage Collection: Sweeps the entire internal matrix clean."""
+        field[0, 0, self.oy-40:self.oy+15, self.ox-35:self.ox+15, :] = 0.0
+
+    def read_buses(self, field):
+        """Polls the output buses for fluid density."""
+        ram_val = int(field[0, 0, self.oy-35:self.oy-10, self.ox-4:self.ox, self.z_ram].cpu().sum())
+        alu_val = int(field[0, 0, self.oy-35:self.oy-10, self.ox-2:self.ox, self.z_alu].cpu().sum())
+        return (1 if ram_val > 0 else 0), (1 if alu_val > 0 else 0)
+
+# --- 3. MACRO-ARCHITECTURE FABRICATION ---
+print("Executing Trial 382d: Half-Adder Demultiplexer (Garbage Collection)")
+print("-" * 50)
+
+torch.manual_seed(137)
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+z_mid = GRID_SIZE // 2
+inhibitor_mask = torch.ones_like(field).bool()
+threshold_mask = torch.zeros_like(field).bool()
+amplifier_mask = torch.zeros_like(field).bool()
+
+decoder = PooleInstructionDecoder(origin_y=200, origin_x=200, z_mid=z_mid)
+decoder.stamp(inhibitor_mask, threshold_mask, amplifier_mask)
+
+# --- 4. THE SOFTWARE EXECUTION LOOP ---
+start_time = time.time()
+ram_signal = []
+alu_signal = []
+history = []
+
+clock_high = False
+instr_high = False
+
+for t in range(501): 
+    # --- CYCLE 1: INSTRUCTION 0 (ROUTE TO RAM) ---
+    if t == 50:
+        print(" -> T=50 : Instr [0] loaded. System Clock High...")
+        clock_high = True
+    if t == 58:
+        clock_high = False
+        
+    if t == 150:
+        print(" -> T=150: Cycle 1 Complete. Initiating Hardware Flush...")
+        decoder.flush_gate(field)
+        
+    # --- CYCLE 2: INSTRUCTION 1 (ROUTE TO ALU) ---
+    if t == 250:
+        print(" -> T=250: Instr [1] loaded. System Clock & Instr High...")
+        clock_high = True
+        instr_high = True
+    if t == 258:
+        clock_high = False
+        instr_high = False
+
+    if t == 350:
+        print(" -> T=350: Cycle 2 Complete. Initiating Hardware Flush...")
+        decoder.flush_gate(field)
+
+    if clock_high: decoder.fire_system_clock(field)
+    if instr_high: decoder.fire_instruction_1(field)
+
+    # --- TELEMETRY POLLING ---
+    ram_hit, alu_hit = decoder.read_buses(field)
+    ram_signal.append(ram_hit)
+    alu_signal.append(alu_hit)
+
+    field = run_manifold(field, inhibitor_mask, threshold_mask, amplifier_mask)
+
+    if t % 50 == 0:
+        history.append(field[0, 0, ::2, ::2, :].max(dim=-1)[0].cpu().clone().numpy())
+
+# --- 5. DIGITAL SIGNAL OUTPUT ---
+print("-" * 50)
+print(f"### DECODER DIAGNOSTIC (T={time.time()-start_time:.2f}s) ###")
+
+# Count distinct rising edges on both buses
+ram_success = sum(1 for i in range(1, len(ram_signal)) if ram_signal[i] == 1 and ram_signal[i-1] == 0)
+alu_success = sum(1 for i in range(1, len(alu_signal)) if alu_signal[i] == 1 and alu_signal[i-1] == 0)
+
+print(f"Total Discrete Packets routed to RAM Bus (Instr 0) : {ram_success}")
+print(f"Total Discrete Packets routed to ALU Bus (Instr 1) : {alu_success}")
+
+if ram_success == 1 and alu_success == 1:
+    print("\nStatus: INSTRUCTION DECODER VERIFIED. SOFTWARE CONTROL ACHIEVED.")
+else:
+    print("\nStatus: ROUTING FAILURE. Review collision physics.")
+
+num_frames = len(history)
+if num_frames > 0:
+    fig, axes = plt.subplots(1, num_frames, figsize=(4*num_frames, 4), facecolor='black')
+    for i, data in enumerate(history):
+        axes[i].imshow(data, cmap='inferno')
+        axes[i].set_title(f"Gen {i*50}", color='white', fontsize=10)
+        axes[i].axis('off')
+    plt.tight_layout()
+    plt.show()
+
+plt.figure(figsize=(15, 4), facecolor='black')
+plt.plot(ram_signal, color='cyan', drawstyle='steps-post', linewidth=2, label='RAM Bus (Instr 0)')
+plt.plot(alu_signal, color='magenta', drawstyle='steps-post', linewidth=2, label='ALU Bus (Instr 1)')
+plt.fill_between(range(len(ram_signal)), ram_signal, color='cyan', alpha=0.2, step='post')
+plt.fill_between(range(len(alu_signal)), alu_signal, color='magenta', alpha=0.2, step='post')
+plt.title("Fluidic Demultiplexer: Half-Adder Software Routing", color='white')
+plt.xlabel("Generation (Time)", color='white')
+plt.ylabel("Signal Detection", color='white')
+plt.yticks([0, 1], ['Low', 'High'], color='white')
+plt.xticks(color='white')
+plt.legend(facecolor='black', labelcolor='white', edgecolor='gray')
+plt.grid(True, color='gray', linestyle='--', alpha=0.3)
+ax = plt.gca()
+ax.set_facecolor('black')
+for spine in ax.spines.values(): spine.set_color('gray')
+plt.show()
