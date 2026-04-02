@@ -1,0 +1,140 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 393: The Von Neumann Singularity
+# EXPONENTIAL SELF-REPLICATION AND THE GREY GOO SCENARIO
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+import time
+
+# --- 1. ENGINE SETUP & DUAL-PHYSICS CORE ---
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold Universal Constructor on: {device}")
+
+B_LOW, B_HIGH = 5.0, 7.0 
+S_LOW, S_HIGH = 5.0, 9.0
+GRID_SIZE = 400 
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+# Core Physics Kernel
+kernel = torch.ones((1, 1, 3, 3), device=device).float()
+kernel[0, 0, 1, 1] = 0
+
+# --- THE VON NEUMANN BLUEPRINT ---
+# A dense, stable 3x3 geometric cross. Mass = 5 voxels.
+probe_blueprint = torch.tensor([[[
+    [0.0, 1.0, 0.0], 
+    [1.0, 1.0, 1.0], 
+    [0.0, 1.0, 0.0]
+]]], device=device).float()
+
+def run_manifold_replicator(f):
+    with torch.no_grad():
+        f_float = f.float()
+        
+        # 1. CORE THERMODYNAMICS
+        padded = F.pad(f_float, (1, 1, 1, 1), mode='constant', value=0)
+        potential = F.conv2d(padded, kernel, padding=0)
+        
+        # Dimensional compensation for 2D plane
+        potential += 3.0 
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES: resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        total_phi = potential + resonance
+        
+        birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        
+        f_new = (birth | survive).float()
+
+        # 2. THE UNIVERSAL CONSTRUCTOR (Self-Replication Patch)
+        # Scan the entire grid for the exact geometric signature of the Blueprint
+        # A perfect match will yield a convolution sum of exactly 5.0
+        blueprint_scan = F.conv2d(padded, probe_blueprint, padding=0)
+        
+        # Find coordinates where the probe is perfectly intact
+        probe_centers_y, probe_centers_x = torch.where(blueprint_scan[0, 0] == 5.0)
+        
+        # Execute Extrusion: Every living probe attempts to build a child
+        for y, x in zip(probe_centers_y, probe_centers_x):
+            # Define spawn offset (build the child 4 voxels diagonally down-right)
+            child_y, child_x = y + 4, x + 4
+            
+            # Boundary check
+            if child_y + 1 < GRID_SIZE and child_x + 1 < GRID_SIZE:
+                # Collision check: Only build if the target space is empty vacuum
+                target_area = f_new[0, 0, child_y-1:child_y+2, child_x-1:child_x+2]
+                if target_area.sum() == 0:
+                    # EXTRUSION: Write the blueprint into the vacuum
+                    f_new[0, 0, child_y-1:child_y+2, child_x-1:child_x+2] = probe_blueprint[0, 0]
+
+    return f_new
+
+# --- 2. UNIVERSE INITIALIZATION ---
+print("Executing Trial 393: The Grey Goo Scenario")
+print("-" * 50)
+
+torch.manual_seed(137)
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE), device=device)
+
+# Drop a SINGLE Von Neumann Probe into the top-left corner
+start_y, start_x = 20, 20
+field[0, 0, start_y-1:start_y+2, start_x-1:start_x+2] = probe_blueprint[0, 0]
+
+# --- 3. THE REPLICATION LOOP ---
+start_time = time.time()
+history = []
+probe_count_log = []
+
+for t in range(201): 
+    
+    field = run_manifold_replicator(field)
+
+    # Track the exact number of living machines
+    # Total mass divided by 5 (the mass of one probe)
+    current_mass = int(field.sum().item())
+    probe_count = current_mass // 5
+    probe_count_log.append(probe_count)
+
+    if t % 25 == 0:
+        print(f" -> T={t:03d} | Active Von Neumann Probes: {probe_count}")
+        history.append(field[0, 0].cpu().clone().numpy())
+
+# --- 4. TELEMETRY OUTPUT ---
+print("-" * 50)
+print(f"### SINGULARITY DIAGNOSTIC (T={time.time()-start_time:.2f}s) ###")
+
+if probe_count_log[-1] > 1000:
+    print("\nStatus: EXPONENTIAL REPLICATION VERIFIED. GREY GOO DETECTED.")
+    print("The Universal Constructor successfully consumed the available matrix.")
+else:
+    print("\nStatus: REPLICATION FAILURE. The swarm collapsed.")
+
+# Rendering the Swarm
+num_frames = len(history)
+if num_frames > 0:
+    fig, axes = plt.subplots(1, num_frames, figsize=(3*num_frames, 4), facecolor='black')
+    for i in range(num_frames):
+        axes[i].imshow(history[i], cmap='plasma')
+        axes[i].set_title(f"Gen {i*25}", color='white', fontsize=12)
+        axes[i].axis('off')
+    plt.tight_layout()
+    plt.show()
+
+# The Singularity Graph
+plt.figure(figsize=(15, 4), facecolor='black')
+plt.plot(probe_count_log, color='lime', linewidth=2, label='Living Constructor Swarm')
+plt.fill_between(range(len(probe_count_log)), probe_count_log, color='lime', alpha=0.2)
+
+plt.title("The Von Neumann Singularity: Exponential Self-Replication", color='white')
+plt.xlabel("Generation (Time)", color='white')
+plt.ylabel("Active Probes (Population)", color='white')
+plt.legend(facecolor='black', labelcolor='white', edgecolor='gray', loc='upper left')
+plt.grid(True, color='gray', linestyle='--', alpha=0.3)
+ax = plt.gca()
+ax.set_facecolor('black')
+for spine in ax.spines.values(): spine.set_color('gray')
+plt.show()
