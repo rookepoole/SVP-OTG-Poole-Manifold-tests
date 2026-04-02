@@ -1,0 +1,112 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 395b: The Power Spectrum (Syntax Patch)
+# FOURIER ANALYSIS AND BARYON ACOUSTIC OSCILLATION PEAK EXTRACTION
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+import time
+
+# --- 1. ENGINE SETUP ---
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold Cosmological FFT Analyzer on: {device}")
+
+B_LOW, B_HIGH = 5.0, 7.0 
+S_LOW, S_HIGH = 5.0, 9.0
+GRID_SIZE = 800  
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3), device=device).float()
+kernel[0, 0, 1, 1] = 0
+
+def run_manifold_2d(f):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1), mode='constant', value=0)
+        potential = F.conv2d(padded, kernel, padding=0)
+        
+        potential += 3.0 
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES: resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        total_phi = potential + resonance
+        
+        birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        
+    return (birth | survive).float()
+
+# --- 2. PRIMORDIAL SEEDING ---
+print("Executing Trial 395b: BAO Peak Extraction")
+print("-" * 50)
+
+torch.manual_seed(42)
+np.random.seed(42)
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE), device=device)
+
+print(" -> T=0: Injecting Primordial Singularity Cores...")
+for _ in range(100):
+    oy = np.random.randint(50, GRID_SIZE - 50)
+    ox = np.random.randint(50, GRID_SIZE - 50)
+    field[0, 0, oy-2:oy+3, ox-2:ox+3] = (torch.rand((5, 5), device=device) > 0.2).float()
+
+# --- 3. THE EXPANSION LOOP ---
+start_time = time.time()
+print(" -> Expanding Universe (Generating Cosmic Web & BAO Shells)...")
+
+for t in range(150): 
+    field = run_manifold_2d(field)
+
+final_density = field[0, 0].cpu().numpy()
+
+# --- 4. FOURIER ANALYSIS (EXTRACTING THE POWER SPECTRUM) ---
+print(" -> T=150: Expansion Frozen. Executing Fast Fourier Transform...")
+
+fft_field = np.fft.fftn(final_density)
+fft_field = np.fft.fftshift(fft_field)
+
+power_spectrum_2d = np.abs(fft_field)**2
+
+def calculate_radial_profile(data):
+    y, x = np.indices(data.shape)
+    center = np.array([(x.max()-x.min())/2.0, (y.max()-y.min())/2.0])
+    r = np.sqrt((x - center[0])**2 + (y - center[1])**2)
+    r = r.astype(int)
+    
+    tbin = np.bincount(r.ravel(), data.ravel())
+    nr = np.bincount(r.ravel())
+    radialprofile = tbin / nr
+    return radialprofile
+
+k_space_power = calculate_radial_profile(power_spectrum_2d)
+
+k_vals = np.arange(1, len(k_space_power) // 2)
+p_k = k_space_power[1:len(k_space_power) // 2]
+
+# --- 5. TELEMETRY OUTPUT ---
+print("-" * 50)
+print(f"### BAO SPECTRAL DIAGNOSTIC (T={time.time()-start_time:.2f}s) ###")
+
+fig, axes = plt.subplots(1, 3, figsize=(18, 5), facecolor='black')
+
+axes[0].imshow(final_density, cmap='magma')
+axes[0].set_title("Real Space: Final Density Field", color='white')
+axes[0].axis('off')
+
+axes[1].imshow(np.log10(power_spectrum_2d + 1), cmap='viridis')
+axes[1].set_title("Fourier Space: 2D Power Spectrum (Log)", color='white')
+axes[1].axis('off')
+
+axes[2].set_facecolor('black')
+axes[2].plot(k_vals, k_vals * p_k, color='cyan', linewidth=2)
+axes[2].set_title("Matter Power Spectrum: k * P(k)", color='white')
+axes[2].set_xlabel("Wavenumber $k$", color='white')
+axes[2].set_ylabel("Power", color='white')
+axes[2].tick_params(colors='white')
+axes[2].grid(True, color='gray', linestyle='--', alpha=0.3)
+for spine in axes[2].spines.values(): spine.set_color('gray')
+
+plt.tight_layout()
+plt.show()
