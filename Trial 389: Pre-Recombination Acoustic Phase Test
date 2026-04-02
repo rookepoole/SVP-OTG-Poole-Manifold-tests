@@ -1,0 +1,81 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 389: Pre-Recombination Acoustic Phase Test
+# Plasma annealing → full Poole rules + ℓ-space power spectrum
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+from scipy.stats import binned_statistic   # ← This was missing
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Trial 389: Pre-Recombination Acoustic Phase Test on: {device}")
+
+GRID_SIZE = 128
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f, b_low, b_high, s_low, s_high):
+    with torch.no_grad():
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0)
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        total_phi = potential + resonance
+        
+        birth = (f == 0) & (total_phi >= b_low) & (total_phi <= b_high)
+        survive = (f == 1) & (total_phi >= s_low) & (total_phi <= s_high)
+        return (birth | survive).float()
+
+# --- Plasma → Poole Annealing ---
+field = (torch.rand((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device) > 0.92).float()
+
+print("Running plasma → Poole annealing...")
+for gen in range(1200):
+    if gen < 400:
+        field = run_manifold(field, 3.0, 6.0, 4.0, 8.0)      # Early plasma
+    elif gen < 800:
+        field = run_manifold(field, 4.0, 6.5, 4.5, 8.5)      # Transition
+    else:
+        field = run_manifold(field, 5.0, 7.0, 5.0, 9.0)      # Full Poole rules
+    
+    if gen % 200 == 0:
+        print(f"Gen {gen} — density: {field.mean().item():.4f}")
+
+# --- Power Spectrum in ℓ-space ---
+def compute_power_spectrum(field):
+    density = field[0,0].cpu().numpy()
+    ft = np.fft.fftn(density)
+    power = np.abs(ft)**2
+    kx = np.fft.fftfreq(GRID_SIZE)
+    ky = np.fft.fftfreq(GRID_SIZE)
+    kz = np.fft.fftfreq(GRID_SIZE)
+    kx, ky, kz = np.meshgrid(kx, ky, kz, indexing='ij')
+    k = np.sqrt(kx**2 + ky**2 + kz**2)
+    k_bins = np.linspace(0, k.max(), 50)
+    bin_means, _, _ = binned_statistic(k.ravel(), power.ravel(), statistic='mean', bins=k_bins)
+    return k_bins[:-1], bin_means
+
+k, p_k = compute_power_spectrum(field)
+
+# Approximate ℓ-space (ℓ ≈ k * χ, simplified proxy)
+ell_proxy = k * GRID_SIZE
+power_proxy = p_k
+
+# Plot
+plt.figure(figsize=(10,6))
+plt.loglog(ell_proxy[1:], power_proxy[1:], 'o-', color='cyan', label='Poole Lattice C_ℓ proxy')
+plt.xlabel('ℓ (multipole proxy)')
+plt.ylabel('Power')
+plt.title('Poole Manifold Pre-Recombination Acoustic Power Spectrum')
+plt.grid(True, which='both', ls='--')
+plt.legend()
+plt.show()
+
+print("\nTrial 389 complete.")
+print("Look for acoustic peaks (oscillations) in the log-log plot.")
+print("Final stabilized density:", field.mean().item())
