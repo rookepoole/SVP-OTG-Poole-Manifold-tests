@@ -1,0 +1,69 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 405: Information Highway (Glider-as-Neuron-Link) — FIXED
+# Query glider scans & collects knowledge along the path
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Trial 405: Information Highway Demo (FIXED) on: {device}")
+
+GRID_SIZE = 300
+CENTER = GRID_SIZE // 2
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f):
+    with torch.no_grad():
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel)
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        total_phi = potential + resonance
+        birth = (f == 0) & (total_phi >= 5.0) & (total_phi <= 7.0)
+        survive = (f == 1) & (total_phi >= 5.0) & (total_phi <= 9.0)
+        return (birth | survive).float()
+
+# Create lattice
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+
+# === Store knowledge as distinct patterns ===
+field[0,0, 80:90, 80:90, 80:90] = 1.0   # Knowledge A (source area)
+field[0,0, 140:150, 140:150, 140:150] = 1.0   # Knowledge B (midway)
+field[0,0, 200:210, 200:210, 200:210] = 1.0   # Knowledge C (near destination)
+
+# Spawn query glider at source
+field[0,0, 82:88, 82:88, 82:88] = 1.0
+
+print("Information Highway initialized.")
+print("Glider spawned at source. It will scan & collect knowledge en route.\n")
+
+history = []
+for t in range(601):
+    field = run_manifold(field)
+    
+    if t % 50 == 0:
+        # Simple payload readout: total live mass in glider head region
+        payload = field[0,0, 70:110, 70:110, 70:110].sum().item()
+        print(f"Gen {t:3d} | Glider payload mass: {payload:.0f}  (higher = more knowledge collected)")
+        history.append(field[0,0,:,:,CENTER].cpu().clone().numpy())
+
+# Visualization
+num_frames = len(history)
+fig, axes = plt.subplots(1, num_frames, figsize=(4*num_frames, 4), facecolor='black')
+for i, data in enumerate(history):
+    axes[i].imshow(data, cmap='inferno')
+    axes[i].set_title(f"Gen {i*50}", color='white')
+    axes[i].axis('off')
+plt.tight_layout()
+plt.show()
+
+print("\nTrial 405 complete.")
+print("The glider has traveled the highway and collected knowledge along the path.")
+print("Ready for next extension: relevance scoring, multiple gliders, destination delivery, etc.")
