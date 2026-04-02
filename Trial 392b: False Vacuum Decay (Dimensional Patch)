@@ -1,0 +1,143 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 392b: False Vacuum Decay (Dimensional Patch)
+# CATASTROPHIC PHASE TRANSITION AND REALITY OVERWRITE
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+import time
+
+# --- 1. ENGINE SETUP & DUAL-PHYSICS CORE ---
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold Reality Wiper on: {device}")
+
+GRID_SIZE = 400 
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3), device=device).float()
+kernel[0, 0, 1, 1] = 0
+
+true_vacuum_mask = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE), device=device).bool()
+
+def run_manifold_decay(f, tv_mask):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1), mode='constant', value=0)
+        potential = F.conv2d(padded, kernel, padding=0)
+        
+        # DIMENSIONAL COMPENSATION: Restoring the missing Z-axis pressure
+        potential += 3.0 
+        
+        # --- THE INFECTION MECHANIC (SPEED OF LIGHT EXPANSION) ---
+        tv_padded = F.pad(tv_mask.float(), (1, 1, 1, 1), mode='constant', value=0)
+        tv_neighbors = F.conv2d(tv_padded, kernel, padding=0)
+        tv_mask = tv_mask | (tv_neighbors > 0)
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES: resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        total_phi = potential + resonance
+        
+        # --- FALSE VACUUM PHYSICS (Standard Universe) ---
+        birth_false = (f == 0) & (total_phi >= 5.0) & (total_phi <= 7.0) & (~tv_mask)
+        survive_false = (f == 1) & (total_phi >= 5.0) & (total_phi <= 9.0) & (~tv_mask)
+        
+        # --- TRUE VACUUM PHYSICS (Alien Mathematics) ---
+        birth_true = (f == 0) & (total_phi >= 2.0) & (total_phi <= 4.0) & tv_mask
+        survive_true = (f == 1) & (total_phi >= 2.0) & (total_phi <= 5.0) & tv_mask
+        
+    f_new = (birth_false | survive_false | birth_true | survive_true).float()
+    return f_new, tv_mask
+
+# --- 2. UNIVERSE INITIALIZATION ---
+print("Executing Trial 392b: False Vacuum Decay (Dimensional Patch)")
+print("-" * 50)
+
+torch.manual_seed(137)
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE), device=device)
+# Seed a dense primordial core so the False Vacuum universe aggressively expands
+cy, cx = GRID_SIZE // 2, GRID_SIZE // 2
+field[0, 0, cy-20:cy+20, cx-20:cx+20] = (torch.rand((40, 40), device=device) > 0.3).float()
+
+# --- 3. THE DOOMSDAY LOOP ---
+start_time = time.time()
+history = []
+tv_history = []
+mass_old_log = []
+mass_new_log = []
+
+for t in range(301): 
+    
+    if t == 100:
+        print("\n -> T=100: ⚠️ WARNING. TRUE VACUUM NUCLEATION EVENT DETECTED AT ORIGIN. ⚠️")
+        true_vacuum_mask[0, 0, cy-1:cy+2, cx-1:cx+2] = True
+
+    field, true_vacuum_mask = run_manifold_decay(field, true_vacuum_mask)
+
+    mass_old = int(field[~true_vacuum_mask].sum().item())
+    mass_new = int(field[true_vacuum_mask].sum().item())
+    mass_old_log.append(mass_old)
+    mass_new_log.append(mass_new)
+
+    if t % 50 == 0:
+        if t < 100:
+            print(f" -> T={t:03d} | False Vacuum Mass: {mass_old:06d}")
+        else:
+            print(f" -> T={t:03d} | False Vacuum Mass: {mass_old:06d} | True Vacuum Mass: {mass_new:06d}")
+        
+        history.append(field[0, 0].cpu().clone().numpy())
+        tv_history.append(true_vacuum_mask[0, 0].cpu().clone().numpy())
+
+# --- 4. TELEMETRY OUTPUT ---
+print("-" * 50)
+print(f"### REALITY WIPER DIAGNOSTIC (T={time.time()-start_time:.2f}s) ###")
+
+if mass_new_log[-1] > mass_old_log[-1]:
+    print("\nStatus: PHASE TRANSITION COMPLETE.")
+    print("The True Vacuum successfully overwrote the mathematical constants of the local universe.")
+else:
+    print("\nStatus: NUCLEATION FAILURE. The False Vacuum stabilized the puncture.")
+
+num_frames = len(history)
+if num_frames > 0:
+    fig, axes = plt.subplots(1, num_frames, figsize=(3*num_frames, 4), facecolor='black')
+    for i in range(num_frames):
+        composite = np.zeros((GRID_SIZE, GRID_SIZE, 3))
+        
+        # False Vacuum Fluid = Cyan
+        composite[:, :, 1] = history[i] * (~tv_history[i])
+        composite[:, :, 2] = history[i] * (~tv_history[i])
+        
+        # True Vacuum Zone Background = Dark Red
+        composite[:, :, 0] = tv_history[i] * 0.15
+        
+        # True Vacuum Fluid = Bright Magenta/Red
+        composite[:, :, 0] += history[i] * tv_history[i]
+        composite[:, :, 2] += history[i] * tv_history[i] * 0.4
+        
+        composite = np.clip(composite, 0, 1)
+        
+        axes[i].imshow(composite)
+        axes[i].set_title(f"Gen {i*50}", color='white', fontsize=12)
+        axes[i].axis('off')
+    plt.tight_layout()
+    plt.show()
+
+# The Doomsday Graph
+plt.figure(figsize=(15, 4), facecolor='black')
+plt.plot(mass_old_log, color='cyan', linewidth=2, label='Old Physics (False Vacuum)')
+plt.plot(mass_new_log, color='magenta', linewidth=2, label='New Physics (True Vacuum)')
+plt.fill_between(range(len(mass_old_log)), mass_old_log, color='cyan', alpha=0.2)
+plt.fill_between(range(len(mass_new_log)), mass_new_log, color='magenta', alpha=0.2)
+plt.axvline(x=100, color='yellow', linestyle=':', linewidth=2, label='Nucleation Event (T=100)')
+
+plt.title("False Vacuum Decay: Mathematical Overwrite of Local Spacetime", color='white')
+plt.xlabel("Generation (Time)", color='white')
+plt.ylabel("Active Mass (Voxels)", color='white')
+plt.legend(facecolor='black', labelcolor='white', edgecolor='gray', loc='upper left')
+plt.grid(True, color='gray', linestyle='--', alpha=0.3)
+ax = plt.gca()
+ax.set_facecolor('black')
+for spine in ax.spines.values(): spine.set_color('gray')
+plt.show()
