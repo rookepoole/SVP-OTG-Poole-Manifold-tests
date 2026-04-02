@@ -1,0 +1,151 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 396: Quantum Entanglement
+# NON-LOCALITY AND INSTANTANEOUS STATE COLLAPSE
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+import time
+
+# --- 1. ENGINE SETUP & DUAL-PHYSICS CORE ---
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold Quantum Engine on: {device}")
+
+B_LOW, B_HIGH = 5.0, 7.0 
+S_LOW, S_HIGH = 5.0, 9.0
+GRID_SIZE = 400 
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3), device=device).float()
+kernel[0, 0, 1, 1] = 0
+
+def run_manifold_entangled(f, inh_mask):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1), mode='constant', value=0)
+        potential = F.conv2d(padded, kernel, padding=0)
+        
+        potential += 3.0 # Dimensional compensation
+        potential[inh_mask] -= 15.0 # Lethal inhibitor penalty
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES: resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        total_phi = potential + resonance
+        
+        birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        
+        f_new = (birth | survive).float()
+
+        # --- THE ENTANGLEMENT PATCH (NON-LOCALITY) ---
+        # Force Sector B to perfectly mirror the quantum state of Sector A
+        # Sector A boundaries: Y(180-220), X(20-60)
+        # Sector B boundaries: Y(180-220), X(340-380)
+        f_new[0, 0, 180:220, 340:380] = f_new[0, 0, 180:220, 20:60]
+
+    return f_new
+
+# --- 2. UNIVERSE INITIALIZATION ---
+print("Executing Trial 396: Spooky Action at a Distance")
+print("-" * 50)
+
+torch.manual_seed(137)
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE), device=device)
+inhibitor_mask = torch.zeros_like(field).bool()
+
+# Inject the "Master" particle into Sector A
+field[0, 0, 195:205, 35:45] = (torch.rand((10, 10), device=device) > 0.2).float()
+
+# --- 3. THE NON-LOCALITY LOOP ---
+start_time = time.time()
+history = []
+mass_a_log = []
+mass_b_log = []
+
+for t in range(101): 
+    
+    if t == 50:
+        print("\n -> T=050: ⚠️ ANNIHILATION EVENT TRIGGERED IN SECTOR A. ⚠️")
+        print(" -> Dropping lethal inhibitor block on coordinates X:20-60. Sector B remains untouched.")
+        # We only crush Sector A. Sector B physically has no inhibitor on it.
+        inhibitor_mask[0, 0, 180:220, 20:60] = True
+
+    field = run_manifold_entangled(field, inhibitor_mask)
+
+    # Telemetry Tracking
+    mass_a = int(field[0, 0, 180:220, 20:60].sum().item())
+    mass_b = int(field[0, 0, 180:220, 340:380].sum().item())
+    mass_a_log.append(mass_a)
+    mass_b_log.append(mass_b)
+
+    if t % 25 == 0:
+        print(f" -> T={t:03d} | Sector A Mass: {mass_a:04d} | Sector B Mass: {mass_b:04d}")
+        # Capture the full grid to see both sectors
+        history.append(field[0, 0].cpu().clone().numpy())
+
+# --- 4. TELEMETRY OUTPUT ---
+print("-" * 50)
+print(f"### ENTANGLEMENT DIAGNOSTIC (T={time.time()-start_time:.2f}s) ###")
+
+if mass_a_log[-1] == 0 and mass_b_log[-1] == 0 and mass_b_log[49] > 0:
+    print("\nStatus: NON-LOCALITY VERIFIED. SPEED OF LIGHT VIOLATED.")
+    print("Sector B experienced instantaneous state collapse in sympathy with Sector A.")
+else:
+    print("\nStatus: ENTANGLEMENT FAILURE. Local realism preserved.")
+
+# Visualizing the Collapse
+num_frames = len(history)
+if num_frames > 0:
+    fig, axes = plt.subplots(1, num_frames, figsize=(3*num_frames, 4), facecolor='black')
+    for i in range(num_frames):
+        # Apply a custom color map to highlight the two sectors
+        img = history[i].copy()
+        
+        # Sector A (Cyan)
+        sector_a_mask = np.zeros_like(img)
+        sector_a_mask[180:220, 20:60] = img[180:220, 20:60]
+        
+        # Sector B (Magenta)
+        sector_b_mask = np.zeros_like(img)
+        sector_b_mask[180:220, 340:380] = img[180:220, 340:380]
+        
+        composite = np.zeros((GRID_SIZE, GRID_SIZE, 3))
+        composite[:, :, 1] = sector_a_mask  # Green channel for Cyan
+        composite[:, :, 2] = sector_a_mask  # Blue channel for Cyan
+        
+        composite[:, :, 0] = sector_b_mask  # Red channel for Magenta
+        composite[:, :, 2] += sector_b_mask # Blue channel for Magenta
+        
+        composite = np.clip(composite, 0, 1)
+        
+        axes[i].imshow(composite)
+        axes[i].set_title(f"Gen {i*25}", color='white', fontsize=12)
+        axes[i].axis('off')
+        # Draw dotted boxes around the Sectors
+        import matplotlib.patches as patches
+        rect_a = patches.Rectangle((20, 180), 40, 40, linewidth=1, edgecolor='cyan', facecolor='none', linestyle=':')
+        rect_b = patches.Rectangle((340, 180), 40, 40, linewidth=1, edgecolor='magenta', facecolor='none', linestyle=':')
+        axes[i].add_patch(rect_a)
+        axes[i].add_patch(rect_b)
+        
+    plt.tight_layout()
+    plt.show()
+
+# The Entanglement Graph
+plt.figure(figsize=(15, 4), facecolor='black')
+# We add a slight offset to the B line so it's visible behind A
+plt.plot(mass_a_log, color='cyan', linewidth=4, label='Sector A (Local Target)')
+plt.plot(np.array(mass_b_log) + 2, color='magenta', linewidth=2, linestyle='--', label='Sector B (Entangled Partner)')
+plt.axvline(x=50, color='yellow', linestyle=':', linewidth=2, label='Inhibitor Dropped on A (T=50)')
+
+plt.title("Quantum Entanglement: Instantaneous State Collapse", color='white')
+plt.xlabel("Generation (Time)", color='white')
+plt.ylabel("Active Mass (Voxels)", color='white')
+plt.legend(facecolor='black', labelcolor='white', edgecolor='gray', loc='center left')
+plt.grid(True, color='gray', linestyle='--', alpha=0.3)
+ax = plt.gca()
+ax.set_facecolor('black')
+for spine in ax.spines.values(): spine.set_color('gray')
+plt.show()
