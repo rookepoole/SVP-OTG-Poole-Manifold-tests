@@ -1,0 +1,114 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 400: Conformal Cyclic Cosmology
+# THE EON LOOP AND HAWKING POINTS
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+import time
+
+# --- 1. ENGINE SETUP ---
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold Eon Engine on: {device}")
+
+GRID_SIZE = 400
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+kernel = torch.ones((1, 1, 3, 3), device=device).float()
+kernel[0, 0, 1, 1] = 0
+
+def run_manifold_ccc(f):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1), mode='circular') # Toroidal topology
+        potential = F.conv2d(padded, kernel, padding=0)
+        
+        potential += 3.0 # Dimensional comp
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES: resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        total_phi = potential + resonance
+        
+        birth = (f == 0) & (total_phi >= 5.0) & (total_phi <= 7.0)
+        survive = (f == 1) & (total_phi >= 5.0) & (total_phi <= 9.0)
+        
+    return (birth | survive).float()
+
+# --- 2. UNIVERSE INITIALIZATION ---
+print("Executing Trial 400: Conformal Cyclic Cosmology")
+print("-" * 50)
+
+torch.manual_seed(42)
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE), device=device)
+
+# Seed Universe 1 (Eon 1)
+cy, cx = GRID_SIZE // 2, GRID_SIZE // 2
+field[0, 0, cy-5:cy+5, cx-5:cx+5] = (torch.rand((10, 10), device=device) > 0.5).float()
+
+start_time = time.time()
+history = []
+mass_log = []
+
+# --- 3. EON 1 (THE FIRST UNIVERSE) ---
+print(" -> EON 1: The First Universe Expands...")
+for t in range(200):
+    field = run_manifold_ccc(field)
+    mass_log.append(int(field.sum().item()))
+    if t % 50 == 0: history.append(field[0, 0].cpu().clone().numpy())
+
+# --- 4. CONFORMAL RESCALING ---
+print("\n -> T=200: MAXIMUM ENTROPY REACHED. TRIGGERING CONFORMAL RESCALING.")
+# Squash the entire 400x400 grid into a dense 10x10 singularity seed
+with torch.no_grad():
+    # Average pooling perfectly compresses the spatial data
+    pooled_remnants = F.avg_pool2d(field, kernel_size=40, stride=40)
+    # The surviving mathematical echoes are the "Hawking Points"
+    hawking_points = (pooled_remnants > 0.05).float()
+    
+    # Wipe the grid for the new universe
+    field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE), device=device)
+    
+    # Inject the compressed remnants as the new Big Bang
+    field[0, 0, cy-5:cy+5, cx-5:cx+5] = hawking_points[0, 0]
+
+# --- 5. EON 2 (THE SECOND UNIVERSE) ---
+print(" -> EON 2: The Second Universe Ignites from the Ashes of the First...")
+for t in range(201):
+    field = run_manifold_ccc(field)
+    mass_log.append(int(field.sum().item()))
+    if t % 50 == 0: history.append(field[0, 0].cpu().clone().numpy())
+
+# --- 6. TELEMETRY OUTPUT ---
+print("-" * 50)
+print(f"### CONFORMAL RESCALING DIAGNOSTIC (T={time.time()-start_time:.2f}s) ###")
+
+# Rendering the Loop
+fig, axes = plt.subplots(1, len(history), figsize=(3*len(history), 4), facecolor='black')
+for i in range(len(history)):
+    axes[i].imshow(history[i], cmap='plasma')
+    if i < 4:
+        axes[i].set_title(f"Eon 1: Gen {i*50}", color='cyan', fontsize=12)
+    else:
+        axes[i].set_title(f"Eon 2: Gen {(i-4)*50}", color='magenta', fontsize=12)
+    axes[i].axis('off')
+plt.tight_layout()
+plt.show()
+
+# The Eon Graph
+plt.figure(figsize=(15, 4), facecolor='black')
+plt.plot(range(200), mass_log[:200], color='cyan', linewidth=2, label='Eon 1 (First Universe)')
+plt.plot(range(200, 401), mass_log[200:], color='magenta', linewidth=2, label='Eon 2 (Rescaled Universe)')
+plt.fill_between(range(200), mass_log[:200], color='cyan', alpha=0.2)
+plt.fill_between(range(200, 401), mass_log[200:], color='magenta', alpha=0.2)
+plt.axvline(x=200, color='yellow', linestyle=':', linewidth=2, label='Conformal Rescaling (Big Bang 2)')
+
+plt.title("Conformal Cyclic Cosmology: The Eon Loop", color='white')
+plt.xlabel("Generation (Time)", color='white')
+plt.ylabel("Active Mass (Voxels)", color='white')
+plt.legend(facecolor='black', labelcolor='white', edgecolor='gray', loc='upper left')
+plt.grid(True, color='gray', linestyle='--', alpha=0.3)
+ax = plt.gca()
+ax.set_facecolor('black')
+for spine in ax.spines.values(): spine.set_color('gray')
+plt.show()
