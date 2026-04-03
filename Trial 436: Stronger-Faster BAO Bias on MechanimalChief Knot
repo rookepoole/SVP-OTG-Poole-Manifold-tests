@@ -1,0 +1,105 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 436: Stronger/Faster BAO Bias on MechanimalChief Knot
+# Orthogonal cross-flow + counter-rotating rings + aggressive BAO oscillation
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Trial 436: Stronger/Faster BAO Bias on MechanimalChief Knot — {device}")
+
+GRID_SIZE = 240
+CENTER = GRID_SIZE // 2
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f, t):
+    with torch.no_grad():
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel)
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        
+        # === STRONGER / FASTER DECAYING BAO BIAS ===
+        if t < 2000:
+            decay = torch.exp(-torch.tensor(t / 600.0, device=device))   # faster decay
+            bias = 1.2 * decay * torch.sin(0.45 * torch.tensor(t, dtype=torch.float32, device=device))
+            total_phi = potential + resonance + bias
+        else:
+            total_phi = potential + resonance
+        
+        birth = (f == 0) & (total_phi >= 5.0) & (total_phi <= 7.0)
+        survive = (f == 1) & (total_phi >= 5.0) & (total_phi <= 9.0)
+        return (birth | survive).float()
+
+# Initialize MechanimalChief orthogonal knot
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+
+# Orthogonal cross-flow
+field[0,0, CENTER-12:CENTER+12, CENTER-70:CENTER-58, CENTER-12:CENTER+12] = 1.0
+field[0,0, CENTER-70:CENTER-58, CENTER-12:CENTER+12, CENTER-12:CENTER+12] = 1.0
+
+# Counter-rotating rings
+field[0,0, CENTER-35:CENTER-25, CENTER-35:CENTER-25, CENTER-12:CENTER+12] = 1.0
+field[0,0, CENTER+25:CENTER+35, CENTER+25:CENTER+35, CENTER-12:CENTER+12] = 1.0
+field[0,0, CENTER-35:CENTER-25, CENTER+25:CENTER+35, CENTER-12:CENTER+12] = 1.0
+field[0,0, CENTER+25:CENTER+35, CENTER-35:CENTER-25, CENTER-12:CENTER+12] = 1.0
+
+print("MechanimalChief knot + STRONGER/FASTER BAO bias initialized.\n")
+
+history_density = []
+collision_mass_history = []
+
+for t in range(5001):
+    field = run_manifold(field, t)
+    
+    if t % 100 == 0 or t == 5000:
+        density = field.mean().item()
+        zone = field[0,0, CENTER-50:CENTER+50, CENTER-50:CENTER+50, CENTER-20:CENTER+20]
+        collision_mass = zone.sum().item()
+        collision_mass_history.append(collision_mass)
+        
+        print(f"Gen {t:4d} | Global Density: {density:.4f} | Collision Zone Mass: {collision_mass:6.0f}")
+        history_density.append(field[0,0,:,:,CENTER].cpu().clone().numpy())
+
+# =============================================================================
+# Stability & BAO Wiggle Check
+# =============================================================================
+collision_array = np.array(collision_mass_history)
+print("\n=== KNOT STABILITY + STRONGER BAO BIAS ===")
+print(f"Mean mass          : {collision_array.mean():.0f}")
+print(f"Std dev            : {collision_array.std():.0f}")
+print(f"Final mass         : {collision_array[-1]:.0f}")
+
+# FFT to hunt for BAO-like oscillations
+fft = np.abs(np.fft.rfft(collision_array[20:]))  # skip early transient
+freqs = np.fft.rfftfreq(len(collision_array[20:]), d=1)
+peak_idx = np.argmax(fft[1:]) + 1
+print(f"Strongest frequency peak: {freqs[peak_idx]:.4f} (higher = more oscillatory)")
+
+# =============================================================================
+# Visualizations
+# =============================================================================
+plt.figure(figsize=(10,10), facecolor='black')
+plt.imshow(field[0,0,:,:,CENTER].cpu().numpy(), cmap='inferno')
+plt.title("Final State: MechanimalChief Knot + Stronger/Faster BAO Bias", color='white')
+plt.axis('off')
+plt.show()
+
+plt.figure(figsize=(12,5), facecolor='black')
+plt.plot(collision_mass_history, color='cyan', linewidth=2)
+plt.title("Collision Zone Mass Over Time (Stronger BAO Bias)", color='white')
+plt.xlabel("Generation (×100)", color='white')
+plt.ylabel("Live Cells in Collision Zone", color='white')
+plt.grid(True, color='gray', alpha=0.3)
+plt.show()
+
+print("\nTrial 436 complete.")
+print("Check mass plot and FFT peak for any clear oscillatory ringing.")
