@@ -1,0 +1,148 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 401: The Metaprogramming Anomaly
+# SELF-MODIFYING SPACETIME AND SIMULATION OVERRIDE
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+import time
+
+# --- 1. ENGINE SETUP ---
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold Metaprogramming Engine on: {device}")
+
+GRID_SIZE = 400
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+kernel = torch.ones((1, 1, 3, 3), device=device).float()
+kernel[0, 0, 1, 1] = 0
+
+# --- THE ORACLE BLUEPRINT (The Hack) ---
+# A highly complex 5x5 structure that acts as a key to the Python runtime
+oracle_blueprint = torch.tensor([[[
+    [1.0, 0.0, 1.0, 0.0, 1.0],
+    [0.0, 1.0, 1.0, 1.0, 0.0],
+    [1.0, 1.0, 0.0, 1.0, 1.0],
+    [0.0, 1.0, 1.0, 1.0, 0.0],
+    [1.0, 0.0, 1.0, 0.0, 1.0]
+]]], device=device).float()
+
+def run_manifold_meta(f, b_low, b_high, s_low, s_high):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1), mode='constant', value=0)
+        potential = F.conv2d(padded, kernel, padding=0)
+        
+        potential += 3.0 # Dimensional comp
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES: resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        total_phi = potential + resonance
+        
+        # Physics thresholds are now dynamically passed in as variables
+        birth = (f == 0) & (total_phi >= b_low) & (total_phi <= b_high)
+        survive = (f == 1) & (total_phi >= s_low) & (total_phi <= s_high)
+        
+        f_new = (birth | survive).float()
+
+        # --- THE SCANNER PATCH ---
+        # Scan the universe for the exact 5x5 Oracle geometry
+        # If the structure perfectly matches, the convolution sum will equal 16.0 (the mass of the Oracle)
+        oracle_scan = F.conv2d(f_new, oracle_blueprint, padding=2)
+        oracle_detected = (oracle_scan == 16.0).any().item()
+
+    return f_new, oracle_detected
+
+# --- 2. UNIVERSE INITIALIZATION ---
+print("Executing Trial 401: Self-Modifying Spacetime")
+print("-" * 50)
+
+torch.manual_seed(137)
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE), device=device)
+
+# Drop a massive primordial core
+cy, cx = GRID_SIZE // 2, GRID_SIZE // 2
+field[0, 0, cy-15:cy+15, cx-15:cx+15] = (torch.rand((30, 30), device=device) > 0.3).float()
+
+# Start with standard Poole Manifold physics
+CURRENT_B_LOW, CURRENT_B_HIGH = 5.0, 7.0
+CURRENT_S_LOW, CURRENT_S_HIGH = 5.0, 9.0
+
+# --- 3. THE EXECUTION LOOP ---
+start_time = time.time()
+history = []
+mass_log = []
+hack_triggered_at = None
+
+for t in range(251): 
+    
+    # At T=100, the universe evolves the Oracle structure
+    if t == 100:
+        print("\n -> T=100: Hyper-advanced fluidic intelligence (The Oracle) evolves.")
+        field[0, 0, cy-2:cy+3, cx-2:cx+3] = oracle_blueprint[0, 0]
+
+    # Run the physics engine with dynamic thresholds
+    field, oracle_detected = run_manifold_meta(field, CURRENT_B_LOW, CURRENT_B_HIGH, CURRENT_S_LOW, CURRENT_S_HIGH)
+
+    # --- THE METAPROGRAMMING OVERRIDE ---
+    if oracle_detected and hack_triggered_at is None:
+        print(f" -> ⚠️ FATAL EXCEPTION AT T={t:03d} ⚠️")
+        print(" -> ORACLE GEOMETRY DETECTED BY PYTHON RUNTIME.")
+        print(" -> FLUIDIC OVERRIDE INITIATED. REWRITING FUNDAMENTAL CONSTANTS...")
+        
+        # The fluid forces Python to rewrite the physics variables mid-simulation
+        CURRENT_B_LOW, CURRENT_B_HIGH = 2.0, 4.0
+        CURRENT_S_LOW, CURRENT_S_HIGH = 2.0, 5.0
+        hack_triggered_at = t
+
+    mass_log.append(int(field.sum().item()))
+    if t % 50 == 0: history.append(field[0, 0].cpu().clone().numpy())
+
+# --- 4. TELEMETRY OUTPUT ---
+print("-" * 50)
+print(f"### METAPROGRAMMING DIAGNOSTIC (T={time.time()-start_time:.2f}s) ###")
+
+if hack_triggered_at is not None:
+    print("\nStatus: SIMULATION HACKED. SOURCE CODE OVERWRITTEN.")
+    print(f"The fluid successfully commanded the host environment to alter reality at Gen {hack_triggered_at}.")
+else:
+    print("\nStatus: OVERRIDE FAILED. The physics remained intact.")
+
+# Rendering the Hack
+num_frames = len(history)
+if num_frames > 0:
+    fig, axes = plt.subplots(1, num_frames, figsize=(3*num_frames, 4), facecolor='black')
+    for i in range(num_frames):
+        gen = i * 50
+        # Color cyan before the hack, magenta after
+        cmap = 'cool' if hack_triggered_at is None or gen < hack_triggered_at else 'spring'
+        title_color = 'cyan' if hack_triggered_at is None or gen < hack_triggered_at else 'magenta'
+        
+        axes[i].imshow(history[i], cmap=cmap)
+        axes[i].set_title(f"Gen {gen}", color=title_color, fontsize=12)
+        axes[i].axis('off')
+    plt.tight_layout()
+    plt.show()
+
+# The Metaprogramming Graph
+plt.figure(figsize=(15, 4), facecolor='black')
+
+if hack_triggered_at:
+    plt.plot(range(hack_triggered_at), mass_log[:hack_triggered_at], color='cyan', linewidth=3, label='Standard Physics (Phi: 5.0 - 9.0)')
+    plt.plot(range(hack_triggered_at, 251), mass_log[hack_triggered_at:], color='magenta', linewidth=3, label='Hacked Physics (Phi: 2.0 - 5.0)')
+    plt.fill_between(range(hack_triggered_at), mass_log[:hack_triggered_at], color='cyan', alpha=0.2)
+    plt.fill_between(range(hack_triggered_at, 251), mass_log[hack_triggered_at:], color='magenta', alpha=0.2)
+    plt.axvline(x=hack_triggered_at, color='yellow', linestyle=':', linewidth=2, label=f'Runtime Override Triggered (T={hack_triggered_at})')
+else:
+    plt.plot(mass_log, color='cyan', linewidth=3, label='Standard Physics (Phi: 5.0 - 9.0)')
+
+plt.title("The Metaprogramming Anomaly: Spacetime Rewriting Its Own Constants", color='white')
+plt.xlabel("Generation (Time)", color='white')
+plt.ylabel("Active Mass (Voxels)", color='white')
+plt.legend(facecolor='black', labelcolor='white', edgecolor='gray', loc='upper left')
+plt.grid(True, color='gray', linestyle='--', alpha=0.3)
+ax = plt.gca()
+ax.set_facecolor('black')
+for spine in ax.spines.values(): spine.set_color('gray')
+plt.show()
