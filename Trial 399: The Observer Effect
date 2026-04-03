@@ -1,0 +1,121 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 399: The Observer Effect
+# DOUBLE SLIT EXPERIMENT AND WAVE FUNCTION COLLAPSE
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+import time
+
+# --- 1. ENGINE SETUP (SCALAR VECTOR POTENTIAL WAVES) ---
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold Quantum Observer on: {device}")
+
+GRID_Y, GRID_X = 200, 400
+
+# The Laplacian kernel for pure scalar wave propagation (Underlying SVP physics)
+laplacian = torch.tensor([[[[0.0, 1.0, 0.0], 
+                            [1.0, -4.0, 1.0], 
+                            [0.0, 1.0, 0.0]]]], device=device)
+c_squared = 0.25 # Wave speed constant
+
+# The Double Slit Wall
+wall_mask = torch.zeros((1, 1, GRID_Y, GRID_X), device=device).bool()
+wall_x = 100
+wall_mask[0, 0, :, wall_x:wall_x+5] = True
+
+# Slit 1 (Y: 80 to 90) and Slit 2 (Y: 110 to 120)
+wall_mask[0, 0, 80:90, wall_x:wall_x+5] = False
+wall_mask[0, 0, 110:120, wall_x:wall_x+5] = False
+
+def execute_universe_run(measurement_active=False):
+    # u is the current wave state, u_prev is the past (for momentum)
+    u = torch.zeros((1, 1, GRID_Y, GRID_X), device=device)
+    u_prev = torch.zeros((1, 1, GRID_Y, GRID_X), device=device)
+    
+    history = []
+    
+    for t in range(401):
+        # 1. Emit continuous scalar waves from the left wall
+        # We use a sine wave to create distinct peaks and troughs
+        emitter_freq = 0.2
+        u[0, 0, 80:120, 5:10] = torch.sin(torch.tensor(t * emitter_freq, device=device)) * 5.0
+        
+        # 2. Wave Propagation Physics (SVP layer)
+        with torch.no_grad():
+            u_padded = F.pad(u, (1, 1, 1, 1), mode='constant', value=0)
+            lap = F.conv2d(u_padded, laplacian, padding=0)
+            
+            # Standard discrete wave equation
+            u_next = 2.0 * u - u_prev + c_squared * lap
+            
+            # Apply the impenetrable wall
+            u_next[wall_mask] = 0.0
+            
+            # --- 3. THE OBSERVER PATCH (WAVE FUNCTION COLLAPSE) ---
+            if measurement_active:
+                # The observer actively "measures" the slits.
+                # This forces the continuous float wave to collapse into discrete, solid binary states.
+                slit_area = u_next[0, 0, :, wall_x:wall_x+5]
+                # Collapse into distinct particles (0 or 1) based on probability amplitude, destroying phase
+                collapsed_particles = torch.where(slit_area > 0.5, 2.0, 0.0) 
+                u_next[0, 0, :, wall_x:wall_x+5] = collapsed_particles
+            
+        u_prev = u.clone()
+        u = u_next.clone()
+        
+        # Apply damping to the edges so waves don't bounce back and muddy the results
+        u[0, 0, :, -10:] *= 0.8
+        u[0, 0, :10, :] *= 0.8
+        u[0, 0, -10:, :] *= 0.8
+        
+        if t % 100 == 0:
+            history.append(u[0, 0].cpu().clone().numpy())
+            
+    # Capture the final distribution hitting the back wall
+    back_wall_impact = u[0, 0, :, 350:380].abs().mean(dim=1).cpu().numpy()
+    
+    return history[-1], back_wall_impact
+
+# --- 2. THE DUAL EXECUTION ---
+print(" -> Running Universe A: The Unobserved Wave (Schrödinger's State)...")
+final_state_unobserved, impact_unobserved = execute_universe_run(measurement_active=False)
+
+print(" -> Running Universe B: The Observed Wave (Measurement Collapse)...")
+final_state_observed, impact_observed = execute_universe_run(measurement_active=True)
+
+# --- 3. TELEMETRY OUTPUT ---
+print("-" * 50)
+print("### QUANTUM MEASUREMENT DIAGNOSTIC ###")
+print("Rendering Reality Comparison...")
+
+fig, axes = plt.subplots(2, 2, figsize=(16, 10), facecolor='black')
+
+# Top Row: UNOBSERVED
+axes[0, 0].imshow(final_state_unobserved, cmap='twilight_shifted', vmin=-2, vmax=2)
+axes[0, 0].set_title("Universe A (Unobserved): Continuous Probability Wave", color='white')
+axes[0, 0].axis('off')
+axes[0, 0].axvline(x=wall_x, color='gray', linestyle='--')
+
+axes[0, 1].plot(impact_unobserved, color='cyan', linewidth=2)
+axes[0, 1].set_title("Back Wall Impact: Interference Pattern Detected", color='cyan')
+axes[0, 1].set_facecolor('black')
+axes[0, 1].tick_params(colors='white')
+axes[0, 1].grid(True, color='gray', alpha=0.3)
+
+# Bottom Row: OBSERVED
+axes[1, 0].imshow(final_state_observed, cmap='twilight_shifted', vmin=-2, vmax=2)
+axes[1, 0].set_title("Universe B (Observed): Collapsed Particle Trajectories", color='white')
+axes[1, 0].axis('off')
+axes[1, 0].axvline(x=wall_x, color='red', linestyle='--')
+
+axes[1, 1].plot(impact_observed, color='magenta', linewidth=2)
+axes[1, 1].set_title("Back Wall Impact: Interference Destroyed (Particle Distribution)", color='magenta')
+axes[1, 1].set_facecolor('black')
+axes[1, 1].tick_params(colors='white')
+axes[1, 1].grid(True, color='gray', alpha=0.3)
+
+plt.tight_layout()
+plt.show()
