@@ -1,0 +1,114 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 423: Side-by-Side Orch OR Hybrid with γ Damping
+# Matter + Coherence layers, objective reduction events, tetrahedral sensors
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Trial 423: Side-by-Side Orch OR Hybrid + γ Damping — {device}")
+
+GRID_SIZE = 200
+CENTER = GRID_SIZE // 2
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def build_cac(field):
+    PHI = (1 + np.sqrt(5)) / 2
+    TILT = 1.47 * np.pi / 180
+    for step in range(-80, 81):
+        x = int(CENTER + step * PHI * np.cos(TILT))
+        y = int(CENTER + step * PHI * np.sin(TILT))
+        field[0, 0, y-4:y+4, x-4:x+4, CENTER-12:CENTER+12] = 1.0
+    field[0, 0, CENTER-12:CENTER+12, CENTER-12:CENTER+12, CENTER-18:CENTER+19] = 1.0
+    return field
+
+def run_layer(f, gamma, t, is_coherence=False):
+    with torch.no_grad():
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel)
+        
+        resonance = torch.zeros_like(potential)
+        weight = 1.8 if is_coherence else 1.0                    # stronger resonance in coherence layer
+        for p in PRIMES:
+            resonance += weight * 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        
+        if is_coherence and gamma > 0:
+            resonance = resonance * (1.0 - gamma)                 # γ damping only on coherence
+        
+        total_phi = potential + resonance
+        
+        b_low = 5.0 - (0.3 if is_coherence and gamma > 0 else 0)
+        b_high = 7.0 + (0.3 if is_coherence and gamma > 0 else 0)
+        s_low = 5.0 - (0.3 if is_coherence and gamma > 0 else 0)
+        s_high = 9.0 + (0.3 if is_coherence and gamma > 0 else 0)
+        
+        birth = (f == 0) & (total_phi >= b_low) & (total_phi <= b_high)
+        survive = (f == 1) & (total_phi >= s_low) & (total_phi <= s_high)
+        return (birth | survive).float()
+
+# Initialize two layers
+matter = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+coherence = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+matter = build_cac(matter)
+coherence = build_cac(coherence)
+
+print("Dual-layer Orch OR hybrid started. Control vs Damped (γ=0.12)\n")
+
+history_m = []
+history_c = []
+or_events = []
+
+for t in range(801):
+    matter = run_layer(matter, 0.00, t, is_coherence=False)
+    coherence_control = run_layer(coherence.clone(), 0.00, t, is_coherence=True)
+    coherence_damped  = run_layer(coherence.clone(), 0.12, t, is_coherence=True)
+    
+    # Objective reduction event detection
+    corr = torch.abs(matter - coherence_control).mean().item()
+    if corr > 0.18 and t % 50 == 0:
+        or_events.append(t)
+    
+    if t % 100 == 0 or t == 800:
+        print(f"Gen {t:3d} | Matter dens: {matter.mean().item():.4f} | "
+              f"Coherence (control): {coherence_control.mean().item():.4f} | "
+              f"Coherence (damped): {coherence_damped.mean().item():.4f} | "
+              f"OR events so far: {len(or_events)}")
+        
+        history_m.append(matter[0,0,:,:,CENTER].cpu().clone().numpy())
+        history_c.append(coherence_control[0,0,:,:,CENTER].cpu().clone().numpy())
+
+# =============================================================================
+# Visualization
+# =============================================================================
+fig, axes = plt.subplots(2, 3, figsize=(15, 10), facecolor='black')
+
+axes[0,0].imshow(history_m[-1], cmap='inferno')
+axes[0,0].set_title("Matter Layer — Final Slice", color='white')
+
+axes[0,1].imshow(history_c[-1], cmap='inferno')
+axes[0,1].set_title("Coherence Layer (Control) — Final Slice", color='white')
+
+axes[1,0].imshow(history_c[-1] - history_m[-1], cmap='RdBu_r')
+axes[1,0].set_title("Coherence - Matter Difference (Control)", color='white')
+
+axes[1,1].imshow(history_c[-1] * 0.0, cmap='inferno')  # placeholder for damped if you want to extend
+axes[1,1].set_title("Damped Coherence Layer (placeholder)", color='white')
+
+axes[0,2].text(0.5, 0.5, f"Objective Reduction Events: {len(or_events)}\n"
+                         f"Last at Gen {or_events[-1] if or_events else 'None'}",
+               horizontalalignment='center', verticalalignment='center',
+               transform=axes[0,2].transAxes, color='white', fontsize=14)
+
+for ax in axes.flat:
+    ax.axis('off')
+plt.tight_layout()
+plt.show()
+
+print("\nTrial 423 complete.")
+print("Look at the coherence layer vs matter layer and any objective reduction events.")
