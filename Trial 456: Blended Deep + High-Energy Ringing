@@ -1,0 +1,110 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 456: Blended Deep + High-Energy Ringing
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Trial 456: Blended Deep + High-Energy Ringing — {device}")
+
+GRID_SIZE = 240
+CENTER = GRID_SIZE // 2
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+MAX_AMPLITUDE = 1.60
+BINDING_BIAS = 0.06
+
+def run_manifold(f, t):
+    with torch.no_grad():
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel)
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        
+        # === BLENDED DEEPEST PURE DECAYING SINE ===
+        global_phase = torch.tensor(t / 120000.0, dtype=torch.float32, device=device)
+        decay = torch.exp(-global_phase)
+        
+        bias = MAX_AMPLITUDE * decay * torch.sin(0.09 * torch.tensor(t, dtype=torch.float32, device=device))
+        
+        total_phi = potential + resonance + bias
+        
+        # Minimal binding in knot zone
+        binding_mask = torch.zeros_like(total_phi)
+        binding_mask[0,0, CENTER-50:CENTER+50, CENTER-50:CENTER+50, CENTER-20:CENTER+20] = 1.0
+        total_phi = total_phi + BINDING_BIAS * binding_mask
+        
+        # Beta-decay asymmetry
+        asym_mask = torch.zeros_like(total_phi)
+        asym_mask[0,0, CENTER-50:CENTER+50, CENTER-50:CENTER+50, CENTER-20:CENTER+20] = 1.0
+        total_phi = total_phi - 0.15 * asym_mask
+        
+        birth = (f == 0) & (total_phi >= 5.0) & (total_phi <= 7.0)
+        survive = (f == 1) & (total_phi >= 5.0) & (total_phi <= 9.0)
+        return (birth | survive).float()
+
+# Initialize MechanimalChief orthogonal knot
+field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+
+# Orthogonal cross-flow
+field[0,0, CENTER-12:CENTER+12, CENTER-70:CENTER-58, CENTER-12:CENTER+12] = 1.0
+field[0,0, CENTER-70:CENTER-58, CENTER-12:CENTER+12, CENTER-12:CENTER+12] = 1.0
+
+# Counter-rotating rings
+field[0,0, CENTER-35:CENTER-25, CENTER-35:CENTER-25, CENTER-12:CENTER+12] = 1.0
+field[0,0, CENTER+25:CENTER+35, CENTER+25:CENTER+35, CENTER-12:CENTER+12] = 1.0
+field[0,0, CENTER-35:CENTER-25, CENTER+25:CENTER+35, CENTER-12:CENTER+12] = 1.0
+field[0,0, CENTER+25:CENTER+35, CENTER-35:CENTER-25, CENTER-12:CENTER+12] = 1.0
+
+print("MechanimalChief knot + blended deepest pure decaying sine bias + minimal binding initialized.\n")
+
+collision_mass_history = []
+
+for t in range(75001):
+    field = run_manifold(field, t)
+    
+    if t % 100 == 0 or t == 75000:
+        density = field.mean().item()
+        zone = field[0,0, CENTER-50:CENTER+50, CENTER-50:CENTER+50, CENTER-20:CENTER+20]
+        collision_mass = zone.sum().item()
+        collision_mass_history.append(collision_mass)
+        
+        print(f"Gen {t:5d} | Global Density: {density:.4f} | Collision Zone Mass: {collision_mass:6.0f}")
+
+# Final metrics
+collision_array = np.array(collision_mass_history)
+print("\n=== KNOT STABILITY + BLENDED DEEPEST PURE DECAYING SINE BIAS + MINIMAL BINDING ===")
+print(f"Mean mass          : {collision_array.mean():.0f}")
+print(f"Std dev            : {collision_array.std():.0f}")
+print(f"Final mass         : {collision_array[-1]:.0f}")
+
+fft = np.abs(np.fft.rfft(collision_array[500:]))
+freqs = np.fft.rfftfreq(len(collision_array[500:]), d=1)
+peak_idx = np.argmax(fft[1:]) + 1
+print(f"Strongest frequency peak: {freqs[peak_idx]:.4f} (higher = more oscillatory)")
+
+# Visualizations
+plt.figure(figsize=(10,10), facecolor='black')
+plt.imshow(field[0,0,:,:,CENTER].cpu().numpy(), cmap='inferno')
+plt.title("Final State: MechanimalChief Knot + Blended Deepest Pure Decaying Sine Bias + Minimal Binding", color='white')
+plt.axis('off')
+plt.show()
+
+plt.figure(figsize=(12,5), facecolor='black')
+plt.plot(collision_mass_history, color='cyan', linewidth=2)
+plt.title("Collision Zone Mass Over Time (Blended Deepest Pure Decaying Sine Bias + Minimal Binding)", color='white')
+plt.xlabel("Generation (×100)", color='white')
+plt.ylabel("Live Cells in Collision Zone", color='white')
+plt.grid(True, color='gray', alpha=0.3)
+plt.show()
+
+print("\nTrial 456 complete.")
+print("This hybrid should give us the perfect blend of deep ringing + high-energy persistence.")
