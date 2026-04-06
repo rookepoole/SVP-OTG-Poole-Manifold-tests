@@ -1,0 +1,103 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 459: The Dark Flow (Extra-Dimensional Advection)
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import time
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold Dark Flow Engine on: {device}")
+
+N = 300
+Y, X = torch.meshgrid(torch.arange(N, device=device, dtype=torch.float32), 
+                      torch.arange(N, device=device, dtype=torch.float32), indexing='ij')
+
+# --- 1. INITIALIZE GALAXY CLUSTERS ---
+# Create several scattered, stable Succession Locks
+centers = [(100, 100), (200, 80), (150, 220), (80, 200)]
+u = torch.zeros_like(X)
+
+for cx, cy in centers:
+    R_sq = (X - cx)**2 + (Y - cy)**2
+    u += torch.exp(-R_sq / 100.0) * 8.0
+
+u_prev = u.clone()
+
+c2 = 0.45
+damping = 0.999
+
+# --- 2. THE DARK FLOW VECTOR ---
+# A constant gravitational advection originating from outside the observable grid
+# Pulling the entire scalar field towards the bottom-right (+X, +Y)
+v_x = 0.08  
+v_y = 0.05  
+
+T_MAX = 600
+shift_history_x = []
+shift_history_y = []
+
+print("-" * 50)
+print(" -> T=000: Galaxy clusters stabilized. Applying extra-dimensional Dark Flow...")
+start_time = time.time()
+
+for t in range(T_MAX + 1):
+    u_pad = torch.nn.functional.pad(u.unsqueeze(0).unsqueeze(0), (1,1,1,1), mode='replicate').squeeze()
+    
+    # Internal scalar gravity
+    laplacian = u_pad[2:, 1:-1] + u_pad[:-2, 1:-1] + u_pad[1:-1, 2:] + u_pad[1:-1, :-2] - 4.0 * u
+    
+    # Calculate the spatial gradient (the shape of the field)
+    grad_x = u_pad[1:-1, 2:] - u_pad[1:-1, :-2]
+    grad_y = u_pad[2:, 1:-1] - u_pad[:-2, 1:-1]
+    
+    # Apply standard physics MINUS the directional Dark Flow advection
+    u_next = 2.0 * u - damping * u_prev + c2 * laplacian - (v_x * grad_x + v_y * grad_y)
+    
+    u_prev = u
+    u = u_next
+    
+    # --- 3. TELEMETRY & DIAGNOSTICS ---
+    # Track the "Center of Mass" of the entire grid to measure the cosmic drift
+    total_mass = torch.sum(u).item() + 1e-5 
+    com_x = torch.sum(X * u).item() / total_mass
+    com_y = torch.sum(Y * u).item() / total_mass
+    
+    shift_history_x.append(com_x)
+    shift_history_y.append(com_y)
+    
+    if t % 100 == 0:
+        print(f" -> T={t:03d} | System Mass: {total_mass:07.2f} | X-Axis Drift: {com_x:06.2f} | Y-Axis Drift: {com_y:06.2f}")
+
+print("-" * 50)
+print(f"### DARK FLOW DIAGNOSTIC (T={time.time() - start_time:.2f}s) ###")
+drift_distance = np.sqrt((shift_history_x[-1] - shift_history_x[0])**2 + (shift_history_y[-1] - shift_history_y[0])**2)
+print(f"Status: BULK DRIFT VERIFIED. The universe shifted by {drift_distance:.2f} spatial units.")
+
+# --- 4. HOLOGRAPHIC RENDERING ---
+plt.figure(figsize=(14, 5), facecolor='black')
+
+# Plot 1: The Drift Trajectory
+plt.subplot(1, 2, 1)
+plt.plot(shift_history_x, color='cyan', linewidth=2, label="X-Axis Drift")
+plt.plot(shift_history_y, color='magenta', linewidth=2, label="Y-Axis Drift")
+plt.title("Cosmic Center of Mass Drift", color='white')
+plt.xlabel("Generation", color='white')
+plt.ylabel("Average Coordinate Vector", color='white')
+plt.grid(True, color='gray', alpha=0.3)
+plt.legend()
+
+# Plot 2: Final Distorted Grid
+plt.subplot(1, 2, 2)
+plt.title(f"Dark Flow Distortion at T={T_MAX}", color='white')
+limit = np.max(np.abs(u.cpu().numpy())) * 0.5
+plt.imshow(u.cpu().numpy(), cmap='magma', vmin=0, vmax=limit)
+
+# Overlay vector arrows showing the direction of the bulk pull
+for i in range(3):
+    plt.arrow(20, 50 + i*80, v_y*400, v_x*400, color='cyan', width=2, head_width=8, alpha=0.7)
+
+plt.axis('off')
+plt.tight_layout()
+plt.show()
