@@ -1,0 +1,64 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 451b: Fractal Resonance (Renormalized)
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import time
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold Renormalized Engine on: {device}")
+
+N = 500
+CENTER = N // 2
+u = torch.zeros((N, N), device=device)
+u_prev = torch.zeros((N, N), device=device)
+
+# --- PATCHED PHYSICS CONSTANTS ---
+phi = (1.0 + 5.0**0.5) / 2.0  
+c2 = 0.20                     # Reduced propagation speed for grid stability
+alpha = 0.002                 # Renormalized coupling constant
+damping = 0.999               # Topological friction to prevent UV Catastrophe
+
+Y, X = torch.meshgrid(torch.arange(N, device=device), torch.arange(N, device=device), indexing='ij')
+R = torch.sqrt((X - CENTER)**2 + (Y - CENTER)**2)
+macro_boundary = (R > N//2 - 15) & (R < N//2 - 5)
+
+T_MAX = 800
+print("-" * 50)
+print(" -> T=000: Initializing Stabilized Micro-Singularity & Macro-Envelope...")
+start_time = time.time()
+
+for t in range(T_MAX + 1):
+    u_pad = torch.nn.functional.pad(u.unsqueeze(0).unsqueeze(0), (1,1,1,1), mode='replicate').squeeze(0).squeeze(0)
+    laplacian = u_pad[2:, 1:-1] + u_pad[:-2, 1:-1] + u_pad[1:-1, 2:] + u_pad[1:-1, :-2] - 4.0 * u
+    
+    # Renormalized Wave Equation
+    u_next = (2.0 * u - damping * u_prev + c2 * laplacian) - alpha * (u**3)
+    
+    # Tuned Injection Amplitudes
+    u_next[CENTER, CENTER] = 2.0 * torch.sin(torch.tensor(t * phi * 0.4, device=device))
+    u_next[macro_boundary] = 1.0 * torch.sin(torch.tensor(t * phi * 0.005, device=device))
+    
+    u_prev = u
+    u = u_next
+    
+    if t % 100 == 0:
+        core_amp = u[CENTER, CENTER].item()
+        mid_amp = u[CENTER + 50, CENTER + 50].item()
+        print(f" -> T={t:03d} | Micro Core Amp: {core_amp:05.2f} | Mid-Space Amp: {mid_amp:05.2f}")
+
+print("-" * 50)
+print(f"### FRACTAL RESONANCE DIAGNOSTIC (T={time.time() - start_time:.2f}s) ###")
+
+plt.figure(figsize=(10, 10), facecolor='black')
+wave_data = u.cpu().numpy()
+view_window = wave_data[20:-20, 20:-20]
+
+# Enhanced contrast limits to reveal the standing waves
+limit = np.max(np.abs(view_window)) * 0.8 
+plt.imshow(view_window, cmap='twilight_shifted', vmin=-limit, vmax=limit)
+plt.title(f"Fractal Resonance: Stabilized Interference Pattern (T={T_MAX})", color='white')
+plt.axis('off')
+plt.show()
