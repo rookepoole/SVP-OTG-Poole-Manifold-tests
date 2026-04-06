@@ -1,0 +1,131 @@
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+import seaborn as sns
+
+sns.set_style("darkgrid")
+
+# ====================== CONFIG ======================
+GRID_SIZE = 128
+GENERATIONS = 700
+PROBE_START_RADII = [18, 25, 35, 45, 55]
+PROBES_PER_RADIUS = 16
+PROBE_STEPS = 350
+
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {DEVICE}")
+
+kernel = torch.ones((1, 1, 3, 3, 3), dtype=torch.float32, device=DEVICE)
+kernel[0, 0, 1, 1, 1] = 0
+
+def circular_pad_3d(x):
+    return F.pad(x, (1,1,1,1,1,1), mode='circular')
+
+# ====================== CORE RULES (with central clogging) ======================
+def poole_step(grid, growth_bias=0.145, resonance_strength=0.09):
+    padded = circular_pad_3d(grid.unsqueeze(0).unsqueeze(0).float())
+    neighbors = F.conv3d(padded, kernel, padding=0).squeeze(0).squeeze(0)
+    
+    birth = ((neighbors >= 5) & (neighbors <= 7) & (grid == 0))
+    survive = ((neighbors >= 5) & (neighbors <= 9) & (grid == 1))
+    
+    low_density = neighbors < 4
+    extra_birth = torch.rand_like(grid, dtype=torch.float32) < growth_bias
+    birth |= (low_density & (grid == 0) & extra_birth)
+    
+    # Mild prime resonance
+    x, y, z = torch.meshgrid(torch.arange(GRID_SIZE, device=DEVICE),
+                             torch.arange(GRID_SIZE, device=DEVICE),
+                             torch.arange(GRID_SIZE, device=DEVICE), indexing='ij')
+    coord_sum = (x + y + z) % 53
+    is_resonant = torch.isin(coord_sum, torch.tensor([2,3,5,7,11,13,17,19], device=DEVICE))
+    resonance_boost = (torch.rand_like(grid, dtype=torch.float32) < resonance_strength) & is_resonant
+    birth |= (resonance_boost & (grid == 0))
+    
+    return (birth | survive).to(torch.int8)
+
+# ====================== EXTREME CORE ======================
+def create_extreme_blackhole_seed(size=GRID_SIZE, core_radius=18):
+    grid = torch.zeros((size, size, size), dtype=torch.int8, device=DEVICE)
+    x, y, z = torch.meshgrid(torch.arange(size, device=DEVICE),
+                             torch.arange(size, device=DEVICE),
+                             torch.arange(size, device=DEVICE), indexing='ij')
+    center = size // 2
+    dist = torch.sqrt((x - center)**2.0 + (y - center)**2.0 + (z - center)**2.0)
+    
+    # Very dense core
+    grid[dist <= core_radius] = 1
+    # Thick dense shell
+    grid[(dist > core_radius) & (dist <= core_radius + 9)] = 1
+    return grid
+
+# ====================== PROBE TRACKING ======================
+def track_infalling_probes(grid, center, start_radii, probes_per_radius=PROBES_PER_RADIUS, steps=PROBE_STEPS):
+    results = {}
+    for r_start in start_radii:
+        speeds = []
+        for _ in range(probes_per_radius):
+            theta = np.random.uniform(0, 2*np.pi)
+            phi = np.random.uniform(0, np.pi)
+            
+            px = int(center[0] + r_start * np.sin(phi) * np.cos(theta)) % GRID_SIZE
+            py = int(center[1] + r_start * np.sin(phi) * np.sin(theta)) % GRID_SIZE
+            pz = int(center[2] + r_start * np.cos(phi)) % GRID_SIZE
+            
+            total_speed = 0.0
+            for _ in range(steps):
+                local_n = 0
+                for dx in [-2,-1,0,1,2]:
+                    for dy in [-2,-1,0,1,2]:
+                        for dz in [-2,-1,0,1,2]:
+                            if dx==0 and dy==0 and dz==0: continue
+                            local_n += grid[(px+dx)%GRID_SIZE, (py+dy)%GRID_SIZE, (pz+dz)%GRID_SIZE].item()
+                
+                # Stronger drag near core
+                drag = 0.09 + 0.055 * local_n
+                total_speed += drag
+                
+                # Inward bias
+                dx_center = np.sign(center[0] - px)
+                dy_center = np.sign(center[1] - py)
+                dz_center = np.sign(center[2] - pz)
+                px = (px + dx_center) % GRID_SIZE
+                py = (py + dy_center) % GRID_SIZE
+                pz = (pz + dz_center) % GRID_SIZE
+            
+            speeds.append(total_speed / steps)
+        
+        results[r_start] = np.mean(speeds)
+    
+    return results
+
+# ====================== RUN ======================
+print("Evolving extreme black hole analog...")
+grid = create_extreme_blackhole_seed()
+
+for gen in tqdm(range(GENERATIONS)):
+    grid = poole_step(grid)
+
+print(f"Final global density: {grid.float().mean().item():.4f}")
+
+# Probe test
+center = np.array([GRID_SIZE//2]*3)
+probe_results = track_infalling_probes(grid.cpu(), center, PROBE_START_RADII)
+
+# Plot
+radii = list(probe_results.keys())
+avg_speeds = list(probe_results.values())
+
+plt.figure(figsize=(10, 6))
+plt.plot(radii, avg_speeds, 'bo-', linewidth=3, markersize=8)
+plt.title('Probe Speed vs Starting Radius\nExtreme Black Hole Analog')
+plt.xlabel('Starting Radius (cells)')
+plt.ylabel('Average Probe Speed')
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('poole_extreme_bh_probe_redshift.png', dpi=300, facecolor='black')
+plt.show()
+
+print("Extreme BH probe test complete!")
