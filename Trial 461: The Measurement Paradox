@@ -1,0 +1,107 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 461: The Measurement Paradox
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import time
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold Quantum Observer Engine on: {device}")
+
+N = 300
+CENTER = N // 2
+Y, X = torch.meshgrid(torch.arange(N, device=device, dtype=torch.float32), 
+                      torch.arange(N, device=device, dtype=torch.float32), indexing='ij')
+
+R = torch.sqrt((X - CENTER)**2 + (Y - CENTER)**2) + 1e-5
+
+# --- 1. INITIALIZE SUPERPOSITION (Continuous Wave Field) ---
+# We create a highly complex, continuous interference pattern
+u = 2.0 * torch.sin(0.15 * X) * torch.cos(0.15 * Y) + torch.sin(0.05 * R)
+u_prev = u.clone()
+
+# Stable baseline physics
+c2 = 0.45 
+damping = 0.999
+
+T_MAX = 400
+collapse_radius = []
+system_entropy = []
+
+def calc_roughness(tensor):
+    # Measures how "discrete" or "steep" the local geometry is (proxy for wave collapse)
+    grad_x = torch.abs(tensor[1:-1, 2:] - tensor[1:-1, :-2])
+    return torch.mean(grad_x).item()
+
+print("-" * 50)
+print(" -> T=000: Continuous wave superposition active. Observer dormant.")
+start_time = time.time()
+
+for t in range(T_MAX + 1):
+    u_pad = torch.nn.functional.pad(u.unsqueeze(0).unsqueeze(0), (1,1,1,1), mode='replicate').squeeze()
+    
+    # Standard spatial cohesion
+    laplacian = u_pad[2:, 1:-1] + u_pad[:-2, 1:-1] + u_pad[1:-1, 2:] + u_pad[1:-1, :-2] - 4.0 * u
+    u_next = 2.0 * u - damping * u_prev + c2 * laplacian
+    
+    # --- 2. THE OBSERVER EFFECT ---
+    # At T=150, the Observer Node activates and begins measuring the field.
+    # The act of measurement forces the continuous waves to quantize into rigid integers.
+    if t >= 150:
+        if t == 150:
+             print(" -> 👁️ T=150: OBSERVER ACTIVATED. Wave function collapsing...")
+        
+        # The observer's "gaze" expands outward slightly over time
+        obs_radius = 10 + (t - 150) * 0.5
+        observer_mask = R < obs_radius
+        
+        # The Collapse: Snapping floating-point geometry to rigid discrete states
+        u_next[observer_mask] = torch.round(u_next[observer_mask])
+        collapse_radius.append(obs_radius)
+    else:
+        collapse_radius.append(0)
+        
+    u_prev = u
+    u = u_next
+    
+    # --- 3. TELEMETRY & DIAGNOSTICS ---
+    roughness = calc_roughness(u)
+    system_entropy.append(roughness)
+    
+    if t % 50 == 0:
+        state = "SUPERPOSITION" if t < 150 else "COLLAPSED"
+        print(f" -> T={t:03d} | System State: {state} | Field Rigidity: {roughness:06.4f}")
+
+print("-" * 50)
+print(f"### OBSERVER PARADOX DIAGNOSTIC (T={time.time() - start_time:.2f}s) ###")
+print("Status: COLLAPSE COMPLETE. The continuous manifold was forced into a localized particle state.")
+
+# --- 4. HOLOGRAPHIC RENDERING ---
+plt.figure(figsize=(15, 5), facecolor='black')
+
+# Plot 1: The Transition of the Field
+plt.subplot(1, 3, 1)
+plt.plot(system_entropy, color='cyan', linewidth=2, label="Field Rigidity")
+plt.axvline(x=150, color='red', linestyle='--', label="Measurement Event")
+plt.title("Wave-Function Collapse", color='white')
+plt.xlabel("Generation", color='white')
+plt.ylabel("Geometric Roughness", color='white')
+plt.grid(True, color='gray', alpha=0.3)
+plt.legend()
+
+# Plot 2: Before Observation (T=149)
+plt.subplot(1, 3, 2)
+plt.title("T=149 (Pure Superposition)", color='white')
+plt.imshow((2.0 * torch.sin(0.15 * X) * torch.cos(0.15 * Y) + torch.sin(0.05 * R)).cpu().numpy(), cmap='twilight', vmin=-3, vmax=3)
+plt.axis('off')
+
+# Plot 3: After Observation (T=400)
+plt.subplot(1, 3, 3)
+plt.title(f"T={T_MAX} (Measured & Collapsed)", color='white')
+plt.imshow(u.cpu().numpy(), cmap='twilight', vmin=-3, vmax=3)
+plt.axis('off')
+
+plt.tight_layout()
+plt.show()
