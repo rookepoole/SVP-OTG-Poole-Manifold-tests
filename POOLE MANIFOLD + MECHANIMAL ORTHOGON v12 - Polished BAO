@@ -1,0 +1,125 @@
+# =============================================================================
+# POOLE MANIFOLD + MECHANIMAL ORTHOGON v12 - Polished BAO
+# =============================================================================
+
+!pip install healpy -q
+
+import torch
+import numpy as np
+import healpy as hp
+import matplotlib.pyplot as plt
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Running on: {device}")
+
+# ====================== PARAMETERS ======================
+N = 144
+CENTER = N // 2
+radius = 50.0
+NSIDE = 32
+beta_asymmetry = 0.29
+orthogon_strength = 1.74
+damping = 0.00021
+
+# ====================== GRID ======================
+Z, Y, X = torch.meshgrid(
+    torch.arange(N, device=device, dtype=torch.float32),
+    torch.arange(N, device=device, dtype=torch.float32),
+    torch.arange(N, device=device, dtype=torch.float32),
+    indexing='ij'
+)
+R_3D = torch.sqrt((X - CENTER)**2 + (Y - CENTER)**2 + (Z - CENTER)**2) + 1e-8
+
+rx = (X - CENTER) / R_3D
+ry = (Y - CENTER) / R_3D
+rz = (Z - CENTER) / R_3D
+
+# ====================== ORTHOGON BASE ======================
+flow_xy = torch.sin(orthogon_strength * rx) * torch.cos(orthogon_strength * ry)
+flow_yz = torch.sin(orthogon_strength * ry) * torch.cos(orthogon_strength * rz)
+flow_zx = torch.sin(orthogon_strength * rz) * torch.cos(orthogon_strength * rx)
+
+base = (flow_xy + flow_yz + flow_zx) * torch.exp(-damping * R_3D**2)
+
+# ====================== POLISHED DECAYING BAO ======================
+decay_env = torch.exp(-0.00075 * R_3D)
+
+pure_radial = 3.0 * torch.sin(0.355 * R_3D) * torch.cos(1.52 * R_3D) * decay_env
+
+radial_osc = (
+    torch.sin(2.05 * R_3D) * (rx**2 - 0.35*ry**2 + 1.5*rz**2) +
+    0.8 * torch.sin(4.5 * R_3D) * (ry**2 - rz**2) +
+    1.35 * torch.sin(0.39 * R_3D) * torch.cos(4.0 * R_3D) * decay_env
+)
+
+u_3D = base + beta_asymmetry * (pure_radial + radial_osc)
+
+# Holofractal resonance
+u_3D += 0.125 * torch.sin(7.3 * R_3D) * torch.cos(4.7 * torch.log(R_3D + 1.0))
+
+u_3D = u_3D / (u_3D.abs().max() + 1e-6)
+
+# ====================== SHELL & HEALPIX ======================
+shell_mask = (R_3D > radius - 4.8) & (R_3D < radius + 4.8)
+
+x_s = (X[shell_mask] - CENTER).cpu().numpy()
+y_s = (Y[shell_mask] - CENTER).cpu().numpy()
+z_s = (Z[shell_mask] - CENTER).cpu().numpy()
+u_s = u_3D[shell_mask].cpu().numpy()
+
+r_norm = np.sqrt(x_s**2 + y_s**2 + z_s**2 + 1e-12)
+x_s *= radius / r_norm
+y_s *= radius / r_norm
+z_s *= radius / r_norm
+
+theta = np.arccos(np.clip(z_s / radius, -1.0, 1.0))
+phi = np.arctan2(y_s, x_s)
+
+NPIX = hp.nside2npix(NSIDE)
+hpx_map = np.zeros(NPIX)
+pix = hp.ang2pix(NSIDE, theta, phi)
+np.add.at(hpx_map, pix, u_s)
+counts = np.bincount(pix, minlength=NPIX)
+hpx_map /= (counts + 1e-8)
+
+cl = hp.anafast(hpx_map)
+ell = np.arange(len(cl))
+
+# ====================== PLOTS ======================
+plt.figure(figsize=(15, 11), facecolor='black')
+
+plt.subplot(2, 2, 1)
+plt.plot(ell[2:], cl[2:], color='cyan', linewidth=2.2)
+plt.title(r"Poole Manifold + Orthogon: $C_\ell$", color='white')
+plt.xlabel(r"Multipole $\ell$", color='white')
+plt.ylabel(r"$C_\ell$", color='white')
+plt.yscale('log')
+plt.grid(True, color='gray', alpha=0.35)
+plt.axvline(x=3, color='magenta', linestyle='--', alpha=0.8, label="Orthogon / Tetrahedral")
+plt.legend()
+
+plt.subplot(2, 2, 2)
+hp.mollview(hpx_map, cmap='inferno', title="Observer Shell Projection", hold=True, sub=(2,2,2))
+
+plt.subplot(2, 2, 3)
+r_bins = np.linspace(12, radius*0.68, 160)
+radial_power = []
+r_np = R_3D.cpu().numpy()
+u_np = u_3D.cpu().numpy()
+for rb in r_bins:
+    mask = (r_np > rb - 3.4) & (r_np < rb + 3.4)
+    radial_power.append(np.std(u_np[mask]) if np.any(mask) else 0)
+plt.plot(r_bins, radial_power, color='lime', linewidth=2)
+plt.title("Radial Power — BAO Decaying Oscillation")
+plt.xlabel("Radius")
+plt.ylabel("Standard Deviation")
+
+plt.subplot(2, 2, 4, projection='3d')
+xx, yy = np.meshgrid(np.arange(N), np.arange(N))
+plt.gca().plot_surface(xx, yy, u_3D[CENTER].cpu().numpy(), cmap='viridis', alpha=0.85)
+plt.title("Orthogon Central Slice")
+
+plt.tight_layout()
+plt.show()
+
+print("✅ v12 running. Expect even cleaner decaying BAO wiggles.")
