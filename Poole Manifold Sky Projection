@@ -1,0 +1,101 @@
+!pip install healpy -q
+
+import torch
+import numpy as np
+import healpy as hp
+import matplotlib.pyplot as plt
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Running on: {device}")
+
+# ====================== PARAMETERS ======================
+N = 160
+NSIDE = 64
+radius = 42.0
+lmax = 3 * NSIDE - 1
+
+# ====================== 3D QUASICRYSTAL FIELD ======================
+CENTER = N // 2
+Z, Y, X = torch.meshgrid(
+    torch.arange(N, device=device, dtype=torch.float32),
+    torch.arange(N, device=device, dtype=torch.float32),
+    torch.arange(N, device=device, dtype=torch.float32),
+    indexing='ij'
+)
+
+R_3D = torch.sqrt((X - CENTER)**2 + (Y - CENTER)**2 + (Z - CENTER)**2) + 1e-6
+
+u_3D = 5.0 * (torch.sin(0.205 * X) * torch.cos(0.205 * Y) * torch.sin(0.205 * Z) *
+              torch.exp(-R_3D**2 / 7000.0))
+
+# ====================== SHELL ======================
+shell_mask = (R_3D > radius - 1.8) & (R_3D < radius + 1.8)
+
+x_s = (X[shell_mask] - CENTER).cpu().numpy()
+y_s = (Y[shell_mask] - CENTER).cpu().numpy()
+z_s = (Z[shell_mask] - CENTER).cpu().numpy()
+u_s = u_3D[shell_mask].cpu().numpy()
+
+cos_theta = np.clip(z_s / radius, -1.0, 1.0)
+theta = np.arccos(cos_theta)
+phi   = np.arctan2(y_s, x_s)
+
+print(f"Shell points extracted: {len(theta)}")
+
+# ====================== HEALPix MAP ======================
+NPIX = hp.nside2npix(NSIDE)
+hpx_map = np.zeros(NPIX, dtype=np.float64)
+pix_idx = hp.ang2pix(NSIDE, theta, phi)
+
+np.add.at(hpx_map, pix_idx, u_s)
+counts = np.bincount(pix_idx, minlength=NPIX)
+hpx_map = np.divide(hpx_map, np.maximum(counts, 1))
+
+hpx_map -= np.mean(hpx_map)
+hpx_map = np.nan_to_num(hpx_map, nan=0.0)
+hpx_map *= 800.0   # Scale for good power spectrum visibility
+
+# ====================== POWER SPECTRA ======================
+cl_poole = hp.anafast(hpx_map, lmax=lmax)
+ell = np.arange(len(cl_poole))
+
+np.random.seed(42)
+isotropic_map = hp.synfast(np.ones(300), NSIDE, lmax=lmax, new=True)
+cl_iso = hp.anafast(isotropic_map, lmax=lmax)
+
+# ====================== PLOTTING (clean layout) ======================
+fig = plt.figure(figsize=(19, 11), facecolor='black')
+
+ax1 = fig.add_subplot(2, 2, 1)
+ax1.plot(ell, cl_poole, color='#00ffff', lw=2.8, label='Poole Manifold (OTG)')
+ax1.axvline(3, color='#ff00ff', ls='--', alpha=0.9, label='ℓ ≈ 3–4 Tetrahedral')
+ax1.axvline(4, color='#ff00ff', ls='--', alpha=0.9)
+ax1.set_title('Poole Manifold — $C_\\ell$', color='white', fontsize=15)
+ax1.set_yscale('log')
+ax1.set_xlabel('$\\ell$')
+ax1.set_ylabel('Power $C_\\ell$')
+ax1.grid(alpha=0.3)
+ax1.legend()
+
+ax2 = fig.add_subplot(2, 2, 2)
+ax2.plot(ell, cl_iso, color='#00ff88', lw=2.8, label='Isotropic Mock')
+ax2.set_title('Isotropic Random Mock — $C_\\ell$', color='white', fontsize=15)
+ax2.set_yscale('log')
+ax2.set_xlabel('$\\ell$')
+ax2.grid(alpha=0.3)
+ax2.legend()
+
+hp.mollview(hpx_map, cmap='plasma', title='Poole Manifold Sky Projection', 
+            fig=fig, sub=(2,2,3), hold=True)
+
+hp.mollview(isotropic_map, cmap='plasma', title='Isotropic Mock Sky', 
+            fig=fig, sub=(2,2,4), hold=True)
+
+plt.subplots_adjust(wspace=0.3, hspace=0.35)
+plt.show()
+
+# Statistics
+low_ell_mask = (ell >= 2) & (ell <= 6)
+ratio = cl_poole[low_ell_mask].mean() / cl_iso[low_ell_mask].mean() if cl_iso[low_ell_mask].mean() > 0 else 0
+print(f"Low-ℓ (2-6) power ratio (Poole / Isotropic): {ratio:.1f}x")
+print("✅ v2.7 complete")
