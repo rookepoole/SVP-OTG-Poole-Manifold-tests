@@ -1,0 +1,79 @@
+# =============================================================================
+# POOLE MANIFOLD — Quantitative Extraction Pipeline (Patched)
+# =============================================================================
+
+# PATCH 1: Instruct Colab to install the HEALPix library before compiling
+!pip install healpy -q
+
+import torch
+import numpy as np
+import healpy as hp
+import matplotlib.pyplot as plt
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing OTG Spherical Harmonic Extraction on: {device}")
+
+# --- 1. INITIALIZE 3D POOLE MANIFOLD ---
+# Reduced N for 3D memory limits, as we are calculating volume, not just a plane
+N = 100
+CENTER = N // 2
+Z, Y, X = torch.meshgrid(
+    torch.arange(N, device=device, dtype=torch.float32),
+    torch.arange(N, device=device, dtype=torch.float32),
+    torch.arange(N, device=device, dtype=torch.float32), 
+    indexing='ij'
+)
+
+# Simulate a stabilized 3D quasicrystal vacuum (OTG baseline)
+R_3D = torch.sqrt((X - CENTER)**2 + (Y - CENTER)**2 + (Z - CENTER)**2) + 1e-5
+u_3D = torch.sin(0.2 * X) * torch.cos(0.2 * Y) * torch.sin(0.2 * Z) * torch.exp(-(R_3D**2)/5000.0)
+
+# --- 2. DEFINE THE SPHERICAL OBSERVER SHELL ---
+# This is our virtual telescope taking a snapshot at a specific redshift (Radius = 30)
+radius = 30.0
+shell_mask = (R_3D > radius - 1.0) & (R_3D < radius + 1.0)
+
+# Extract coordinates and scalar values strictly on the shell
+x_shell = (X[shell_mask] - CENTER).cpu().numpy()
+y_shell = (Y[shell_mask] - CENTER).cpu().numpy()
+z_shell = (Z[shell_mask] - CENTER).cpu().numpy()
+u_shell = u_3D[shell_mask].cpu().numpy()
+
+# Convert Cartesian to Spherical (Theta, Phi)
+theta = np.arccos(z_shell / radius)
+phi = np.arctan2(y_shell, x_shell)
+
+# --- 3. MAP TO HEALPIX FORMAT ---
+# NSIDE determines the resolution of our spherical map
+NSIDE = 16
+NPIX = hp.nside2npix(NSIDE)
+hpx_map = np.zeros(NPIX)
+
+# Assign OTG scalar values to the HEALPix grid
+pixel_indices = hp.ang2pix(NSIDE, theta, phi)
+for i, pix in enumerate(pixel_indices):
+    hpx_map[pix] = u_shell[i]
+
+# --- 4. EXTRACT THE ANGULAR POWER SPECTRUM (C_ell) ---
+cl = hp.anafast(hpx_map)
+ell = np.arange(len(cl))
+
+# --- 5. HOLOGRAPHIC RENDERING ---
+plt.figure(figsize=(12, 5), facecolor='black')
+
+# PATCH 2: Using raw strings (r"...") to fix the LaTeX \ell escape sequence warnings
+plt.plot(ell, cl, color='cyan', marker='o', linestyle='-', linewidth=2)
+plt.title(r"Poole Manifold: Angular Power Spectrum ($C_\ell$)", color='white')
+plt.xlabel(r"Multipole Moment ($\ell$)", color='white')
+plt.ylabel(r"Power ($C_\ell$)", color='white')
+plt.grid(True, color='gray', alpha=0.3)
+plt.yscale('log')
+
+# Highlight the low-ell geometric anomalies where OTG diverges from standard cosmology
+plt.axvline(x=3, color='magenta', linestyle='--', alpha=0.7, label="Expected Tetrahedral Spike")
+plt.axvline(x=4, color='magenta', linestyle='--', alpha=0.7)
+plt.legend()
+plt.show()
+
+# Render the Spherical Sky Map
+hp.mollview(hpx_map, cmap='inferno', title="OTG Quasicrystal Sky Map Projection")
