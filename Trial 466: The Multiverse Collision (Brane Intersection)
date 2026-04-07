@@ -1,0 +1,111 @@
+# =============================================================================
+# POOLE MANIFOLD — Trial 466: The Multiverse Collision (Brane Intersection)
+# =============================================================================
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import time
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold M-Theory Engine on: {device}")
+
+N = 350
+CENTER = N // 2
+Y, X = torch.meshgrid(torch.arange(N, device=device, dtype=torch.float32), 
+                      torch.arange(N, device=device, dtype=torch.float32), indexing='ij')
+
+R = torch.sqrt((X - CENTER)**2 + (Y - CENTER)**2) + 1e-5
+
+# --- 1. INITIALIZE PARALLEL UNIVERSES ---
+# Universe Alpha: A dense, tightly bound quasicrystal lattice
+u_alpha = torch.sin(0.2 * X) * torch.cos(0.2 * Y) * torch.exp(-(R**2) / 25000.0) * 8.0
+u_alpha_prev = u_alpha.clone()
+
+# Universe Beta: A chaotic, high-frequency sparse web
+u_beta = (torch.sin(0.05 * R) + torch.randn_like(X) * 0.5) * torch.exp(-(R**2) / 25000.0) * 8.0
+u_beta_prev = u_beta.clone()
+
+c2 = 0.45
+damping = 0.998
+
+T_MAX = 500
+alpha_mass_history = []
+beta_mass_history = []
+collision_energy = []
+
+print("-" * 50)
+print(" -> T=000: Universe Alpha and Universe Beta stable on parallel branes.")
+print(" -> Initiating transverse dimensional drift...")
+start_time = time.time()
+
+for t in range(T_MAX + 1):
+    u_a_pad = torch.nn.functional.pad(u_alpha.unsqueeze(0).unsqueeze(0), (1,1,1,1), mode='replicate').squeeze()
+    u_b_pad = torch.nn.functional.pad(u_beta.unsqueeze(0).unsqueeze(0), (1,1,1,1), mode='replicate').squeeze()
+    
+    lap_alpha = u_a_pad[2:, 1:-1] + u_a_pad[:-2, 1:-1] + u_a_pad[1:-1, 2:] + u_a_pad[1:-1, :-2] - 4.0 * u_alpha
+    lap_beta  = u_b_pad[2:, 1:-1] + u_b_pad[:-2, 1:-1] + u_b_pad[1:-1, 2:] + u_b_pad[1:-1, :-2] - 4.0 * u_beta
+    
+    # --- 2. THE BRANE INTERSECTION ---
+    # The coupling constant between the two dimensions grows exponentially as they collide
+    brane_coupling = 0.0001 * np.exp(0.02 * t) if t > 100 else 0.0
+    
+    if t == 100:
+        print(" -> ⚠️ T=100: BRANE CONTACT DETECTED. Scalar phase interference initiated.")
+        
+    # Phase Interference: Each universe bleeds its spatial gradient into the other
+    alpha_bleed = brane_coupling * u_beta * lap_beta
+    beta_bleed  = brane_coupling * u_alpha * lap_alpha
+    
+    u_alpha_next = 2.0 * u_alpha - damping * u_alpha_prev + c2 * lap_alpha + alpha_bleed
+    u_beta_next  = 2.0 * u_beta - damping * u_beta_prev + c2 * lap_beta + beta_bleed
+    
+    u_alpha_prev, u_beta_prev = u_alpha, u_beta
+    u_alpha, u_beta = u_alpha_next, u_beta_next
+    
+    # --- 3. TELEMETRY ---
+    mass_a = torch.sum(torch.abs(u_alpha)).item()
+    mass_b = torch.sum(torch.abs(u_beta)).item()
+    total_interference = torch.sum(torch.abs(alpha_bleed + beta_bleed)).item()
+    
+    alpha_mass_history.append(mass_a)
+    beta_mass_history.append(mass_b)
+    collision_energy.append(total_interference)
+    
+    if t % 100 == 0:
+        print(f" -> T={t:03d} | Alpha Mass: {mass_a:08.0f} | Beta Mass: {mass_b:08.0f} | Interference Energy: {total_interference:08.0f}")
+
+print("-" * 50)
+print(f"### MULTIVERSE COLLISION DIAGNOSTIC (T={time.time() - start_time:.2f}s) ###")
+
+# --- 4. HOLOGRAPHIC RENDERING ---
+plt.figure(figsize=(18, 5), facecolor='black')
+
+plt.subplot(1, 3, 1)
+plt.plot(alpha_mass_history, color='cyan', label="Universe Alpha")
+plt.plot(beta_mass_history, color='magenta', label="Universe Beta")
+plt.plot(collision_energy, color='yellow', linestyle='--', label="Interference Energy")
+plt.axvline(x=100, color='red', linestyle=':', label="Brane Contact")
+plt.title("Multiverse Annihilation Curve", color='white')
+plt.xlabel("Generation", color='white')
+plt.ylabel("Absolute Phi Potential", color='white')
+plt.yscale('log')
+plt.grid(True, color='gray', alpha=0.3)
+plt.legend()
+
+plt.subplot(1, 3, 2)
+plt.title("Pre-Collision Matrices (T=099)", color='white')
+plt.imshow(u_alpha_prev.cpu().numpy() + u_beta_prev.cpu().numpy(), cmap='twilight_shifted')
+plt.axis('off')
+
+plt.subplot(1, 3, 3)
+plt.title(f"Post-Collision Remnant (T={T_MAX})", color='white')
+# Merge the surviving arrays to see the final unified manifold state
+final_state = u_alpha.cpu().numpy() + u_beta.cpu().numpy()
+limit = np.max(np.abs(final_state)) * 0.5
+if np.isnan(limit) or limit == 0: limit = 1.0
+plt.imshow(final_state, cmap='inferno', vmin=-limit, vmax=limit)
+plt.axis('off')
+
+plt.tight_layout()
+plt.show()
