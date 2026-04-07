@@ -1,0 +1,155 @@
+# =============================================================================
+# POOLE MANIFOLD + OTG — IMPROVED GALAXY ROTATION CURVE TEST
+# Smoother, more physical rotation for flatter curves
+# =============================================================================
+
+!pip install healpy -q
+import torch
+import numpy as np
+import healpy as hp
+import matplotlib.pyplot as plt
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Running Improved Rotation Curve Test on: {device}")
+
+# --- PARAMETERS ---
+N = 80
+CENTER = N // 2
+radius = 28.0
+NSIDE = 32
+
+orthogon_strength = 1.74
+beta_asym = 0.29
+tricyl_weight = 0.42
+monopole_weight = 0.9
+hadron_k = 0.014
+maxwell_mult = 0.25
+
+shear_strength = 0.45          # ← Main tuning knob (0.3 to 0.7 range)
+seed_type = 'He4'              # Try 'He4', 'Ca40', or 'Fe56'
+
+# --- Setup Grid ---
+Z, Y, X = torch.meshgrid(
+    torch.arange(N, device=device, dtype=torch.float32),
+    torch.arange(N, device=device, dtype=torch.float32),
+    torch.arange(N, device=device, dtype=torch.float32),
+    indexing='ij'
+)
+RX = X - CENTER
+RY = Y - CENTER
+RZ = Z - CENTER
+R = torch.sqrt(RX**2 + RY**2 + RZ**2) + 1e-6
+
+# Core geometry
+cyl = torch.minimum(torch.minimum(torch.abs(RX), torch.abs(RY)), torch.abs(RZ))
+tricyl = torch.exp(-10.0 * (cyl - 0.62)**2)
+flow = (torch.sin(0.2 * RX) * torch.cos(0.2 * RY) * torch.sin(0.2 * RZ)) * orthogon_strength
+
+# Monopoles
+planar = torch.zeros_like(R)
+r_planar = 1.5; sigma_p = 0.35
+for s in [-1.0, 1.0]:
+    planar += torch.exp(-((RX - s*r_planar)**2 + RY**2 + RZ**2) / sigma_p**2)
+    planar += torch.exp(-(RX**2 + (RY - s*r_planar)**2 + RZ**2) / sigma_p**2)
+    planar += torch.exp(-(RX**2 + RY**2 + (RZ - s*r_planar)**2) / sigma_p**2)
+
+covalent = torch.zeros_like(R)
+r_cov = 0.707; sigma_c = 0.23 if seed_type != 'He4' else 0.25
+for sx in [-1.,1.]:
+    for sy in [-1.,1.]:
+        for sz in [-1.,1.]:
+            covalent += torch.exp(-((RX - sx*r_cov)**2 + (RY - sy*r_cov)**2 + (RZ - sz*r_cov)**2) / sigma_c**2)
+
+monopole_spark = (1.0 * planar + 1.8 * covalent) * (13.8 if seed_type == 'He4' else 17.0)
+
+# Hadron Effect + Ω(r)ϕ
+void_mask = covalent > 0.001
+hadron_void = torch.zeros_like(R)
+hadron_void[void_mask] = -hadron_k * covalent[void_mask] / (1 + (R[void_mask]/12)**2)
+
+omega_r = 1.0 / (1 + 0.045 * R**2)
+phi_factor = torch.tanh(0.8 * (monopole_spark + tricyl))
+total_spark = (flow + tricyl * tricyl_weight + monopole_spark * monopole_weight + hadron_void) \
+              * omega_r * phi_factor
+total_spark += beta_asym * torch.sin(0.15 * R)
+
+# Base scalar field
+u = torch.tanh(total_spark) * torch.exp(-0.00075 * R)
+
+# === IMPROVED AZIMUTHAL ROTATION / SHEAR ===
+phi = torch.atan2(RY, RX)
+# Smoother profile: combination for flatter curve
+rotation = shear_strength * (1.0 / (1 + 0.08 * R)) * torch.cos(phi)   # Slowly falling + constant component
+
+u = u + rotation * 0.65
+
+# Maxwell perpendicular term
+div_A = (torch.gradient(flow, dim=0)[0] + torch.gradient(flow, dim=1)[0] + torch.gradient(flow, dim=2)[0])
+perp_factor = torch.abs(torch.cos(0.8 * (RX*RY + RY*RZ + RZ*RX)))
+u = u + 0.15 * div_A * perp_factor * maxwell_mult
+u = torch.tanh(u) * torch.exp(-0.00075 * R)
+
+# --- Shell & Maps ---
+shell_mask = (R > radius - 1.0) & (R < radius + 1.0)
+x_s = RX[shell_mask].cpu().numpy()
+y_s = RY[shell_mask].cpu().numpy()
+z_s = RZ[shell_mask].cpu().numpy()
+u_s = u[shell_mask].cpu().numpy()
+
+theta = np.arccos(z_s / radius)
+phi_ang = np.arctan2(y_s, x_s)
+NPIX = hp.nside2npix(NSIDE)
+hpx_map = np.zeros(NPIX)
+pix = hp.ang2pix(NSIDE, theta, phi_ang)
+np.add.at(hpx_map, pix, u_s)
+
+cl = hp.anafast(hpx_map)
+central_slice = u[CENTER].cpu().numpy()
+knot_proj = u.max(0)[0].cpu().numpy()
+
+# --- Improved Rotation Curve Diagnostic ---
+radii = np.linspace(4, 35, 25)
+velocities = []
+for rad in radii:
+    mask = (R.cpu().numpy() > rad - 1.5) & (R.cpu().numpy() < rad + 1.5)
+    if mask.sum() > 50:
+        vel = np.mean(np.abs(rotation.cpu().numpy()[mask]))
+        velocities.append(vel)
+
+# --- Plot ---
+plt.figure(figsize=(18, 11), facecolor='black')
+plt.suptitle(f'Improved Rotation Curve Test — {seed_type} Seed', color='white', fontsize=16)
+
+plt.subplot(2, 3, 1)
+plt.plot(np.arange(len(cl)), cl, color='cyan', lw=2)
+plt.axvline(3, color='magenta', ls='--')
+plt.title('C_ℓ Power Spectrum', color='white')
+plt.yscale('log')
+plt.grid(alpha=0.3)
+
+plt.subplot(2, 3, 2)
+plt.imshow(central_slice, cmap='inferno', origin='lower')
+plt.title('Central Slice', color='white')
+plt.colorbar()
+
+plt.subplot(2, 3, 3)
+plt.imshow(knot_proj, cmap='viridis', origin='lower')
+plt.title('3D Knot Max Projection', color='white')
+plt.colorbar()
+
+plt.subplot(2, 3, 4)
+hp.mollview(hpx_map, cmap='inferno', title="Sky Projection", hold=True)
+
+plt.subplot(2, 3, 5)
+plt.plot(radii[:len(velocities)], velocities, color='orange', lw=2.5, marker='o')
+plt.title('Emergent Rotation Curve', color='white')
+plt.xlabel('Radius', color='white')
+plt.ylabel('Mean Rotational Velocity', color='white')
+plt.grid(alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+
+print(f"✅ Improved Rotation Curve test complete for {seed_type}.")
+print("Look for flatter or slowly rising curve (the goal).")
+print(f"Current shear_strength = {shear_strength}")
