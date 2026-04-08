@@ -1,0 +1,143 @@
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+
+class PooleManifoldHeartSimV6:
+    def __init__(self, size: int = 96, device: str = None):
+        self.size = size
+        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        
+        self.vacuum = 0.100
+        self.throughput = 0.015
+        self.growth_bias = 1.40
+        self.pressure_strength = 2.0
+
+        # Background density field
+        self.grid = torch.full((1, 1, size, size, size), self.vacuum, 
+                              dtype=torch.float32, device=self.device)
+        
+        # Wave field for murmur propagation (displacement)
+        self.wave = torch.zeros_like(self.grid)
+        self.wave_velocity = torch.zeros_like(self.grid)   # momentum/velocity
+
+        # Kernel
+        k = torch.ones((1, 1, 3, 3, 3), device=self.device)
+        k[0, 0, 1, 1, 1] = 0
+        self.kernel = k / 26.0
+
+        # Heart
+        self.heart_center = (size//2, size//2, size//2)
+        self.heart_radius = 5
+        self.heart_freq = 1.5
+        self.steps_per_sec = 80.0   # higher temporal resolution
+        self.heart_active = False
+
+        # Probe
+        self.probe_center = (self.heart_center[0] + 32, self.heart_center[1], self.heart_center[2])
+        self.probe_radius = 3
+        self.probe_history = []
+        self.time_history = []
+
+    def _apply_heart(self, step: int):
+        if not self.heart_active:
+            return
+        t = step / self.steps_per_sec
+        pulse = 0.45 * np.sin(2 * np.pi * self.heart_freq * t)
+
+        x, y, z = torch.meshgrid(
+            torch.arange(self.size, device=self.device),
+            torch.arange(self.size, device=self.device),
+            torch.arange(self.size, device=self.device),
+            indexing='ij'
+        )
+        dist = torch.sqrt((x - self.heart_center[0])**2 + 
+                         (y - self.heart_center[1])**2 + 
+                         (z - self.heart_center[2])**2)
+        mask = dist <= self.heart_radius
+        
+        # Kick the velocity field (this creates propagating waves)
+        self.wave_velocity[0, 0][mask] += pulse * 0.28
+        # Minor density modulation
+        self.grid[0, 0][mask] = self.vacuum + pulse * 0.06 + self.grid[0, 0][mask] * 0.94
+
+    def step(self, step: int):
+        self._apply_heart(step)
+
+        # === Background density update (Poole rules) ===
+        padded = F.pad(self.grid, (1,1,1,1,1,1), mode='circular')
+        neigh = F.conv3d(padded, self.kernel, padding=0)
+
+        pressure = torch.exp(-self.grid * self.pressure_strength)
+        birth_surv = neigh * 26.0
+        growth = torch.where((birth_surv >= 5.0) & (birth_surv <= 9.0),
+                           self.growth_bias, 0.96 * self.growth_bias)
+
+        update = self.throughput * neigh * growth * pressure
+        self.grid = torch.clamp(self.grid * 0.98 + update + self.vacuum * 0.01, 0.0, 1.3)
+
+        # === Wave propagation (discrete wave equation) ===
+        wave_padded = F.pad(self.wave, (1,1,1,1,1,1), mode='circular')
+        laplacian = F.conv3d(wave_padded, self.kernel, padding=0) - self.wave   # discrete Laplacian
+
+        # Update velocity and position (damped wave)
+        self.wave_velocity = self.wave_velocity * 0.965 + laplacian * 0.085   # wave speed & damping
+        self.wave = self.wave + self.wave_velocity * 0.75
+
+        # Probe reads absolute wave amplitude (murmur strength)
+        px, py, pz = self.probe_center
+        r = self.probe_radius
+        probe_slice = self.wave[0, 0, px-r:px+r+1, py-r:py+r+1, pz-r:pz+r+1]
+        probe_val = probe_slice.mean().abs().item()   # absolute for cleaner FFT
+        
+        self.probe_history.append(probe_val)
+        self.time_history.append(step / self.steps_per_sec)
+
+    def run(self, total_steps: int = 4000, activate_at: int = 400):
+        print(f"Running Poole Manifold v6 - Wave Equation Heart Murmur on {self.size}³")
+        self.heart_active = True
+        
+        for s in range(total_steps):
+            if s == activate_at:
+                print(f"   → Heart node ACTIVATED at step {s} ({activate_at/self.steps_per_sec:.1f}s)")
+            self.step(s)
+            
+            if s % 800 == 0 or s == total_steps-1:
+                print(f"   step {s:4d}/{total_steps} | probe wave = {self.probe_history[-1]:.6f}")
+
+        print("Simulation finished.")
+        return np.array(self.time_history), np.array(self.probe_history)
+
+    def plot(self, t, probe):
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
+        
+        ax1.plot(t, probe, 'tab:blue', lw=1.0)
+        ax1.set_title("Probe Wave Signal at ~32 voxels - v6 (Wave Equation)")
+        ax1.set_xlabel("Time (s)")
+        ax1.set_ylabel("Wave Amplitude")
+        ax1.grid(alpha=0.3)
+
+        signal = probe - np.mean(probe)
+        fft = np.abs(np.fft.rfft(signal))
+        freq = np.fft.rfftfreq(len(signal), d=t[1]-t[0])
+        
+        ax2.plot(freq, fft, 'tab:red', lw=1.4)
+        ax2.set_xlim(0, 10)
+        ax2.axvline(self.heart_freq, color='black', ls='--', alpha=0.8, label=f'{self.heart_freq} Hz')
+        ax2.set_title("FFT - Recovered Frequency")
+        ax2.set_xlabel("Frequency (Hz)")
+        ax2.set_ylabel("Amplitude")
+        ax2.legend()
+        ax2.grid(alpha=0.3)
+        
+        plt.tight_layout()
+        plt.show()
+
+# ====================== RUN ======================
+if __name__ == "__main__":
+    sim = PooleManifoldHeartSimV6(size=96)
+    times, probe = sim.run(total_steps=4000, activate_at=400)
+    sim.plot(times, probe)
+    
+    np.savez("poole_heart_murmur_v6.npz", time=times, probe=probe)
+    print("\nData saved to poole_heart_murmur_v6.npz")
