@@ -1,0 +1,152 @@
+# =============================================================================
+# POOLE MANIFOLD 3D + DESI DR1 — FULL WORKING COLAB
+# Fixed: Now properly runs in 3D
+# =============================================================================
+
+# 1. Install
+!pip install -q astropy numpy matplotlib tqdm --quiet
+
+import numpy as np
+import matplotlib.pyplot as plt
+from astropy.io import fits
+from astropy.cosmology import FlatLambdaCDM
+import urllib.request
+from tqdm import tqdm
+import os
+
+print("✅ Dependencies installed")
+
+# ======================
+# 2. Download (working link)
+# ======================
+url = "https://data.desi.lbl.gov/public/dr1/survey/catalogs/dr1/LSS/iron/LSScats/v1.5/BGS_ANY_NGC_clustering.dat.fits"
+filename = "BGS_clustering.fits"
+
+if not os.path.exists(filename):
+    print("Downloading DESI DR1 BGS catalog (~480 MB)...")
+    with tqdm(unit='B', unit_scale=True, desc=filename) as t:
+        urllib.request.urlretrieve(url, filename, reporthook=lambda b, bsize, tsize: t.update(bsize))
+    print("✅ Download complete")
+else:
+    print("✅ Catalog already downloaded")
+
+# ======================
+# 3. 3D POOLE MANIFOLD RULES
+# ======================
+BIRTH_MIN = 5
+BIRTH_MAX = 7
+SURV_MIN  = 5
+SURV_MAX  = 9
+
+def poole_step_3d(grid):
+    """3D version of your Poole Manifold"""
+    shape = grid.shape
+    new_grid = np.zeros(shape, dtype=int)
+    
+    for x in range(shape[0]):
+        for y in range(shape[1]):
+            for z in range(shape[2]):
+                # Count 26 neighbors (3D Moore neighborhood)
+                nb = 0
+                for dx in [-1, 0, 1]:
+                    for dy in [-1, 0, 1]:
+                        for dz in [-1, 0, 1]:
+                            if dx == 0 and dy == 0 and dz == 0:
+                                continue
+                            nx = (x + dx) % shape[0]
+                            ny = (y + dy) % shape[1]
+                            nz = (z + dz) % shape[2]
+                            nb += grid[nx, ny, nz]
+                
+                cell = grid[x, y, z]
+                if cell == 0:  # dead
+                    if BIRTH_MIN <= nb <= BIRTH_MAX:
+                        new_grid[x, y, z] = 1
+                else:  # alive
+                    if SURV_MIN <= nb <= SURV_MAX:
+                        new_grid[x, y, z] = 1
+    return new_grid
+
+print("✅ 3D Poole Manifold rules loaded")
+
+# ======================
+# 4. LOAD DESI DATA
+# ======================
+print("Loading catalog...")
+with fits.open(filename) as hdul:
+    data = hdul[1].data
+
+ra  = data['RA']
+dec = data['DEC']
+z   = data['Z']
+
+print(f"Loaded {len(data):,} galaxies")
+
+cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
+comoving_dist = cosmo.comoving_distance(z).value
+
+# ======================
+# 5. CREATE 3D GRID
+# ======================
+N_VOXEL = 48   # 48³ is a good balance (faster than 64)
+
+ra_norm  = (ra  - ra.min())  / (ra.max()  - ra.min())
+dec_norm = (dec - dec.min()) / (dec.max() - dec.min())
+dist_norm = (comoving_dist - comoving_dist.min()) / (comoving_dist.max() - comoving_dist.min())
+
+print("Creating 3D density grid...")
+grid, _ = np.histogramdd(
+    [ra_norm, dec_norm, dist_norm],
+    bins=N_VOXEL,
+    range=[[0,1],[0,1],[0,1]]
+)
+
+density = (grid > np.percentile(grid, 75)).astype(int)   # top 25% as alive
+print(f"✅ {N_VOXEL}³ grid created with {density.sum():,} alive cells")
+
+# ======================
+# 6. EVOLVE IN 3D
+# ======================
+generations = 30
+current = density.copy()
+history = [current.sum()]
+
+print(f"Evolving 3D Poole Manifold for {generations} generations...")
+
+for gen in range(generations):
+    current = poole_step_3d(current)
+    history.append(current.sum())
+    if (gen + 1) % 5 == 0 or gen == 0 or gen == generations-1:
+        print(f"Generation {gen+1:2d} → {current.sum():,} alive cells")
+
+# ======================
+# 7. RESULTS
+# ======================
+plt.figure(figsize=(12, 5))
+
+plt.subplot(1, 2, 1)
+plt.plot(history, marker='o', linewidth=2)
+plt.title("Poole Manifold 3D on DESI DR1")
+plt.xlabel("Generation")
+plt.ylabel("Alive Cells")
+plt.grid(True)
+
+# Show middle slice along Z axis
+plt.subplot(1, 2, 2)
+mid_slice = current[:, :, N_VOXEL//2]
+plt.imshow(mid_slice, cmap='viridis', origin='lower')
+plt.title(f"Final Generation — Middle Slice (Z={N_VOXEL//2})")
+plt.colorbar(label="Cell State")
+plt.axis('off')
+
+plt.tight_layout()
+plt.show()
+
+plt.imsave("poole_desi_3d_final.png", mid_slice, cmap='viridis')
+print("\n✅ Saved final slice as 'poole_desi_3d_final.png'")
+
+print("\n=== FINAL SUMMARY ===")
+print(f"Initial alive cells : {density.sum():,}")
+print(f"Final alive cells   : {current.sum():,}")
+print(f"Grid resolution     : {N_VOXEL}³")
+print(f"Generations run     : {generations}")
