@@ -1,0 +1,195 @@
+# =============================================================================
+# POOLE MANIFOLD — REAL LRG vs RANDOM CONTROL + STRUCTURE METRICS
+# 64³ resolution, 80 generations, with clustering analysis
+# =============================================================================
+
+!pip install -q astropy numpy matplotlib tqdm scipy --quiet
+
+import numpy as np
+import matplotlib.pyplot as plt
+from astropy.io import fits
+from astropy.cosmology import FlatLambdaCDM
+import urllib.request
+from tqdm import tqdm
+import os
+from scipy import ndimage
+
+print("✅ Dependencies installed")
+
+# ======================
+# DOWNLOAD LRG
+# ======================
+url = "https://data.desi.lbl.gov/public/dr1/survey/catalogs/dr1/LSS/iron/LSScats/v1.5/LRG_NGC_clustering.dat.fits"
+filename = "LRG_clustering.fits"
+
+if not os.path.exists(filename):
+    print("Downloading LRG catalog...")
+    with tqdm(unit='B', unit_scale=True, desc=filename) as t:
+        urllib.request.urlretrieve(url, filename, reporthook=lambda b, bsize, tsize: t.update(bsize))
+    print("✅ Download complete")
+else:
+    print("✅ LRG catalog ready")
+
+# ======================
+# 3D POOLE RULES
+# ======================
+BIRTH_MIN = 5
+BIRTH_MAX = 7
+SURV_MIN  = 5
+SURV_MAX  = 9
+
+def poole_step_3d(grid):
+    shape = grid.shape
+    new_grid = np.zeros(shape, dtype=int)
+    for x in range(shape[0]):
+        for y in range(shape[1]):
+            for z in range(shape[2]):
+                nb = 0
+                for dx in [-1,0,1]:
+                    for dy in [-1,0,1]:
+                        for dz in [-1,0,1]:
+                            if dx == 0 and dy == 0 and dz == 0: continue
+                            nx = (x + dx) % shape[0]
+                            ny = (y + dy) % shape[1]
+                            nz = (z + dz) % shape[2]
+                            nb += grid[nx, ny, nz]
+                cell = grid[x, y, z]
+                if cell == 0:
+                    if BIRTH_MIN <= nb <= BIRTH_MAX:
+                        new_grid[x, y, z] = 1
+                else:
+                    if SURV_MIN <= nb <= SURV_MAX:
+                        new_grid[x, y, z] = 1
+    return new_grid
+
+print("✅ Rules loaded")
+
+# ======================
+# LOAD REAL LRG + GRID
+# ======================
+print("Loading real LRG data...")
+with fits.open(filename) as hdul:
+    data = hdul[1].data
+
+ra  = data['RA']
+dec = data['DEC']
+z   = data['Z']
+
+cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
+comoving_dist = cosmo.comoving_distance(z).value
+
+N_VOXEL = 64
+
+ra_norm  = (ra  - ra.min())  / (ra.max()  - ra.min())
+dec_norm = (dec - dec.min()) / (dec.max() - dec.min())
+dist_norm = (comoving_dist - comoving_dist.min()) / (comoving_dist.max() - comoving_dist.min())
+
+grid, _ = np.histogramdd([ra_norm, dec_norm, dist_norm], bins=N_VOXEL, range=[[0,1],[0,1],[0,1]])
+real_density = (grid > np.percentile(grid, 75)).astype(int)
+
+print(f"Real LRG initial alive: {real_density.sum():,}")
+
+# ======================
+# RANDOM CONTROL
+# ======================
+np.random.seed(42)
+random_density = np.zeros((N_VOXEL, N_VOXEL, N_VOXEL), dtype=int)
+flat_indices = np.random.choice(N_VOXEL**3, size=real_density.sum(), replace=False)
+random_density.flat[flat_indices] = 1
+
+print(f"Random control initial alive: {random_density.sum():,}")
+
+# ======================
+# RUN BOTH
+# ======================
+generations = 80
+
+def run_simulation(initial_grid, name):
+    current = initial_grid.copy()
+    history = [current.sum()]
+    print(f"\nRunning {name}...")
+    for gen in range(generations):
+        current = poole_step_3d(current)
+        history.append(current.sum())
+        if (gen + 1) % 10 == 0 or gen == 0 or gen == generations-1:
+            print(f"Gen {gen+1:2d} → {current.sum():,} alive cells")
+    return history, current
+
+real_history, real_final = run_simulation(real_density, "REAL LRG")
+random_history, random_final = run_simulation(random_density, "RANDOM CONTROL")
+
+# ======================
+# STRUCTURE METRICS
+# ======================
+def compute_structure_metrics(grid, name):
+    # 1. Connected components (islands)
+    labeled, num_components = ndimage.label(grid)
+    component_sizes = np.bincount(labeled.ravel())[1:]
+    
+    # 2. Average local clustering (average live neighbors per alive cell)
+    alive_count = grid.sum()
+    if alive_count == 0:
+        avg_neighbors = 0
+    else:
+        # Count neighbors for all cells, then average only over alive ones
+        neighbors = np.zeros_like(grid, dtype=int)
+        for dx in [-1,0,1]:
+            for dy in [-1,0,1]:
+                for dz in [-1,0,1]:
+                    if dx == 0 and dy == 0 and dz == 0: continue
+                    shifted = np.roll(np.roll(np.roll(grid, dx, axis=0), dy, axis=1), dz, axis=2)
+                    neighbors += shifted
+        avg_neighbors = neighbors[grid == 1].mean()
+    
+    # 3. Rough filamentarity (eigenvalue ratio of covariance)
+    coords = np.argwhere(grid == 1)
+    if len(coords) > 3:
+        cov = np.cov(coords.T)
+        eigenvalues = np.linalg.eigvalsh(cov)
+        eigenvalues = eigenvalues[eigenvalues > 0]
+        if len(eigenvalues) >= 2:
+            filament_score = eigenvalues.max() / eigenvalues.min()
+        else:
+            filament_score = 1.0
+    else:
+        filament_score = 1.0
+    
+    print(f"\n=== {name} STRUCTURE METRICS ===")
+    print(f"Connected components (islands) : {num_components}")
+    print(f"Largest cluster size           : {component_sizes.max() if len(component_sizes)>0 else 0:,}")
+    print(f"Average live neighbors per cell: {avg_neighbors:.2f}")
+    print(f"Filamentarity score            : {filament_score:.2f} (higher = more elongated/filamentary)")
+    return num_components, component_sizes.max() if len(component_sizes)>0 else 0, avg_neighbors, filament_score
+
+real_metrics = compute_structure_metrics(real_final, "REAL LRG")
+random_metrics = compute_structure_metrics(random_final, "RANDOM CONTROL")
+
+# ======================
+# PLOTS
+# ======================
+plt.figure(figsize=(14, 6))
+
+plt.subplot(1, 2, 1)
+plt.plot(real_history, marker='o', linewidth=2, label='Real LRG')
+plt.plot(random_history, marker='x', linewidth=2, label='Random Control')
+plt.title(f"Poole Manifold Comparison — {N_VOXEL}³, {generations} Generations")
+plt.xlabel("Generation")
+plt.ylabel("Alive Cells")
+plt.legend()
+plt.grid(True)
+
+plt.subplot(1, 2, 2)
+plt.imshow(real_final[:, :, N_VOXEL//2], cmap='viridis', origin='lower')
+plt.title("Final Real LRG — Middle Slice")
+plt.colorbar(label="Cell State")
+plt.axis('off')
+
+plt.tight_layout()
+plt.show()
+
+plt.imsave("poole_comparison_real_final.png", real_final[:, :, N_VOXEL//2], cmap='viridis')
+print("\n✅ Saved final real slice")
+
+print("\n=== FINAL ALIVE CELLS ===")
+print(f"Real LRG  : {real_final.sum():,}")
+print(f"Random    : {random_final.sum():,}")
