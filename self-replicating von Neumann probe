@@ -1,0 +1,156 @@
+!pip install -q torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device} — Self-replicating probe online!")
+def poole_manifold_step(grid, probes):
+    # Base rules
+    kernel = torch.ones((1, 1, 3, 3, 3), device=device, dtype=torch.float32)
+    kernel[0, 0, 1, 1, 1] = 0
+    padded = F.pad(grid.unsqueeze(0).unsqueeze(0), (1,1,1,1,1,1), mode='circular')
+    neighbor_sum = F.conv3d(padded, kernel, padding=0).squeeze(0).squeeze(0)
+    
+    born = (neighbor_sum >= 5) & (neighbor_sum <= 7) & (grid == 0)
+    survive = (neighbor_sum >= 5) & (neighbor_sum <= 9) & (grid == 1)
+    new_grid = born | survive
+    
+    new_probes = []
+    size = grid.shape[0]
+    
+    # Single shared meshgrid (much faster)
+    x, y, z = torch.meshgrid(torch.arange(size, device=device),
+                             torch.arange(size, device=device),
+                             torch.arange(size, device=device), indexing='ij')
+    
+    for p in probes:
+        r = torch.sqrt((x - p[0])**2 + (y - p[1])**2 + (z - p[2])**2 + 1e-6)
+        
+        # Collector front + engine back
+        front = (x > p[0]) & (r < 12)
+        back  = (x < p[0]) & (r < 8)
+        neighbor_sum[front] += 1.2
+        neighbor_sum[back]  -= 0.8
+        
+        # Fuel check
+        fuel_zone = (x < p[0] - 5) & (r < 10)
+        fuel_cells = grid[fuel_zone].sum().item()
+        
+        if fuel_cells > 72 and len(probes) < 12:
+            new_probes.append(torch.tensor([p[0] - 22, p[1], p[2]], dtype=torch.float32, device=device))
+        
+        # Move probe
+        p[0] += 0.8
+        if p[0] > size * 0.92:
+            p[0] = size * 0.08
+    
+    # Spawn new probes (exact copy)
+    for new_p in new_probes:
+        cx, cy, cz = int(new_p[0]), int(new_p[1]), int(new_p[2])
+        for i in range(-4, 5):
+            for j in range(-4, 5):
+                for k in range(-4, 5):
+                    if i*i + j*j + k*k <= 12:
+                        if 0 <= cx+i < size and 0 <= cy+j < size and 0 <= cz+k < size:
+                            new_grid[cx+i, cy+j, cz+k] = 1.0
+        probes.append(new_p)
+    
+    # Final rules
+    born = (neighbor_sum >= 5) & (neighbor_sum <= 7) & (new_grid == 0)
+    survive = (neighbor_sum >= 5) & (neighbor_sum <= 9) & (new_grid == 1)
+    
+    return (born | survive).float(), probes
+
+print("✅ Optimized self-replicating probe engine ready!")
+size = 80
+np.random.seed(42)
+grid_np = np.zeros((size, size, size), dtype=np.float32)
+
+# Background cosmic web
+for _ in range(220):
+    x = np.random.randint(0, size)
+    y = np.random.randint(0, size)
+    z = np.random.randint(0, size)
+    length = np.random.randint(25, 55)
+    dx = np.random.randn() * 1.3
+    dy = np.random.randn() * 1.3
+    dz = np.random.randn() * 1.3
+    for i in range(length):
+        ix = int(x + i * dx) % size
+        iy = int(y + i * dy) % size
+        iz = int(z + i * dz) % size
+        if 0 <= ix < size and 0 <= iy < size and 0 <= iz < size:
+            grid_np[ix, iy, iz] = 1.0
+            if i % 3 == 0:
+                grid_np[(ix+1)%size, iy, iz] = 1.0
+
+noise = np.random.choice([0, 1], size=(size, size, size), p=[0.85, 0.15])
+grid_np = np.clip(grid_np + noise, 0, 1)
+
+# Initial probe
+probe_center = torch.tensor([size//5, size//2, size//2], dtype=torch.float32, device=device)
+cx, cy, cz = int(probe_center[0]), int(probe_center[1]), int(probe_center[2])
+for i in range(-4, 5):
+    for j in range(-4, 5):
+        for k in range(-4, 5):
+            if i*i + j*j + k*k <= 12:
+                grid_np[cx+i, cy+j, cz+k] = 1.0
+
+grid = torch.from_numpy(grid_np).float().to(device)
+probes = [probe_center]
+
+print(f"Cosmic web + 1 self-replicating probe initialized — {grid.sum().item():.0f} live cells")
+steps = 6000
+density_history = []
+
+print("Probes are replicating... (optimized version)")
+
+for step in range(steps):
+    grid, probes = poole_manifold_step(grid, probes)
+    
+    if step % 250 == 0 or step == steps-1:
+        density = grid.mean().item()
+        density_history.append((step, density))
+        print(f"Step {step:4d} | Density: {density:.4f} | Probes: {len(probes)}")
+        
+        if step % 1000 == 0 or step == steps-1:
+            clear_output(wait=True)
+            center = size // 2
+            fig, axes = plt.subplots(1, 3, figsize=(15,5))
+            axes[0].imshow(grid[center].cpu().numpy(), cmap='binary')
+            axes[0].set_title('XY slice')
+            axes[1].imshow(grid[:, center, :].cpu().numpy(), cmap='binary')
+            axes[1].set_title('XZ slice')
+            axes[2].imshow(grid[:, :, center].cpu().numpy(), cmap='binary')
+            axes[2].set_title('YZ slice')
+            plt.suptitle(f"Self-Replicating Probes — Step {step} | Probes: {len(probes)}")
+            plt.show()
+
+print("\n✅ Optimized simulation finished!")
+steps_list, dens_list = zip(*density_history)
+plt.figure(figsize=(10,5))
+plt.plot(steps_list, dens_list, 'b-', linewidth=2)
+plt.axhline(y=0.31, color='r', linestyle='--', label='Phoenix ~31%')
+plt.title('Density during Self-Replicating Probe Run')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+center = size // 2
+fig, axes = plt.subplots(1, 3, figsize=(18,6))
+axes[0].imshow(grid[center].cpu().numpy(), cmap='binary')
+axes[0].set_title('XY middle slice')
+axes[1].imshow(grid[:, center, :].cpu().numpy(), cmap='binary')
+axes[1].set_title('XZ middle slice')
+axes[2].imshow(grid[:, :, center].cpu().numpy(), cmap='binary')
+axes[2].set_title('YZ middle slice')
+plt.suptitle(f"Final — {len(probes)} probes")
+plt.tight_layout()
+plt.show()
+
+np.save('self_replicating_probes_final.npy', grid.cpu().numpy())
+print("Saved final state!")
