@@ -1,0 +1,98 @@
+!pip install -q torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from numpy.fft import fftn, fftshift
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device} — Ready!")
+size = 80
+np.random.seed(42)
+grid_np = np.zeros((size, size, size), dtype=np.float32)
+
+# Filament seeding
+for _ in range(280):
+    x = np.random.randint(0, size)
+    y = np.random.randint(0, size)
+    z = np.random.randint(0, size)
+    length = np.random.randint(30, 65)
+    dx = np.random.randn() * 1.4
+    dy = np.random.randn() * 1.4
+    dz = np.random.randn() * 1.4
+    for i in range(length):
+        ix = int(x + i * dx) % size
+        iy = int(y + i * dy) % size
+        iz = int(z + i * dz) % size
+        if 0 <= ix < size and 0 <= iy < size and 0 <= iz < size:
+            grid_np[ix, iy, iz] = 1.0
+            if i % 2 == 0:
+                grid_np[(ix+1)%size, iy, iz] = 1.0
+                grid_np[ix, (iy+1)%size, iz] = 1.0
+                grid_np[ix, iy, (iz+1)%size] = 1.0
+
+noise = np.random.choice([0, 1], size=(size, size, size), p=[0.82, 0.18])
+grid_np = np.clip(grid_np + noise, 0, 1)
+
+# Further tuned decaying sine
+x = np.linspace(-1.3, 1.3, size)
+y = np.linspace(-1.3, 1.3, size)
+z = np.linspace(-1.3, 1.3, size)
+xx, yy, zz = np.meshgrid(x, y, z, indexing='ij')
+r = np.sqrt(xx**2 + yy**2 + zz**2) + 1e-8
+
+decaying_sine = 0.28 * np.sin(2 * np.pi * r * 3.8) * np.exp(-4.5 * r)   # new tuning
+grid_np = np.clip(grid_np + decaying_sine, 0, 1)
+
+grid = torch.from_numpy(grid_np).float().to(device)
+print(f"Decaying sine v3 — {grid.sum().item():.0f} live cells ({100*grid.mean().item():.1f}%)")
+def poole_manifold_step(grid):
+    kernel = torch.ones((1, 1, 3, 3, 3), device=device, dtype=torch.float32)
+    kernel[0, 0, 1, 1, 1] = 0
+    padded = F.pad(grid.unsqueeze(0).unsqueeze(0), (1,1,1,1,1,1), mode='circular')
+    neighbor_sum = F.conv3d(padded, kernel, padding=0).squeeze(0).squeeze(0)
+    born = (neighbor_sum >= 5) & (neighbor_sum <= 7) & (grid == 0)
+    survive = (neighbor_sum >= 5) & (neighbor_sum <= 9) & (grid == 1)
+    return (born | survive).float()
+
+print("B5-7 / S5-9 loaded")
+steps = 8000
+density_history = []
+
+print("Running simulation...")
+
+for step in range(steps):
+    grid = poole_manifold_step(grid)
+    
+    if step % 500 == 0 or step == steps-1:
+        density = grid.mean().item()
+        density_history.append((step, density))
+        print(f"Step {step:4d} | Density: {density:.4f} ({100*density:.1f}%)")
+
+print("\n✅ Simulation finished!")
+# Density plot + slices (paste your usual code here)
+
+# NEW: Radial Power Spectrum for BAO
+density_field = grid.cpu().numpy()
+ft = fftshift(fftn(density_field - density_field.mean()))
+power = np.abs(ft)**2
+
+radial_power = []
+radii = []
+for r in range(2, size//2):
+    shell = np.logical_and(np.sqrt(np.sum(np.indices(density_field.shape)**2, axis=0)) >= r-0.5,
+                           np.sqrt(np.sum(np.indices(density_field.shape)**2, axis=0)) < r+0.5)
+    if shell.sum() > 0:
+        radial_power.append(power[shell].mean())
+        radii.append(r)
+
+plt.figure(figsize=(10,6))
+plt.plot(radii, radial_power)
+plt.title('Radial Power Spectrum - Looking for BAO Wiggle')
+plt.xlabel('Wavenumber (scale)')
+plt.ylabel('Power')
+plt.grid(True)
+plt.show()
+
+print("Look at the power spectrum plot — any clear peak or oscillation?")
