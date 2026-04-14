@@ -1,0 +1,126 @@
+!pip install -q torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device} — Starship online!")
+def poole_manifold_step(grid):
+    # Base rules
+    kernel = torch.ones((1, 1, 3, 3, 3), device=device, dtype=torch.float32)
+    kernel[0, 0, 1, 1, 1] = 0
+    padded = F.pad(grid.unsqueeze(0).unsqueeze(0), (1,1,1,1,1,1), mode='circular')
+    neighbor_sum = F.conv3d(padded, kernel, padding=0).squeeze(0).squeeze(0)
+    
+    born = (neighbor_sum >= 5) & (neighbor_sum <= 7) & (grid == 0)
+    survive = (neighbor_sum >= 5) & (neighbor_sum <= 9) & (grid == 1)
+    new_grid = born | survive
+    
+    # === STARSHIP HULL MASKS ===
+    size = grid.shape[0]
+    x, y, z = torch.meshgrid(torch.arange(size, device=device),
+                             torch.arange(size, device=device),
+                             torch.arange(size, device=device), indexing='ij')
+    
+    # Hull body (elongated along X, centered)
+    hull_x = (x > size//2 - 28) & (x < size//2 + 12)  # longer nose
+    hull_yz = (torch.abs(y - size//2) <= 4) & (torch.abs(z - size//2) <= 4)
+    hull = hull_x & hull_yz
+    
+    # Nose cone (tapered front)
+    nose = (x > size//2 + 12) & (x < size//2 + 22) & \
+           (torch.abs(y - size//2) <= 3) & (torch.abs(z - size//2) <= 3)
+    
+    # Engine glow at rear (bright blue-white plasma)
+    engine = (x > size//2 - 28) & (x < size//2 - 22) & \
+             (torch.abs(y - size//2) <= 5) & (torch.abs(z - size//2) <= 5)
+    
+    # Apply glow
+    neighbor_sum[hull] += 7.0      # solid hull
+    neighbor_sum[nose] += 6.0      # nose cone
+    neighbor_sum[engine] += 12.0   # bright engine glow
+    
+    # Background inhibitor
+    neighbor_sum[~hull & ~nose & ~engine] -= 0.5
+    
+    # Final rules
+    born = (neighbor_sum >= 5) & (neighbor_sum <= 7) & (new_grid == 0)
+    survive = (neighbor_sum >= 5) & (neighbor_sum <= 9) & (new_grid == 1)
+    return (born | survive).float()
+
+print("✅ Starship hull engine ready!")
+np.random.seed(42)
+size = 80
+grid_np = np.zeros((size, size, size), dtype=np.float32)
+
+for _ in range(220):
+    x = np.random.randint(0, size)
+    y = np.random.randint(0, size)
+    z = np.random.randint(0, size)
+    length = np.random.randint(25, 55)
+    dx = np.random.randn() * 1.3
+    dy = np.random.randn() * 1.3
+    dz = np.random.randn() * 1.3
+    for i in range(length):
+        ix = int(x + i * dx) % size
+        iy = int(y + i * dy) % size
+        iz = int(z + i * dz) % size
+        if 0 <= ix < size and 0 <= iy < size and 0 <= iz < size:
+            grid_np[ix, iy, iz] = 1.0
+            if i % 3 == 0:
+                grid_np[(ix+1)%size, iy, iz] = 1.0
+
+noise = np.random.choice([0, 1], size=(size, size, size), p=[0.85, 0.15])
+grid_np = np.clip(grid_np + noise, 0, 1)
+
+grid = torch.from_numpy(grid_np).float().to(device)
+print(f"Cosmic web + Starship initialized — {grid.sum().item():.0f} live cells")
+steps = 5000
+density_history = []
+
+print("Starship launched...")
+
+for step in range(steps):
+    grid = poole_manifold_step(grid)
+    
+    if step % 500 == 0 or step == steps-1:
+        density = grid.mean().item()
+        density_history.append((step, density))
+        print(f"Step {step:4d} | Density: {density:.4f}")
+        
+        if step % 1000 == 0 or step == steps-1:
+            clear_output(wait=True)
+            center = size // 2
+            fig, axes = plt.subplots(1, 3, figsize=(15,5))
+            axes[0].imshow(grid[center].cpu().numpy(), cmap='binary')
+            axes[0].set_title('XY slice')
+            axes[1].imshow(grid[:, center, :].cpu().numpy(), cmap='binary')
+            axes[1].set_title('XZ slice')
+            axes[2].imshow(grid[:, :, center].cpu().numpy(), cmap='binary')
+            axes[2].set_title('YZ slice')
+            plt.suptitle(f"Starship — Step {step}")
+            plt.show()
+
+print("\n✅ Starship simulation finished!")
+steps_list, dens_list = zip(*density_history)
+plt.figure(figsize=(10,5))
+plt.plot(steps_list, dens_list, 'b-', linewidth=2)
+plt.axhline(y=0.31, color='r', linestyle='--')
+plt.title('Density during Starship Run')
+plt.grid(True)
+plt.show()
+
+center = size // 2
+fig, axes = plt.subplots(1, 3, figsize=(18,6))
+axes[0].imshow(grid[center].cpu().numpy(), cmap='binary')
+axes[1].imshow(grid[:, center, :].cpu().numpy(), cmap='binary')
+axes[2].imshow(grid[:, :, center].cpu().numpy(), cmap='binary')
+plt.suptitle("Final Starship Hull")
+plt.tight_layout()
+plt.show()
+
+np.save('starship_final.npy', grid.cpu().numpy())
+print("Saved!")
