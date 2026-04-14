@@ -1,0 +1,90 @@
+!pip install -q torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device} — Porous Flow Test online!")
+def poole_manifold_step(grid):
+    kernel = torch.ones((1, 1, 3, 3, 3), device=device, dtype=torch.float32)
+    kernel[0, 0, 1, 1, 1] = 0
+    padded = F.pad(grid.unsqueeze(0).unsqueeze(0), (1,1,1,1,1,1), mode='circular')
+    neighbor_sum = F.conv3d(padded, kernel, padding=0).squeeze(0).squeeze(0)
+    
+    born = (neighbor_sum >= 5) & (neighbor_sum <= 7) & (grid == 0)
+    survive = (neighbor_sum >= 5) & (neighbor_sum <= 9) & (grid == 1)
+    return (born | survive).float()
+
+print("✅ Porous flow engine ready!")
+np.random.seed(42)
+size = 80
+grid_np = np.zeros((size, size, size), dtype=np.float32)
+
+# Cosmic web background
+for _ in range(220):
+    x = np.random.randint(0, size)
+    y = np.random.randint(0, size)
+    z = np.random.randint(0, size)
+    length = np.random.randint(25, 55)
+    dx = np.random.randn() * 1.3
+    dy = np.random.randn() * 1.3
+    dz = np.random.randn() * 1.3
+    for i in range(length):
+        ix = int(x + i * dx) % size
+        iy = int(y + i * dy) % size
+        iz = int(z + i * dz) % size
+        if 0 <= ix < size and 0 <= iy < size and 0 <= iz < size:
+            grid_np[ix, iy, iz] = 1.0
+
+noise = np.random.choice([0, 1], size=(size, size, size), p=[0.85, 0.15])
+grid_np = np.clip(grid_np + noise, 0, 1)
+
+grid = torch.from_numpy(grid_np).float().to(device)
+print(f"Porous network initialized — {grid.sum().item():.0f} solid cells")
+steps = 3000
+density_history = []
+flow_history = []
+
+print("Running porous flow test...")
+
+for step in range(steps):
+    grid = poole_manifold_step(grid)
+    
+    if step % 500 == 0 or step == steps-1:
+        density = grid.mean().item()
+        density_history.append((step, density))
+        print(f"Step {step:4d} | Density: {density:.4f}")
+        
+        if step % 1000 == 0 or step == steps-1:
+            clear_output(wait=True)
+            center = size // 2
+            fig, axes = plt.subplots(1, 3, figsize=(15,5))
+            axes[0].imshow(grid[center].cpu().numpy(), cmap='binary')
+            axes[0].set_title('XY slice')
+            axes[1].imshow(grid[:, center, :].cpu().numpy(), cmap='binary')
+            axes[1].set_title('XZ slice')
+            axes[2].imshow(grid[:, :, center].cpu().numpy(), cmap='binary')
+            axes[2].set_title('YZ slice')
+            plt.suptitle(f"Porous Flow — Step {step}")
+            plt.show()
+
+print("\n✅ Porous flow simulation finished!")
+final_grid = grid.cpu().numpy() > 0.5
+porosity = 1 - final_grid.mean()
+print(f"Porosity: {porosity:.4f} ({porosity*100:.1f}%)")
+
+# Simple permeability proxy (fraction of empty space connected left-to-right)
+empty = ~final_grid
+from scipy.ndimage import label
+labeled, num_features = label(empty)
+print(f"Number of separate void clusters: {num_features}")
+
+# Flow direction proxy (along X)
+flow_slice = empty[:, size//2, :]
+print(f"Example cross-section openness: {flow_slice.mean():.4f}")
+
+np.save('porous_network_final.npy', final_grid.astype(np.uint8))
+print("Saved porous network for further analysis!")
