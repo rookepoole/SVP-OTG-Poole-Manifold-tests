@@ -1,0 +1,131 @@
+!pip install -q torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device} — Crystal lattice online!")
+def poole_manifold_step(grid):
+    # Base rules
+    kernel = torch.ones((1, 1, 3, 3, 3), device=device, dtype=torch.float32)
+    kernel[0, 0, 1, 1, 1] = 0
+    padded = F.pad(grid.unsqueeze(0).unsqueeze(0), (1,1,1,1,1,1), mode='circular')
+    neighbor_sum = F.conv3d(padded, kernel, padding=0).squeeze(0).squeeze(0)
+    
+    born = (neighbor_sum >= 5) & (neighbor_sum <= 7) & (grid == 0)
+    survive = (neighbor_sum >= 5) & (neighbor_sum <= 9) & (grid == 1)
+    new_grid = born | survive
+    
+    # === GROWING CRYSTAL LATTICE ===
+    size = grid.shape[0]
+    x, y, z = torch.meshgrid(torch.arange(size, device=device),
+                             torch.arange(size, device=device),
+                             torch.arange(size, device=device), indexing='ij')
+    
+    center = size // 2
+    r = torch.sqrt((x - center)**2 + (y - center)**2 + (z - center)**2)
+    
+    # Central seed core (strong boost to start growth)
+    core = r < 4
+    inner_layer = (r >= 4) & (r < 9)
+    outer_layer = (r >= 9) & (r < 16)
+    
+    # Radial crystal growth encouragement (tapers off to let it stabilize)
+    neighbor_sum[core] += 12.0
+    neighbor_sum[inner_layer] += 7.0
+    neighbor_sum[outer_layer] += 3.5
+    
+    # Background inhibitor (keeps cosmic web + density ~31%)
+    neighbor_sum[~core & ~inner_layer & ~outer_layer] -= 0.5
+    
+    # Final rules
+    born = (neighbor_sum >= 5) & (neighbor_sum <= 7) & (new_grid == 0)
+    survive = (neighbor_sum >= 5) & (neighbor_sum <= 9) & (new_grid == 1)
+    return (born | survive).float()
+
+print("✅ Growing crystal lattice engine ready!")
+np.random.seed(42)
+size = 80
+grid_np = np.zeros((size, size, size), dtype=np.float32)
+
+# Light cosmic web background
+for _ in range(180):  # slightly fewer filaments so crystal can grow
+    x = np.random.randint(0, size)
+    y = np.random.randint(0, size)
+    z = np.random.randint(0, size)
+    length = np.random.randint(20, 45)
+    dx = np.random.randn() * 1.3
+    dy = np.random.randn() * 1.3
+    dz = np.random.randn() * 1.3
+    for i in range(length):
+        ix = int(x + i * dx) % size
+        iy = int(y + i * dy) % size
+        iz = int(z + i * dz) % size
+        if 0 <= ix < size and 0 <= iy < size and 0 <= iz < size:
+            grid_np[ix, iy, iz] = 1.0
+
+# Tiny symmetric seed crystal in center (3x3x3 cross)
+center = size // 2
+grid_np[center-1:center+2, center-1:center+2, center-1:center+2] = 1.0
+grid_np[center-2:center+3, center, center] = 1.0  # arms for symmetry
+grid_np[center, center-2:center+3, center] = 1.0
+grid_np[center, center, center-2:center+3] = 1.0
+
+noise = np.random.choice([0, 1], size=(size, size, size), p=[0.88, 0.12])
+grid_np = np.clip(grid_np + noise, 0, 1)
+
+grid = torch.from_numpy(grid_np).float().to(device)
+print(f"Cosmic web + tiny crystal seed initialized — {grid.sum().item():.0f} live cells")
+steps = 5000
+density_history = []
+
+print("Crystal growth started...")
+
+for step in range(steps):
+    grid = poole_manifold_step(grid)
+    
+    if step % 500 == 0 or step == steps-1:
+        density = grid.mean().item()
+        density_history.append((step, density))
+        print(f"Step {step:4d} | Density: {density:.4f}")
+        
+        if step % 1000 == 0 or step == steps-1:
+            clear_output(wait=True)
+            center = size // 2
+            fig, axes = plt.subplots(1, 3, figsize=(15,5))
+            axes[0].imshow(grid[center].cpu().numpy(), cmap='binary')
+            axes[0].set_title('XY slice')
+            axes[1].imshow(grid[:, center, :].cpu().numpy(), cmap='binary')
+            axes[1].set_title('XZ slice')
+            axes[2].imshow(grid[:, :, center].cpu().numpy(), cmap='binary')
+            axes[2].set_title('YZ slice')
+            plt.suptitle(f"Growing Crystal — Step {step}")
+            plt.show()
+
+print("\n✅ Crystal growth simulation finished!")
+steps_list, dens_list = zip(*density_history)
+plt.figure(figsize=(10,5))
+plt.plot(steps_list, dens_list, 'b-', linewidth=2)
+plt.axhline(y=0.31, color='r', linestyle='--', label='Phoenix ~31%')
+plt.title('Density during Crystal Growth')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+center = size // 2
+fig, axes = plt.subplots(1, 3, figsize=(18,6))
+axes[0].imshow(grid[center].cpu().numpy(), cmap='binary')
+axes[0].set_title('XY middle slice')
+axes[1].imshow(grid[:, center, :].cpu().numpy(), cmap='binary')
+axes[1].set_title('XZ middle slice')
+axes[2].imshow(grid[:, :, center].cpu().numpy(), cmap='binary')
+axes[2].set_title('YZ middle slice')
+plt.suptitle("Final Growing Crystal Lattice")
+plt.tight_layout()
+plt.show()
+
+np.save('crystal_lattice_final.npy', grid.cpu().numpy())
+print("Saved final state!")
