@@ -1,0 +1,49 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+# Load the binary grid we saved last run
+final_grid = np.load('porous_network_final.npy')
+print(f"Loaded porous network — {final_grid.sum():,} solid cells")
+# Get coordinates of all solid (live) cells
+points = np.argwhere(final_grid)  # shape: (N, 3) where N = number of solid cells
+
+# Save as simple CSV (easy to share)
+np.savetxt('porous_points.csv', points, delimiter=',', 
+           header='x,y,z', comments='', fmt='%d')
+
+# Save as PLY file (standard 3D point cloud format)
+def save_ply(points, filename='porous_points.ply'):
+    with open(filename, 'w') as f:
+        f.write("ply\n")
+        f.write("format ascii 1.0\n")
+        f.write(f"element vertex {len(points)}\n")
+        f.write("property float x\n")
+        f.write("property float y\n")
+        f.write("property float z\n")
+        f.write("end_header\n")
+        for p in points:
+            f.write(f"{p[0]} {p[1]} {p[2]}\n")
+    print(f"Saved {len(points):,} points to {filename}")
+
+save_ply(points)
+
+print(f"Exported {len(points):,} points")
+print("Files created:")
+print("   → porous_points.csv")
+print("   → porous_points.ply")
+# Downsample for faster plotting (show every 4th point)
+downsample = 4
+pts = points[::downsample]
+
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(pts[:,0], pts[:,1], pts[:,2], s=0.5, c='blue', alpha=0.6)
+ax.set_title('Poole Manifold Porous Network — 3D Point Cloud')
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+plt.tight_layout()
+plt.show()
+
+print("3D preview shown above (downsampled for speed)")
