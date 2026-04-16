@@ -1,0 +1,136 @@
+!pip install -q torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device} — Fluid Permeability (Darcy Flow) Test online!")
+def poole_manifold_step(grid):
+    kernel = torch.ones((1, 1, 3, 3, 3), device=device, dtype=torch.float32)
+    kernel[0, 0, 1, 1, 1] = 0
+    padded = F.pad(grid.unsqueeze(0).unsqueeze(0), (1,1,1,1,1,1), mode='circular')
+    neighbor_sum = F.conv3d(padded, kernel, padding=0).squeeze(0).squeeze(0)
+    
+    born = (neighbor_sum >= 5) & (neighbor_sum <= 7) & (grid == 0)
+    survive = (neighbor_sum >= 5) & (neighbor_sum <= 9) & (grid == 1)
+    return (born | survive).float()
+
+print("✅ Poole Manifold engine ready!")
+np.random.seed(42)
+size = 80
+grid_np = np.zeros((size, size, size), dtype=np.float32)
+
+# Cosmic web filaments
+for _ in range(220):
+    x = np.random.randint(0, size)
+    y = np.random.randint(0, size)
+    z = np.random.randint(0, size)
+    length = np.random.randint(25, 55)
+    dx = np.random.randn() * 1.3
+    dy = np.random.randn() * 1.3
+    dz = np.random.randn() * 1.3
+    for i in range(length):
+        ix = int(x + i * dx) % size
+        iy = int(y + i * dy) % size
+        iz = int(z + i * dz) % size
+        if 0 <= ix < size and 0 <= iy < size and 0 <= iz < size:
+            grid_np[ix, iy, iz] = 1.0
+
+noise = np.random.choice([0, 1], size=(size, size, size), p=[0.85, 0.15])
+grid_np = np.clip(grid_np + noise, 0, 1)
+
+grid = torch.from_numpy(grid_np).float().to(device)
+
+# Pressure field (will be driven by boundary conditions)
+pressure = torch.zeros((size, size, size), device=device, dtype=torch.float32)
+
+print(f"Porous network initialized — {grid.sum().item():.0f} solid cells")
+steps = 3000
+density_history = []
+pressure_history = []
+flow_history = []
+
+print("Running Fluid Permeability (Darcy Flow) Test...")
+
+for step in range(steps):
+    grid = poole_manifold_step(grid)
+    
+    # Pressure diffusion through pores (high permeability in empty space)
+    padded_p = F.pad(pressure.unsqueeze(0).unsqueeze(0), (1,1,1,1,1,1), mode='circular')
+    diffused = F.avg_pool3d(padded_p, kernel_size=3, stride=1, padding=0).squeeze(0).squeeze(0)
+    
+    # Fluid flows easily through pores, almost not at all through solid
+    pores = (grid < 0.5)
+    pressure = torch.where(pores, diffused * 0.96, diffused * 0.20)
+    
+    # Apply constant pressure gradient (left face high, right face low)
+    pressure[0, :, :] = 1.0          # inlet pressure
+    pressure[-1, :, :] = 0.0         # outlet pressure
+    
+    # Simple flow velocity proxy (for permeability calculation)
+    flow_rate = (pressure[1:, :, :] - pressure[:-1, :, :]).abs().mean().item()
+    
+    if step % 500 == 0 or step == steps-1:
+        density = grid.mean().item()
+        avg_pressure = pressure.mean().item()
+        density_history.append((step, density))
+        pressure_history.append((step, avg_pressure))
+        flow_history.append((step, flow_rate))
+        print(f"Step {step:4d} | Density: {density:.4f} | Avg Pressure: {avg_pressure:.4f} | Flow rate: {flow_rate:.4f}")
+        
+        if step % 1000 == 0 or step == steps-1:
+            clear_output(wait=True)
+            center = size // 2
+            fig, axes = plt.subplots(1, 3, figsize=(15,5))
+            axes[0].imshow(grid[center].cpu().numpy(), cmap='binary')
+            axes[0].set_title('Solid network (XY)')
+            axes[1].imshow(pressure[center].cpu().numpy(), cmap='plasma')
+            axes[1].set_title('Pressure (XY)')
+            axes[2].imshow(pressure[:, center, :].cpu().numpy(), cmap='plasma')
+            axes[2].set_title('Pressure (XZ)')
+            plt.suptitle(f"Fluid Permeability — Step {step}")
+            plt.show()
+
+print("\n✅ Fluid Permeability test finished!")
+steps_list, dens_list = zip(*density_history)
+p_steps, p_list = zip(*pressure_history)
+f_steps, f_list = zip(*flow_history)
+
+plt.figure(figsize=(10,5))
+plt.plot(steps_list, dens_list, 'b-', label='Solid density')
+plt.axhline(y=0.31, color='r', linestyle='--', label='Phoenix ~31%')
+plt.title('Density during Permeability Test')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+plt.figure(figsize=(10,5))
+plt.plot(p_steps, p_list, 'purple', label='Average pressure')
+plt.title('Pressure Distribution Over Time')
+plt.xlabel('Step')
+plt.ylabel('Mean pressure')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+plt.figure(figsize=(10,5))
+plt.plot(f_steps, f_list, 'orange', label='Flow rate')
+plt.title('Fluid Flow Rate Over Time')
+plt.xlabel('Step')
+plt.ylabel('Mean flow velocity proxy')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+final_grid = grid.cpu().numpy() > 0.5
+porosity = 1 - final_grid.mean()
+print(f"Porosity: {porosity:.4f} ({porosity*100:.1f}%)")
+print(f"Final average pressure: {pressure.mean().item():.4f}")
+print(f"Final flow rate: {flow_rate:.4f}")
+
+np.save('permeability_final_grid.npy', final_grid.astype(np.uint8))
+np.save('permeability_final_pressure.npy', pressure.cpu().numpy())
+print("Saved permeability data!")
