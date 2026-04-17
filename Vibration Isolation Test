@@ -1,0 +1,95 @@
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+import time
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device} — Vibration Isolation Engine Ready!")
+
+size = 80
+
+def poole_manifold_step(grid):
+    kernel = torch.ones((1, 1, 3, 3, 3), device=device, dtype=torch.float32)
+    kernel[0, 0, 1, 1, 1] = 0
+    padded = F.pad(grid.unsqueeze(0).unsqueeze(0), (1,1,1,1,1,1), mode='circular')
+    neighbor_sum = F.conv3d(padded, kernel, padding=0).squeeze(0).squeeze(0)
+    born = (neighbor_sum >= 5) & (neighbor_sum <= 7) & (grid == 0)
+    survive = (neighbor_sum >= 5) & (neighbor_sum <= 9) & (grid == 1)
+    return (born | survive).float()
+    torch.manual_seed(42)
+np.random.seed(42)
+grid = torch.zeros((size, size, size), device=device, dtype=torch.float32)
+
+for _ in range(220):
+    x0 = np.random.randint(0, size)
+    y0 = np.random.randint(0, size)
+    z0 = np.random.randint(0, size)
+    length = np.random.randint(25, 55)
+    dx = np.random.choice([-1, 1])
+    dy = np.random.choice([-1, 1])
+    dz = np.random.choice([-1, 1])
+    for i in range(length):
+        x = (x0 + i * dx) % size
+        y = (y0 + i * dy) % size
+        z = (z0 + i * dz) % size
+        grid[x, y, z] = 1.0
+
+noise = (torch.rand(size, size, size, device=device) < 0.15).float()
+grid = torch.clamp(grid + noise, 0, 1)
+
+print(f"Initial grid ready — {int(grid.sum().item())} live cells")
+vibration = torch.zeros((size, size, size), device=device, dtype=torch.float32)
+print("Vibration field ready — multi-frequency isolation test loaded")
+steps = 4000
+density_history = []
+vib_history = []
+damping_ratio_history = []
+
+print("Running Vibration Isolation Test...\n")
+
+for step in range(steps):
+    grid = poole_manifold_step(grid)
+    
+    # Multi-frequency pulses (different frequencies for realism)
+    if step % 400 == 0:   # low frequency
+        vibration[0:6, :, :] = 1.0
+    if step % 1200 == 0:  # high frequency
+        vibration[0:4, :, :] = 0.8
+    
+    # Damped propagation (pores vs solid)
+    padded_v = F.pad(vibration.unsqueeze(0).unsqueeze(0), (1,1,1,1,1,1), mode='circular')
+    diffused = F.avg_pool3d(padded_v, kernel_size=3, stride=1, padding=0).squeeze(0).squeeze(0)
+    pores = (grid < 0.5)
+    vibration = torch.where(pores, diffused * 0.985, diffused * 0.94)
+    
+    # Metrics
+    density = grid.mean().item()
+    avg_vib = vibration.mean().item()
+    damping_ratio = (1.0 - avg_vib) * 100 if step > 0 else 0.0
+    
+    density_history.append(density)
+    vib_history.append(avg_vib)
+    damping_ratio_history.append(damping_ratio)
+    
+    if step % 500 == 0 or step == steps - 1:
+        clear_output(wait=True)
+        print(f"Step {step:4d} | Density: {density:.4f} | Avg Vibration: {avg_vib:.4f} | Damping: {damping_ratio:.1f}%")
+        
+        center = size // 2
+        fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+        axes[0].imshow(grid[center].cpu().numpy(), cmap='binary')
+        axes[0].set_title('Solid Network (XY)')
+        axes[1].imshow(vibration[center].cpu().numpy(), cmap='plasma')
+        axes[1].set_title('Vibration Amplitude (XY)')
+        axes[2].imshow(vibration[:, center, :].cpu().numpy(), cmap='plasma')
+        axes[2].set_title('Vibration Amplitude (XZ)')
+        plt.suptitle(f'Vibration Isolation Test — Step {step} | Damping: {damping_ratio:.1f}%')
+        plt.show()
+
+print(f"\n✅ Vibration Isolation Test finished!")
+print(f"Final porosity: {1-grid.mean().item():.4f} ({(1-grid.mean().item())*100:.1f}%)")
+print(f"Final average damping: {damping_ratio_history[-1]:.1f}%")
+np.save('vibration_final_grid.npy', grid.cpu().numpy())
+np.save('vibration_final_vib.npy', vibration.cpu().numpy())
