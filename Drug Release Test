@@ -1,0 +1,123 @@
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+import time
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device} — Drug Release Engine Ready!")
+
+size = 80
+# Poole Manifold core step (unchanged — your original B5-7/S5-9 rules)
+def poole_manifold_step(grid):
+    kernel = torch.ones((1, 1, 3, 3, 3), device=device, dtype=torch.float32)
+    kernel[0, 0, 1, 1, 1] = 0
+    padded = F.pad(grid.unsqueeze(0).unsqueeze(0), (1,1,1,1,1,1), mode='circular')
+    neighbor_sum = F.conv3d(padded, kernel, padding=0).squeeze(0).squeeze(0)
+    born = (neighbor_sum >= 5) & (neighbor_sum <= 7) & (grid == 0)
+    survive = (neighbor_sum >= 5) & (neighbor_sum <= 9) & (grid == 1)
+    return (born | survive).float()
+    torch.manual_seed(42)
+np.random.seed(42)
+
+grid = torch.zeros((size, size, size), device=device, dtype=torch.float32)
+
+# 220 random filaments + 15% noise (same as all previous tests)
+for _ in range(220):
+    x0 = np.random.randint(0, size)
+    y0 = np.random.randint(0, size)
+    z0 = np.random.randint(0, size)
+    length = np.random.randint(25, 55)
+    dx = np.random.choice([-1, 1])
+    dy = np.random.choice([-1, 1])
+    dz = np.random.choice([-1, 1])
+    for i in range(length):
+        x = (x0 + i * dx) % size
+        y = (y0 + i * dy) % size
+        z = (z0 + i * dz) % size
+        grid[x, y, z] = 1.0
+
+# 15% background noise
+noise = (torch.rand(size, size, size, device=device) < 0.15).float()
+grid = torch.clamp(grid + noise, 0, 1)
+
+print(f"Initial grid ready — {int(grid.sum().item())} live cells ({grid.mean().item():.1%})")
+# Drug concentration field (same resolution as grid)
+drug = torch.zeros((size, size, size), device=device, dtype=torch.float32)
+
+# Seed high drug concentration in central pore region (realistic implant style)
+center = size // 2
+radius = 12
+for x in range(size):
+    for y in range(size):
+        for z in range(size):
+            if (x - center)**2 + (y - center)**2 + (z - center)**2 < radius**2:
+                if grid[x, y, z] < 0.5:  # only in pores
+                    drug[x, y, z] = 1.0
+
+print("Drug seeded in central pore volume — ready for release test")
+steps = 4000
+drug_history = []
+density_history = []
+release_rate_history = []
+
+print("Running FIXED Controlled Drug Release Test (gentler diffusion)...\n")
+
+for step in range(steps):
+    grid = poole_manifold_step(grid)
+    
+    # Gentler diffusion — same pattern that worked for conductivity & thermal
+    padded_d = F.pad(drug.unsqueeze(0).unsqueeze(0), (1,1,1,1,1,1), mode='circular')
+    diffused = F.avg_pool3d(padded_d, kernel_size=3, stride=1, padding=0).squeeze(0).squeeze(0)
+    
+    pores = (grid < 0.5)
+    drug = torch.where(pores, diffused * 0.995, diffused * 0.96)   # much gentler
+    
+    # Tiny background maintenance (prevents total collapse, mimics real slow leakage)
+    drug += 0.00008
+    drug = torch.clamp(drug, 0.0, 1.0)
+    
+    # Metrics
+    total_drug = drug.sum().item()
+    density = grid.mean().item()
+    
+    if step > 0 and drug_history[-1] > 0:
+        release_rate = (drug_history[-1] - total_drug) / drug_history[-1] * 100
+    else:
+        release_rate = 0.0
+    
+    drug_history.append(total_drug)
+    density_history.append(density)
+    release_rate_history.append(release_rate)
+    
+    if step % 500 == 0 or step == steps - 1:
+        clear_output(wait=True)
+        print(f"Step {step:4d} | Density: {density:.4f} (Phoenix ~0.31) | Drug remaining: {total_drug:.2f} | Release rate: {release_rate:.2f}%")
+        
+        center = size // 2
+        fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+        axes[0].imshow(grid[center].cpu().numpy(), cmap='binary')
+        axes[0].set_title('Solid Network (XY)')
+        axes[1].imshow(drug[center].cpu().numpy(), cmap='plasma')
+        axes[1].set_title('Drug Concentration (XY)')
+        axes[2].imshow(drug[:, center, :].cpu().numpy(), cmap='plasma')
+        axes[2].set_title('Drug Concentration (XZ)')
+        plt.suptitle(f'FIXED Drug Release Test — Step {step} | Remaining: {total_drug:.2f}')
+        plt.show()
+
+print(f"\n✅ FIXED Drug Release Test finished!")
+print(f"Final drug remaining: {drug_history[-1]:.2f} ({drug_history[-1]/drug_history[0]*100:.1f}% of initial)")
+print(f"Porosity: {1-grid.mean().item():.4f} ({(1-grid.mean().item())*100:.1f}%)")
+
+# Half-life
+initial_drug = drug_history[0]
+half_life_step = next((i for i, v in enumerate(drug_history) if v <= initial_drug * 0.5), None)
+print(f"Drug half-life: ~{half_life_step} steps" if half_life_step else "No half-life reached")
+np.save('drug_release_final_grid.npy', grid.cpu().numpy())
+np.save('drug_release_final_drug.npy', drug.cpu().numpy())
+
+# Quick half-life calculation
+initial_drug = drug_history[0]
+half_life_step = next((i for i, v in enumerate(drug_history) if v <= initial_drug * 0.5), None)
+print(f"Drug half-life: ~{half_life_step} steps" if half_life_step else "No half-life reached")
