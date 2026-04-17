@@ -1,0 +1,118 @@
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+import time
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device} — Catalysis Engine Ready!")
+
+size = 80
+
+def poole_manifold_step(grid):
+    kernel = torch.ones((1, 1, 3, 3, 3), device=device, dtype=torch.float32)
+    kernel[0, 0, 1, 1, 1] = 0
+    padded = F.pad(grid.unsqueeze(0).unsqueeze(0), (1,1,1,1,1,1), mode='circular')
+    neighbor_sum = F.conv3d(padded, kernel, padding=0).squeeze(0).squeeze(0)
+    born = (neighbor_sum >= 5) & (neighbor_sum <= 7) & (grid == 0)
+    survive = (neighbor_sum >= 5) & (neighbor_sum <= 9) & (grid == 1)
+    return (born | survive).float()
+    torch.manual_seed(42)
+np.random.seed(42)
+grid = torch.zeros((size, size, size), device=device, dtype=torch.float32)
+
+for _ in range(220):
+    x0 = np.random.randint(0, size)
+    y0 = np.random.randint(0, size)
+    z0 = np.random.randint(0, size)
+    length = np.random.randint(25, 55)
+    dx = np.random.choice([-1, 1])
+    dy = np.random.choice([-1, 1])
+    dz = np.random.choice([-1, 1])
+    for i in range(length):
+        x = (x0 + i * dx) % size
+        y = (y0 + i * dy) % size
+        z = (z0 + i * dz) % size
+        grid[x, y, z] = 1.0
+
+noise = (torch.rand(size, size, size, device=device) < 0.15).float()
+grid = torch.clamp(grid + noise, 0, 1)
+
+print(f"Initial grid ready — {int(grid.sum().item())} live cells")
+# Two reactants (U = substrate, V = product) + catalyst on filaments
+U = torch.ones((size, size, size), device=device, dtype=torch.float32) * 0.8
+V = torch.zeros((size, size, size), device=device, dtype=torch.float32)
+
+# Seed high substrate (U) on left face (incoming flow)
+U[:15, :, :] = 1.0
+
+print("Reactants seeded — Catalysis reactor ready")
+steps = 4000
+density_history = []
+U_history = []
+V_history = []
+yield_history = []
+
+print("Running FIXED Catalytic Surface Efficiency Test (gentler diffusion + stronger feed)...\n")
+
+for step in range(steps):
+    grid = poole_manifold_step(grid)
+    
+    # Reaction on filament surfaces only (catalyst sites)
+    pores = (grid < 0.5)
+    catalyst = ~pores
+    reaction_rate = U * V * V * 0.045          # slightly stronger reaction
+    U = U - reaction_rate * catalyst * 0.75
+    V = V + reaction_rate * catalyst * 1.35
+    
+    # Gentler diffusion (same tuning that fixed drug & battery)
+    padded_U = F.pad(U.unsqueeze(0).unsqueeze(0), (1,1,1,1,1,1), mode='circular')
+    diffused_U = F.avg_pool3d(padded_U, kernel_size=3, stride=1, padding=0).squeeze(0).squeeze(0)
+    U = torch.where(pores, diffused_U * 0.995, diffused_U * 0.97)
+    U += 0.00012                               # tiny substrate maintenance
+    
+    padded_V = F.pad(V.unsqueeze(0).unsqueeze(0), (1,1,1,1,1,1), mode='circular')
+    diffused_V = F.avg_pool3d(padded_V, kernel_size=3, stride=1, padding=0).squeeze(0).squeeze(0)
+    V = torch.where(pores, diffused_V * 0.99, diffused_V * 0.96)
+    V += 0.00008                               # tiny product maintenance
+    
+    # Stronger, more frequent feed on left face
+    if step % 300 == 0:
+        U[:10, :, :] = 1.0
+    
+    # Clamp to prevent negatives
+    U = torch.clamp(U, 0.0, 1.0)
+    V = torch.clamp(V, 0.0, 1.0)
+    
+    # Metrics
+    density = grid.mean().item()
+    avg_U = U.mean().item()
+    avg_V = V.mean().item()
+    reaction_yield = avg_V / (avg_U + avg_V + 1e-6) * 100
+    
+    density_history.append(density)
+    U_history.append(avg_U)
+    V_history.append(avg_V)
+    yield_history.append(reaction_yield)
+    
+    if step % 500 == 0 or step == steps - 1:
+        clear_output(wait=True)
+        print(f"Step {step:4d} | Density: {density:.4f} | Avg U: {avg_U:.4f} | Avg V: {avg_V:.4f} | Yield: {reaction_yield:.1f}%")
+        
+        center = size // 2
+        fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+        axes[0].imshow(grid[center].cpu().numpy(), cmap='binary')
+        axes[0].set_title('Solid Network (XY)')
+        axes[1].imshow(V[center].cpu().numpy(), cmap='plasma')
+        axes[1].set_title('Product V (XY)')
+        axes[2].imshow(V[:, center, :].cpu().numpy(), cmap='plasma')
+        axes[2].set_title('Product V (XZ)')
+        plt.suptitle(f'FIXED Catalytic Reactor Test — Step {step} | Yield: {reaction_yield:.1f}%')
+        plt.show()
+
+print(f"\n✅ FIXED Catalysis Test finished!")
+print(f"Final porosity: {1-grid.mean().item():.4f} ({(1-grid.mean().item())*100:.1f}%)")
+print(f"Final reaction yield: {yield_history[-1]:.1f}%")
+np.save('catalysis_final_grid.npy', grid.cpu().numpy())
+np.save('catalysis_final_V.npy', V.cpu().numpy())
