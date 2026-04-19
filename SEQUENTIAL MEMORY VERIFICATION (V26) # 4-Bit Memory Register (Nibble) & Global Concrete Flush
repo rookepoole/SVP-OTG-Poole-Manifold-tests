@@ -1,0 +1,162 @@
+# =============================================================================
+# POOLE MANIFOLD — SEQUENTIAL MEMORY VERIFICATION (V26)
+# 4-Bit Memory Register (Nibble) & Global Concrete Flush
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import gc
+import time
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold V26 4-Bit Register Suite on: {device}")
+
+B_LOW, B_HIGH = 5.0, 7.0 
+S_LOW, S_HIGH = 5.0, 9.0
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f, inhibitor_mask, threshold_mask, amplifier_mask):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0)
+        
+        potential[inhibitor_mask] -= 15.0
+        potential[threshold_mask] -= 2.0
+        potential[amplifier_mask] += 1.0
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+            
+        total_phi = potential + resonance
+        
+    birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+    survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+    
+    del padded, potential, resonance, total_phi, f_float
+    return (birth | survive).float()
+
+# ==========================================
+# ARCHITECTURAL PRIMITIVES
+# ==========================================
+class Poole4BitRegister:
+    def __init__(self, z_mid):
+        self.z = z_mid
+        # X-Coordinates for the 4 independent memory loops
+        # Ordered Left to Right: Bit 3, Bit 2, Bit 1, Bit 0
+        self.bit_offsets = [30, 110, 190, 270] 
+        self.width = 60
+        self.height = 80
+        self.oy = 50
+
+    def stamp(self, inh, thr, amp):
+        z = self.z
+        oy = self.oy
+        h = self.height
+        w = self.width
+        
+        for ox in self.bit_offsets:
+            # 1. FIBER OPTIC CAPILLARY TRACK (2-Units Wide, Fully Powered)
+            # Top Lane
+            inh[0, 0, oy:oy+2, ox:ox+w, z-2:z+2] = False
+            amp[0, 0, oy:oy+2, ox:ox+w, z-2:z+2] = True
+            # Right Lane
+            inh[0, 0, oy:oy+h, ox+w-2:ox+w, z-2:z+2] = False
+            amp[0, 0, oy:oy+h, ox+w-2:ox+w, z-2:z+2] = True
+            # Bottom Lane
+            inh[0, 0, oy+h-2:oy+h, ox:ox+w, z-2:z+2] = False
+            amp[0, 0, oy+h-2:oy+h, ox:ox+w, z-2:z+2] = True
+            # Left Lane
+            inh[0, 0, oy:oy+h, ox:ox+2, z-2:z+2] = False
+            amp[0, 0, oy:oy+h, ox:ox+2, z-2:z+2] = True
+            
+            # 2. SET VALVE
+            # Injects DOWN into the Top Lane of each bit
+            mid_x = ox + (w // 2)
+            inh[0, 0, oy-30:oy, mid_x-2:mid_x+2, z-2:z+2] = False
+            amp[0, 0, oy-30:oy, mid_x-2:mid_x+2, z-2:z+2] = True
+
+# ==========================================
+# TEMPORAL LATCH EXECUTION
+# ==========================================
+def run_memory_cycle():
+    # Grid expanded to 360 wide to fit the 4-bit array
+    GRID_Y, GRID_X, GRID_Z = 160, 360, 10
+    z_mid = 5
+    
+    field = torch.zeros((1, 1, GRID_Y, GRID_X, GRID_Z), device=device)
+    base_inhibitor_mask = torch.ones_like(field).bool()
+    threshold_mask = torch.zeros_like(field).bool()
+    amplifier_mask = torch.zeros_like(field).bool()
+
+    register = Poole4BitRegister(z_mid=z_mid)
+    register.stamp(base_inhibitor_mask, threshold_mask, amplifier_mask)
+
+    # Telemetry tracking for each independent bit
+    history = {'B3': [], 'B2': [], 'B1': [], 'B0': []}
+    
+    print("--- COMMENCING 4-BIT REGISTER CYCLE (V26) ---")
+    print(">> Target Value: 1011 (Decimal 11)")
+    
+    for t in range(351): 
+        current_inh_mask = base_inhibitor_mask.clone()
+
+        # 1. THE DATA BUS WRITE (T=10 to T=40)
+        # We inject fluid into the SET valves of Bit 3, Bit 1, and Bit 0
+        if 10 <= t <= 40:
+            # Bit 3 (MSB) -> ON
+            field[0, 0, 22:26, 58:62, z_mid-1:z_mid+1] = 1.0
+            # Bit 2 -> OFF (Left empty)
+            # Bit 1 -> ON
+            field[0, 0, 22:26, 218:222, z_mid-1:z_mid+1] = 1.0
+            # Bit 0 (LSB) -> ON
+            field[0, 0, 22:26, 298:302, z_mid-1:z_mid+1] = 1.0
+
+        # 2. GLOBAL HARDWARE INTERRUPT (T=250 to T=255)
+        # The Concrete Pour applies a -15.0 penalty to the entire 4-Bit array
+        if 250 <= t <= 255:
+            current_inh_mask[0, 0, 10:140, 20:340, z_mid-2:z_mid+2] = True
+
+        if t > 0:
+            field[0, 0, :, :, :] = torch.where(amplifier_mask, field[0, 0, :, :, :], field[0, 0, :, :, :])
+
+        field = run_manifold(field, current_inh_mask, threshold_mask, amplifier_mask)
+
+        # TELEMETRY: Measure the mass of each independent loop
+        history['B3'].append(field[0, 0, 45:135, 25:95, z_mid].sum().item())
+        history['B2'].append(field[0, 0, 45:135, 105:175, z_mid].sum().item())
+        history['B1'].append(field[0, 0, 45:135, 185:255, z_mid].sum().item())
+        history['B0'].append(field[0, 0, 45:135, 265:335, z_mid].sum().item())
+
+    print(">> T=350: Cycle Complete. Rendering Telemetry...")
+
+    # --- PLOT DIAGNOSTICS ---
+    plt.figure(figsize=(14, 7), facecolor='black')
+    ax = plt.gca()
+    ax.set_facecolor('black')
+    
+    # Plot each bit with a slight offset so overlapping lines are visible
+    ax.plot(range(351), history['B3'], color='#00ffcc', linewidth=2.5, label='Bit 3 (Value: 1)')
+    ax.plot(range(351), history['B2'], color='#ff3366', linewidth=2.5, label='Bit 2 (Value: 0)')
+    ax.plot(range(351), [m + 1 for m in history['B1']], color='#ffff00', linewidth=2, linestyle='--', label='Bit 1 (Value: 1)')
+    ax.plot(range(351), [m + 2 for m in history['B0']], color='#ff99ff', linewidth=1.5, linestyle=':', label='Bit 0 (Value: 1)')
+    
+    ax.axvspan(10, 40, color='#00ffcc', alpha=0.15, label='Data Bus WRITE (1011)')
+    ax.axvspan(250, 255, color='#ff3366', alpha=0.3, label='GLOBAL ERASE (Concrete Flush)')
+    
+    plt.title("Fluid Tensor Array: 4-Bit Register Telemetry (V26)", color='white', fontsize=14)
+    plt.xlabel("Time (T)", color='white')
+    plt.ylabel("Kinetic Loop Mass", color='white')
+    ax.tick_params(colors='white')
+    ax.grid(True, color='gray', alpha=0.3)
+    plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
+    plt.tight_layout()
+    plt.show()
+
+run_memory_cycle()
