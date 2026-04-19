@@ -1,0 +1,141 @@
+# =============================================================================
+# POOLE MANIFOLD — SEQUENTIAL MEMORY VERIFICATION (V25)
+# The Concrete Pour (Absolute Inhibitor Erase)
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import gc
+import time
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold V25 Concrete Latch Suite on: {device}")
+
+B_LOW, B_HIGH = 5.0, 7.0 
+S_LOW, S_HIGH = 5.0, 9.0
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f, inhibitor_mask, threshold_mask, amplifier_mask):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0)
+        
+        potential[inhibitor_mask] -= 15.0
+        potential[threshold_mask] -= 2.0
+        potential[amplifier_mask] += 1.0
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+            
+        total_phi = potential + resonance
+        
+    birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+    survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+    
+    del padded, potential, resonance, total_phi, f_float
+    return (birth | survive).float()
+
+# ==========================================
+# ARCHITECTURAL PRIMITIVES
+# ==========================================
+class PooleConcreteLatch:
+    def __init__(self, z_mid):
+        self.z = z_mid
+
+    def stamp(self, inh, thr, amp):
+        z = self.z
+        
+        # 1. THE FIBER OPTIC TRACK (Strictly 2-units wide, FULLY POWERED)
+        # Top Lane 
+        inh[0, 0, 40:42, 40:120, z-2:z+2] = False
+        amp[0, 0, 40:42, 40:120, z-2:z+2] = True
+        
+        # Right Lane 
+        inh[0, 0, 40:120, 118:120, z-2:z+2] = False
+        amp[0, 0, 40:120, 118:120, z-2:z+2] = True
+        
+        # Bottom Lane 
+        inh[0, 0, 118:120, 40:120, z-2:z+2] = False
+        amp[0, 0, 118:120, 40:120, z-2:z+2] = True
+        
+        # Left Lane 
+        inh[0, 0, 40:120, 40:42, z-2:z+2] = False
+        amp[0, 0, 40:120, 40:42, z-2:z+2] = True
+        
+        # 2. SET VALVE
+        # Injects DOWN into the Top Lane
+        inh[0, 0, 10:40, 60:64, z-2:z+2] = False
+        amp[0, 0, 10:40, 60:64, z-2:z+2] = True
+
+# ==========================================
+# TEMPORAL LATCH EXECUTION
+# ==========================================
+def run_memory_cycle():
+    GRID_Y, GRID_X, GRID_Z = 160, 160, 10
+    z_mid = 5
+    
+    field = torch.zeros((1, 1, GRID_Y, GRID_X, GRID_Z), device=device)
+    base_inhibitor_mask = torch.ones_like(field).bool()
+    threshold_mask = torch.zeros_like(field).bool()
+    amplifier_mask = torch.zeros_like(field).bool()
+
+    latch = PooleConcreteLatch(z_mid=z_mid)
+    latch.stamp(base_inhibitor_mask, threshold_mask, amplifier_mask)
+
+    mass_history = []
+    
+    print("--- COMMENCING CONCRETE ERASE CYCLE (V25) ---")
+    
+    for t in range(451): 
+        # Clone the inhibitor mask so we can dynamically pave the grid
+        current_inh_mask = base_inhibitor_mask.clone()
+
+        # 1. THE SET PULSE (Populate the track)
+        if 10 <= t <= 40:
+            field[0, 0, 12:16, 60:64, z_mid-1:z_mid+1] = 1.0
+
+        # 2. THE CONCRETE POUR (Absolute Mathematical Erase)
+        # We temporarily fill the ENTIRE loop and the SET valve with inhibitor concrete.
+        # This applies a -15.0 penalty, unconditionally vaporizing everything inside.
+        if 250 <= t <= 255:
+            current_inh_mask[0, 0, 10:130, 30:130, z_mid-2:z_mid+2] = True
+
+        # Apply the thermal wind continuously
+        if t > 0:
+            field[0, 0, :, :, :] = torch.where(amplifier_mask, field[0, 0, :, :, :], field[0, 0, :, :, :])
+
+        # We pass the dynamic concrete mask to the physics engine
+        field = run_manifold(field, current_inh_mask, threshold_mask, amplifier_mask)
+
+        # TELEMETRY: Global Mass of the track and the valve
+        loop_mass = field[0, 0, 10:130, 30:130, z_mid].sum().item() 
+        mass_history.append(loop_mass)
+
+    print(">> T=450: Cycle Complete. Rendering Telemetry...")
+
+    # --- PLOT DIAGNOSTICS ---
+    plt.figure(figsize=(12, 6), facecolor='black')
+    ax = plt.gca()
+    ax.set_facecolor('black')
+    
+    ax.plot(range(451), mass_history, color='#00ffcc', linewidth=2, label='Memory State (Global Mass Q)')
+    
+    ax.axvspan(10, 40, color='#00ffcc', alpha=0.15, label='SET Pulse Fired')
+    ax.axvspan(250, 255, color='#ff3366', alpha=0.3, label='CONCRETE POUR (-15.0 Penalty)')
+    
+    plt.title("Fluid Tensor Memory: Concrete Erase Telemetry (V25)", color='white', fontsize=14)
+    plt.xlabel("Time (T)", color='white')
+    plt.ylabel("Global Loop Mass (Q)", color='white')
+    ax.tick_params(colors='white')
+    ax.grid(True, color='gray', alpha=0.3)
+    plt.legend(loc='upper right')
+    plt.show()
+
+run_memory_cycle()
