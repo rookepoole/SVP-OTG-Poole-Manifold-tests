@@ -1,0 +1,174 @@
+# =============================================================================
+# POOLE MANIFOLD — SEQUENTIAL MEMORY VERIFICATION (V27)
+# 8-Bit Data Bus (Byte) & Logic Analyzer Telemetry
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import gc
+import time
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold V27 8-Bit Bus Suite on: {device}")
+
+B_LOW, B_HIGH = 5.0, 7.0 
+S_LOW, S_HIGH = 5.0, 9.0
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f, inhibitor_mask, threshold_mask, amplifier_mask):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0)
+        
+        potential[inhibitor_mask] -= 15.0
+        potential[threshold_mask] -= 2.0
+        potential[amplifier_mask] += 1.0
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+            
+        total_phi = potential + resonance
+        
+    birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+    survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+    
+    del padded, potential, resonance, total_phi, f_float
+    return (birth | survive).float()
+
+# ==========================================
+# ARCHITECTURAL PRIMITIVES
+# ==========================================
+class Poole8BitRegister:
+    def __init__(self, z_mid):
+        self.z = z_mid
+        # X-Coordinates for the 8 independent memory loops
+        # Ordered Left to Right: Bit 7 (MSB) down to Bit 0 (LSB)
+        self.bit_offsets = [30, 110, 190, 270, 350, 430, 510, 590] 
+        self.width = 60
+        self.height = 80
+        self.oy = 50
+
+    def stamp(self, inh, thr, amp):
+        z = self.z
+        oy = self.oy
+        h = self.height
+        w = self.width
+        
+        for ox in self.bit_offsets:
+            # 1. FIBER OPTIC CAPILLARY TRACK
+            inh[0, 0, oy:oy+2, ox:ox+w, z-2:z+2] = False
+            amp[0, 0, oy:oy+2, ox:ox+w, z-2:z+2] = True
+            
+            inh[0, 0, oy:oy+h, ox+w-2:ox+w, z-2:z+2] = False
+            amp[0, 0, oy:oy+h, ox+w-2:ox+w, z-2:z+2] = True
+            
+            inh[0, 0, oy+h-2:oy+h, ox:ox+w, z-2:z+2] = False
+            amp[0, 0, oy+h-2:oy+h, ox:ox+w, z-2:z+2] = True
+            
+            inh[0, 0, oy:oy+h, ox:ox+2, z-2:z+2] = False
+            amp[0, 0, oy:oy+h, ox:ox+2, z-2:z+2] = True
+            
+            # 2. SET VALVE
+            mid_x = ox + (w // 2)
+            inh[0, 0, oy-30:oy, mid_x-2:mid_x+2, z-2:z+2] = False
+            amp[0, 0, oy-30:oy, mid_x-2:mid_x+2, z-2:z+2] = True
+
+# ==========================================
+# TEMPORAL LATCH EXECUTION
+# ==========================================
+def run_memory_cycle():
+    # Grid expanded to 680 wide to fit the 8-bit array
+    GRID_Y, GRID_X, GRID_Z = 160, 680, 10
+    z_mid = 5
+    
+    field = torch.zeros((1, 1, GRID_Y, GRID_X, GRID_Z), device=device)
+    base_inhibitor_mask = torch.ones_like(field).bool()
+    threshold_mask = torch.zeros_like(field).bool()
+    amplifier_mask = torch.zeros_like(field).bool()
+
+    register = Poole8BitRegister(z_mid=z_mid)
+    register.stamp(base_inhibitor_mask, threshold_mask, amplifier_mask)
+
+    # Telemetry tracking for 8 independent bits
+    history = {f'B{i}': [] for i in range(8)}
+    
+    print("--- COMMENCING 8-BIT DATA BUS CYCLE (V27) ---")
+    print(">> Target Value: 10101010 (Decimal 170 / 0xAA)")
+    
+    for t in range(351): 
+        current_inh_mask = base_inhibitor_mask.clone()
+
+        # 1. THE DATA BUS WRITE (T=10 to T=40)
+        if 10 <= t <= 40:
+            # Bit 7 (MSB) -> ON
+            field[0, 0, 22:26, 58:62, z_mid-1:z_mid+1] = 1.0
+            # Bit 6 -> OFF
+            # Bit 5 -> ON
+            field[0, 0, 22:26, 218:222, z_mid-1:z_mid+1] = 1.0
+            # Bit 4 -> OFF
+            # Bit 3 -> ON
+            field[0, 0, 22:26, 378:382, z_mid-1:z_mid+1] = 1.0
+            # Bit 2 -> OFF
+            # Bit 1 -> ON
+            field[0, 0, 22:26, 538:542, z_mid-1:z_mid+1] = 1.0
+            # Bit 0 (LSB) -> OFF
+
+        # 2. GLOBAL HARDWARE INTERRUPT (T=250 to T=255)
+        if 250 <= t <= 255:
+            # Pour concrete over the entire 680-unit grid
+            current_inh_mask[0, 0, 10:140, 20:660, z_mid-2:z_mid+2] = True
+
+        if t > 0:
+            field[0, 0, :, :, :] = torch.where(amplifier_mask, field[0, 0, :, :, :], field[0, 0, :, :, :])
+
+        field = run_manifold(field, current_inh_mask, threshold_mask, amplifier_mask)
+
+        # TELEMETRY
+        history['B7'].append(field[0, 0, 45:135, 25:95, z_mid].sum().item())
+        history['B6'].append(field[0, 0, 45:135, 105:175, z_mid].sum().item())
+        history['B5'].append(field[0, 0, 45:135, 185:255, z_mid].sum().item())
+        history['B4'].append(field[0, 0, 45:135, 265:335, z_mid].sum().item())
+        history['B3'].append(field[0, 0, 45:135, 345:415, z_mid].sum().item())
+        history['B2'].append(field[0, 0, 45:135, 425:495, z_mid].sum().item())
+        history['B1'].append(field[0, 0, 45:135, 505:575, z_mid].sum().item())
+        history['B0'].append(field[0, 0, 45:135, 585:655, z_mid].sum().item())
+
+    print(">> T=350: Cycle Complete. Rendering Logic Analyzer...")
+
+    # --- PLOT DIAGNOSTICS (LOGIC ANALYZER VIEW) ---
+    plt.figure(figsize=(14, 10), facecolor='black')
+    ax = plt.gca()
+    ax.set_facecolor('black')
+    
+    colors = ['#00ffcc', '#ff3366', '#ffff00', '#ff99ff', '#00ccff', '#ff6600', '#99ff33', '#cc66ff']
+    
+    # Plot each bit with a massive 70-unit Y-offset to stack them cleanly
+    for i in range(8):
+        bit_idx = 7 - i # Start from MSB at the top
+        trace_data = [m + (bit_idx * 70) for m in history[f'B{bit_idx}']]
+        ax.plot(range(351), trace_data, color=colors[bit_idx], linewidth=2.5, label=f'Bit {bit_idx}')
+    
+    ax.axvspan(10, 40, color='#00ffcc', alpha=0.15, label='WRITE PHASE')
+    ax.axvspan(250, 255, color='#ff3366', alpha=0.3, label='GLOBAL ERASE')
+    
+    plt.title("Fluid Tensor Array: 8-Bit Logic Analyzer (V27)", color='white', fontsize=16)
+    plt.xlabel("Time (T)", color='white')
+    
+    # Hide the raw Y-axis numbers since they are just offsets now
+    ax.set_yticks([i * 70 for i in range(8)])
+    ax.set_yticklabels([f'Bit {i}' for i in range(8)])
+    ax.tick_params(colors='white')
+    
+    ax.grid(True, color='gray', alpha=0.2)
+    plt.legend(loc='upper right')
+    plt.tight_layout()
+    plt.show()
+
+run_memory_cycle()
