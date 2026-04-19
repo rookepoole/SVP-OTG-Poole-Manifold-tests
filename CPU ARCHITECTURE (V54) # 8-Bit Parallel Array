@@ -1,0 +1,169 @@
+# =============================================================================
+# POOLE MANIFOLD — CPU ARCHITECTURE (V54)
+# 8-Bit Parallel Array (The Surgical Array Strike)
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import gc
+import time
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold V54 8-Bit CPU Bus on: {device}")
+
+B_LOW, B_HIGH = 5.0, 7.0 
+S_LOW, S_HIGH = 5.0, 9.0
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f, inhibitor_mask, threshold_mask, amplifier_mask):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0)
+        
+        potential[inhibitor_mask] -= 15.0
+        potential[threshold_mask] -= 2.0
+        potential[amplifier_mask] += 1.0
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+            
+        total_phi = potential + resonance
+        
+    birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+    survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+    
+    del padded, potential, resonance, total_phi, f_float
+    return (birth | survive).float()
+
+# ==========================================
+# ARCHITECTURAL PRIMITIVES
+# ==========================================
+class Poole8BitBus:
+    def __init__(self, z_mid):
+        self.z = z_mid
+
+    def stamp(self, inh, thr, amp):
+        z = self.z
+        
+        # Tile the 60-Unit Insulated Macro-Slice 8 times
+        for i in range(8):
+            ox = 10 + i * 60 
+            
+            # 1. REGISTER A_i (The Disruptor)
+            ry_a, rx_a = 28, ox
+            inh[0, 0, ry_a:ry_a+2, rx_a:rx_a+20, z-2:z+2] = False 
+            amp[0, 0, ry_a:ry_a+2, rx_a:rx_a+20, z-2:z+2] = True
+            inh[0, 0, ry_a:ry_a+20, rx_a+18:rx_a+20, z-2:z+2] = False 
+            amp[0, 0, ry_a:ry_a+20, rx_a+18:rx_a+20, z-2:z+2] = True
+            inh[0, 0, ry_a+18:ry_a+20, rx_a:rx_a+20, z-2:z+2] = False 
+            amp[0, 0, ry_a+18:ry_a+20, rx_a:rx_a+20, z-2:z+2] = True
+            inh[0, 0, ry_a:ry_a+20, rx_a:rx_a+2, z-2:z+2] = False 
+            amp[0, 0, ry_a:ry_a+20, rx_a:rx_a+2, z-2:z+2] = True
+            
+            # 2. REGISTER B_i (The Primary) 
+            ry_b, rx_b = 0, ox + 30
+            inh[0, 0, ry_b:ry_b+2, rx_b:rx_b+20, z-2:z+2] = False 
+            amp[0, 0, ry_b:ry_b+2, rx_b:rx_b+20, z-2:z+2] = True
+            inh[0, 0, ry_b:ry_b+20, rx_b+18:rx_b+20, z-2:z+2] = False 
+            amp[0, 0, ry_b:ry_b+20, rx_b+18:rx_b+20, z-2:z+2] = True
+            inh[0, 0, ry_b+18:ry_b+20, rx_b:rx_b+20, z-2:z+2] = False 
+            amp[0, 0, ry_b+18:ry_b+20, rx_b:rx_b+20, z-2:z+2] = True
+            inh[0, 0, ry_b:ry_b+20, rx_b:rx_b+2, z-2:z+2] = False 
+            amp[0, 0, ry_b:ry_b+20, rx_b:rx_b+2, z-2:z+2] = True
+            
+            # 3. BUS A_i (Path Length = 100 units exactly)
+            inh[0, 0, 48:120, ox+18:ox+20, z-2:z+2] = False
+            amp[0, 0, 48:120, ox+18:ox+20, z-2:z+2] = True
+            inh[0, 0, 118:120, ox+18:ox+48, z-2:z+2] = False
+            amp[0, 0, 118:120, ox+18:ox+48, z-2:z+2] = True
+            
+            # 4. BUS B_i (Path Length = 100 units exactly)
+            inh[0, 0, 20:200, ox+48:ox+50, z-2:z+2] = False
+            amp[0, 0, 20:200, ox+48:ox+50, z-2:z+2] = True
+
+# ==========================================
+# TEMPORAL LATCH EXECUTION
+# ==========================================
+def run_alu_cycle():
+    GRID_Y, GRID_X, GRID_Z = 220, 500, 10
+    z_mid = 5
+    
+    field = torch.zeros((1, 1, GRID_Y, GRID_X, GRID_Z), device=device)
+    base_inhibitor_mask = torch.ones_like(field).bool()
+    threshold_mask = torch.zeros_like(field).bool()
+    amplifier_mask = torch.zeros_like(field).bool()
+
+    alu = Poole8BitBus(z_mid=z_mid)
+    alu.stamp(base_inhibitor_mask, threshold_mask, amplifier_mask)
+
+    history = {'Total_Mem_A': [], 'Total_Mem_B': [], 'Total_ALU_Out': []}
+    
+    # THE TEST VECTOR: A = 10101010, B = 11111111
+    # Result should be exactly 4 active bits surviving (01010101)
+    A_byte = [1, 0, 1, 0, 1, 0, 1, 0]
+    B_byte = [1, 1, 1, 1, 1, 1, 1, 1]
+    
+    print("--- COMMENCING 8-BIT PARALLEL EXECUTION (V54: The Surgical Strike) ---")
+    
+    for t in range(501): 
+        current_inh_mask = base_inhibitor_mask.clone()
+
+        if 10 <= t <= 40:
+            for i in range(8):
+                ox = 10 + i * 60
+                if A_byte[i] == 1:
+                    field[0, 0, 28:30, ox+8:ox+12, z_mid-1:z_mid+1] = 1.0 
+                if B_byte[i] == 1:
+                    field[0, 0, 0:2, ox+38:ox+42, z_mid-1:z_mid+1] = 1.0 
+
+        # THE SURGICAL CLOCK FLUSH 
+        if 200 <= t <= 215:
+            for i in range(8):
+                ox = 10 + i * 60
+                # Wipe Reg A and Bus A without touching Bus B (stops at ox+47)
+                current_inh_mask[0, 0, 25:125, ox:ox+47, z_mid-2:z_mid+2] = True
+                # Clean the Intersection and Exhaust explicitly
+                current_inh_mask[0, 0, 115:205, ox+47:ox+55, z_mid-2:z_mid+2] = True
+
+        if t > 0:
+            field[0, 0, :, :, :] = torch.where(amplifier_mask, field[0, 0, :, :, :], field[0, 0, :, :, :])
+
+        field = run_manifold(field, current_inh_mask, threshold_mask, amplifier_mask)
+
+        # TOTAL ARRAY TELEMETRY
+        history['Total_Mem_A'].append(field[0, 0, 25:50, :, z_mid].sum().item())
+        history['Total_Mem_B'].append(field[0, 0, 0:25, :, z_mid].sum().item())
+        history['Total_ALU_Out'].append(field[0, 0, 175:195, :, z_mid].sum().item())
+
+    print(">> T=500: Execution Complete. Plotting 8-Bit Bus Diagnostics...")
+
+    plt.figure(figsize=(13, 8), facecolor='black')
+    ax = plt.gca()
+    ax.set_facecolor('black')
+    
+    ax.plot(range(501), history['Total_Mem_A'], color='#00ffcc', alpha=0.6, linewidth=2, label='Total Array Mass: Reg A (Disruptors)')
+    ax.plot(range(501), [m * 1.05 for m in history['Total_Mem_B']], color='#ff9900', alpha=0.6, linewidth=2, linestyle='--', label='Total Array Mass: Reg B (Carriers)')
+    ax.plot(range(501), [m * 2 for m in history['Total_ALU_Out']], color='#ff3366', linewidth=3, label='Total Output Mass (AC Heartbeat)')
+    
+    ax.axvspan(10, 40, color='#ffffff', alpha=0.1, label='WRITE BYTE VECTORS')
+    ax.axvspan(100, 160, color='#ff9900', alpha=0.1, label='PARALLEL COMPUTE (Even Bits Annihilate)')
+    ax.axvspan(200, 215, color='#00ffcc', alpha=0.2, label='SURGICAL CLOCK FLUSH')
+    ax.axvspan(280, 480, color='#ff3366', alpha=0.1, label='PARALLEL COMPUTE (Odd Bits Coast)')
+    
+    plt.title("Fluid Tensor Architecture: 8-Bit Macro-Slice Bus (V54)", color='white', fontsize=14)
+    plt.xlabel("Time (T)", color='white')
+    plt.ylabel("Relative Kinetic Mass", color='white')
+    ax.tick_params(colors='white')
+    ax.grid(True, color='gray', alpha=0.3)
+    plt.legend(loc='upper right')
+    plt.tight_layout()
+    plt.show()
+
+run_alu_cycle()
