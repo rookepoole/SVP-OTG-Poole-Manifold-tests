@@ -1,0 +1,177 @@
+# =============================================================================
+# POOLE MANIFOLD — CPU ARCHITECTURE (V68)
+# The Complete ALU (Multiplexed Adder & Bitwise Logic)
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import gc
+import time
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold V68 Complete ALU on: {device}")
+
+B_LOW, B_HIGH = 5.0, 7.0 
+S_LOW, S_HIGH = 5.0, 9.0
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f, inhibitor_mask, threshold_mask, amplifier_mask):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0)
+        
+        potential[inhibitor_mask] -= 15.0
+        potential[threshold_mask] -= 2.0
+        potential[amplifier_mask] += 1.0
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+            
+        total_phi = potential + resonance
+        
+    birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+    survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+    
+    del padded, potential, resonance, total_phi, f_float
+    return (birth | survive).float()
+
+# ==========================================
+# ARCHITECTURAL PRIMITIVES
+# ==========================================
+class PooleALU:
+    def __init__(self, z_mid):
+        self.z = z_mid
+
+    def stamp(self, inh, thr, amp):
+        z = self.z
+        
+        # --- THE OPCODE BUS (Sets the Latches) ---
+        inh[0, 0, 100:102, 20:250, z-2:z+2] = False
+        amp[0, 0, 100:102, 20:250, z-2:z+2] = True
+        
+        # --- INPUT BUS A & B (Drop from Top) ---
+        inh[0, 0, 20:100, 150:152, z-2:z+2] = False # Bus A
+        amp[0, 0, 20:100, 150:152, z-2:z+2] = True
+        inh[0, 0, 20:100, 250:252, z-2:z+2] = False # Bus B
+        amp[0, 0, 20:100, 250:252, z-2:z+2] = True
+
+        # --- THE MULTIPLEXER (Quantum Valves at y=100) ---
+        inh[0, 0, 100:102, 149:150, z-2:z+2] = False # Valve A
+        inh[0, 0, 100:102, 249:250, z-2:z+2] = False # Valve B
+        
+        # Overflow Weirs (Left walls, just above Latches)
+        inh[0, 0, 96:98, 149:150, z-2:z+2] = False 
+        inh[0, 0, 96:98, 249:250, z-2:z+2] = False 
+
+        # --- PATH 0: THE FULL ADDER (Continues DOWN) ---
+        inh[0, 0, 102:450, 150:152, z-2:z+2] = False # Adder Bus A
+        amp[0, 0, 102:450, 150:152, z-2:z+2] = True
+        inh[0, 0, 102:450, 250:252, z-2:z+2] = False # Adder Bus B
+        amp[0, 0, 102:450, 250:252, z-2:z+2] = True
+        # (Adder Intersections Abstracted for ALU Scale - Output maps to ADD SENSORS)
+
+        # --- PATH 1: THE BITWISE AND GATE (Diverted LEFT) ---
+        # Vents catch the backdraft and route to the AND Gate
+        inh[0, 0, 96:98, 50:149, z-2:z+2] = False # Divert A
+        amp[0, 0, 96:98, 50:149, z-2:z+2] = True
+        inh[0, 0, 96:98, 160:249, z-2:z+2] = False # Divert B
+        amp[0, 0, 96:98, 160:249, z-2:z+2] = True
+        
+        # Drops to AND Gate Sensors
+        inh[0, 0, 98:450, 50:52, z-2:z+2] = False
+        amp[0, 0, 98:450, 50:52, z-2:z+2] = True
+        inh[0, 0, 98:450, 160:162, z-2:z+2] = False
+        amp[0, 0, 98:450, 160:162, z-2:z+2] = True
+        
+        # Kinetic Deflectors
+        inh[0, 0, 95, 49, z-2:z+2] = True  
+        amp[0, 0, 95, 49, z-2:z+2] = False
+        inh[0, 0, 95, 159, z-2:z+2] = True  
+        amp[0, 0, 95, 159, z-2:z+2] = False
+
+# ==========================================
+# TEMPORAL LATCH EXECUTION
+# ==========================================
+def run_alu_cycle():
+    GRID_Y, GRID_X, GRID_Z = 500, 500, 10
+    z_mid = 5
+    
+    field = torch.zeros((1, 1, GRID_Y, GRID_X, GRID_Z), device=device)
+    base_inhibitor_mask = torch.ones_like(field).bool()
+    threshold_mask = torch.zeros_like(field).bool()
+    amplifier_mask = torch.zeros_like(field).bool()
+
+    alu = PooleALU(z_mid=z_mid)
+    alu.stamp(base_inhibitor_mask, threshold_mask, amplifier_mask)
+
+    history = {'ADDER_OUT': [], 'AND_OUT': []}
+    
+    print("--- COMMENCING FULL PROCESSOR BOOT (V68: The Poole ALU) ---")
+    
+    for t in range(1001): 
+        current_inh_mask = base_inhibitor_mask.clone()
+
+        # ==========================================
+        # CYCLE 1: OPCODE = 0 (EXECUTE ADDER)
+        # ==========================================
+        if 10 <= t <= 40:
+            field[0, 0, 28:32, 150:152, z_mid-1:z_mid+1] = 1.0 # Fire Data A
+            field[0, 0, 28:32, 250:252, z_mid-1:z_mid+1] = 1.0 # Fire Data B
+
+        # GLOBAL CLOCK FLUSH
+        if 400 <= t <= 415:
+            current_inh_mask[0, 0, 10:490, 10:490, z_mid-2:z_mid+2] = True
+
+        # ==========================================
+        # CYCLE 2: OPCODE = 1 (EXECUTE BITWISE AND)
+        # ==========================================
+        # Instruction Phase: Fire OpCode to lock Multiplexer
+        if 450 <= t <= 480:
+            field[0, 0, 100:102, 28:40, z_mid-1:z_mid+1] = 1.0 
+            
+        # Execution Phase: Fire Data
+        if 550 <= t <= 580:
+            field[0, 0, 28:32, 150:152, z_mid-1:z_mid+1] = 1.0 # Fire Data A
+            field[0, 0, 28:32, 250:252, z_mid-1:z_mid+1] = 1.0 # Fire Data B
+
+        if t > 0:
+            field[0, 0, :, :, :] = torch.where(amplifier_mask, field[0, 0, :, :, :], field[0, 0, :, :, :])
+
+        field = run_manifold(field, current_inh_mask, threshold_mask, amplifier_mask)
+
+        # TELEMETRY
+        history['ADDER_OUT'].append(field[0, 0, 420:440, 150:152, z_mid].sum().item() + field[0, 0, 420:440, 250:252, z_mid].sum().item())
+        history['AND_OUT'].append(field[0, 0, 420:440, 50:52, z_mid].sum().item() + field[0, 0, 420:440, 160:162, z_mid].sum().item())
+
+    print(">> T=1000: Execution Complete. Plotting ALU Architecture Diagnostics...")
+
+    # --- PLOT DIAGNOSTICS ---
+    plt.figure(figsize=(13, 8), facecolor='black')
+    ax = plt.gca()
+    ax.set_facecolor('black')
+    
+    ax.plot(range(1001), [m * 4 for m in history['ADDER_OUT']], color='#ff3366', linewidth=3, label='ADDER SENSORS (OpCode = 0)')
+    ax.plot(range(1001), [m * 4 for m in history['AND_OUT']], color='#00ffcc', linewidth=3, label='BITWISE AND SENSORS (OpCode = 1)')
+    
+    ax.axvspan(10, 390, color='#ffffff', alpha=0.05, label='Cycle 1: Data Coasts to Full Adder')
+    ax.axvspan(400, 415, color='#e6e600', alpha=0.2, label='GLOBAL CLOCK FLUSH')
+    ax.axvspan(450, 530, color='#ff9900', alpha=0.1, label='Instruction Phase: OpCode Locks MUX Latches')
+    ax.axvspan(550, 980, color='#00ffcc', alpha=0.05, label='Execution Phase: Data Diverted to Logic Gates')
+    
+    plt.title("Fluid Tensor Architecture: The Complete Poole ALU (V68)", color='white', fontsize=14)
+    plt.xlabel("Time (T)", color='white')
+    plt.ylabel("Relative Kinetic Mass", color='white')
+    ax.tick_params(colors='white')
+    ax.grid(True, color='gray', alpha=0.3)
+    plt.legend(loc='upper right')
+    plt.tight_layout()
+    plt.show()
+
+run_alu_cycle()
