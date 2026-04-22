@@ -1,0 +1,161 @@
+# =============================================================================
+# POOLE MANIFOLD — CPU ARCHITECTURE (V140)
+# The Full Adder Verification Suite (The Active Ground)
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import gc
+import time
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold V140 Full Adder Verification Suite on: {device}")
+
+B_LOW, B_HIGH = 5.0, 7.0 
+S_LOW, S_HIGH = 5.0, 9.0
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f, inhibitor_mask, threshold_mask, amplifier_mask):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0)
+        
+        potential[inhibitor_mask] -= 15.0
+        potential[threshold_mask] -= 2.0
+        potential[amplifier_mask] += 1.0
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+            
+        total_phi = potential + resonance
+        
+    birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+    survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+    
+    del padded, potential, resonance, total_phi, f_float
+    return (birth | survive).float()
+
+# ==========================================
+# ARCHITECTURAL PRIMITIVES
+# ==========================================
+class PooleVerificationSuite:
+    def __init__(self):
+        self.ze = slice(3, 8)
+
+    def stamp(self, inh, thr, amp):
+        ze = self.ze
+        
+        # 1. INPUT PIN A
+        inh[0, 0, 80:83, 20:60, ze] = False
+        amp[0, 0, 80:83, 20:60, ze] = True
+        
+        # 2. INPUT PIN B
+        inh[0, 0, 150:153, 20:60, ze] = False
+        amp[0, 0, 150:153, 20:60, ze] = True
+        
+        # 3. INPUT CARRY-IN
+        inh[0, 0, 220:223, 20:60, ze] = False
+        amp[0, 0, 220:223, 20:60, ze] = True
+        
+        # 4. THE ALU CHAMBER
+        inh[0, 0, 60:240, 60:220, ze] = False
+        amp[0, 0, 60:240, 60:220, ze] = True
+        
+        # 5. OUTPUT PIN: SUM
+        inh[0, 0, 120:123, 220:280, ze] = False
+        amp[0, 0, 120:123, 220:280, ze] = True
+        
+        # 6. OUTPUT PIN: CARRY-OUT
+        inh[0, 0, 180:183, 220:280, ze] = False
+        amp[0, 0, 180:183, 220:280, ze] = True
+
+# ==========================================
+# TEMPORAL LATCH EXECUTION
+# ==========================================
+def run_alu_cycle():
+    GRID_Y, GRID_X, GRID_Z = 300, 300, 10
+    
+    field = torch.zeros((1, 1, GRID_Y, GRID_X, GRID_Z), device=device)
+    base_inhibitor_mask = torch.ones_like(field).bool()
+    threshold_mask = torch.zeros_like(field).bool()
+    amplifier_mask = torch.zeros_like(field).bool()
+
+    alu = PooleVerificationSuite()
+    alu.stamp(base_inhibitor_mask, threshold_mask, amplifier_mask)
+
+    truth_table = [
+        (0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1),
+        (1, 0, 0), (1, 0, 1), (1, 1, 0), (1, 1, 1)
+    ]
+    
+    CYCLE_LENGTH = 250
+    TOTAL_FRAMES = CYCLE_LENGTH * len(truth_table)
+    
+    history = {'PIN_A': [], 'PIN_B': [], 'PIN_CIN': []}
+    
+    print("--- COMMENCING TEST BENCH (V140: The Active Ground) ---")
+    
+    for t in range(TOTAL_FRAMES): 
+        current_inh_mask = base_inhibitor_mask.clone()
+
+        current_state_idx = t // CYCLE_LENGTH
+        state_t = t % CYCLE_LENGTH
+        
+        # THE ACTIVE GROUND FLUSH
+        # Instantly delete all fluid at the start of a new truth table row
+        # to ensure the previous state's exhaust doesn't corrupt the next run.
+        if state_t == 0:
+            field.zero_()
+        
+        A, B, Cin = truth_table[current_state_idx]
+
+        # The Sustained Square Wave
+        if state_t < 60:
+            if A: field[0, 0, 80:83, 20:23, 3:8] = 1.0
+            if B: field[0, 0, 150:153, 20:23, 3:8] = 1.0
+            if Cin: field[0, 0, 220:223, 20:23, 3:8] = 1.0
+
+        if t > 0:
+            field[0, 0, :, :, :] = torch.where(amplifier_mask, field[0, 0, :, :, :], field[0, 0, :, :, :])
+
+        field = run_manifold(field, current_inh_mask, threshold_mask, amplifier_mask)
+
+        # TELEMETRY
+        history['PIN_A'].append(field[0, 0, 80:83, 40:50, 3:8].sum().item())
+        history['PIN_B'].append(field[0, 0, 150:153, 40:50, 3:8].sum().item())
+        history['PIN_CIN'].append(field[0, 0, 220:223, 40:50, 3:8].sum().item())
+
+    print(f">> T={TOTAL_FRAMES}: Execution Complete. Plotting V140 Diagnostics...")
+
+    # --- PLOT DIAGNOSTICS ---
+    plt.figure(figsize=(14, 8), facecolor='black')
+    ax = plt.gca()
+    ax.set_facecolor('black')
+    
+    ax.plot(range(TOTAL_FRAMES), [m * 0.1 for m in history['PIN_CIN']], color='#00ffcc', alpha=0.8, linewidth=2, label='Carry-In Bus')
+    ax.plot(range(TOTAL_FRAMES), [(m * 0.1) + 15.0 for m in history['PIN_B']], color='#ff9900', alpha=0.8, linewidth=2, label='Pin B Bus (Offset +15)')
+    ax.plot(range(TOTAL_FRAMES), [(m * 0.1) + 30.0 for m in history['PIN_A']], color='#ff3366', alpha=0.8, linewidth=2, label='Pin A Bus (Offset +30)')
+    
+    for i in range(len(truth_table) + 1):
+        ax.axvline(x=i * CYCLE_LENGTH, color='white', alpha=0.2, linestyle='--')
+        if i < len(truth_table):
+            ax.text(i * CYCLE_LENGTH + (CYCLE_LENGTH/2), 50.0, str(truth_table[i]), color='white', ha='center', fontsize=12)
+
+    plt.title("Fluid Tensor Architecture: Verification Suite (V140 Active Ground)", color='white', fontsize=14)
+    plt.xlabel("Time (T)", color='white')
+    plt.ylabel("Input Bus Density", color='white')
+    ax.set_ylim(-2, 55)
+    ax.tick_params(colors='white')
+    ax.grid(True, color='gray', alpha=0.3)
+    plt.legend(loc='upper right')
+    plt.tight_layout()
+    plt.show()
+
+run_alu_cycle()
