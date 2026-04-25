@@ -1,0 +1,113 @@
+# ================================================
+# OTG Phenomenological Fit to DESI DR2 BAO Data
+# ✅ FINAL FIXED VERSION (manual trapz + shape safety)
+# ================================================
+import torch
+import numpy as np
+from scipy.optimize import minimize
+import matplotlib.pyplot as plt
+
+# ----------------- DESI DR2 BAO Data -----------------
+data = np.array([
+    [0.295,  7.944, 0.075],
+    [0.510, 12.720, 0.098],
+    [0.706, 16.048, 0.110],
+    [0.934, 19.720, 0.091],
+    [1.321, 24.256, 0.174],
+    [1.484, 26.059, 0.400],
+    [2.330, 31.267, 0.256]
+])
+z_bao = torch.tensor(data[:, 0], dtype=torch.float32)
+dv_rd_data = torch.tensor(data[:, 1], dtype=torch.float32)
+dv_rd_sigma = torch.tensor(data[:, 2], dtype=torch.float32)
+
+H0_fid = 67.4
+c = 299792.458
+rd_fid = 147.5
+
+# ----------------- Reliable cumulative trapezoidal integral -----------------
+def cumtrapz(y, x, dim=0):
+    """Always returns same length as y, with [0, integral_1, ..., integral_N]"""
+    dx = x[1:] - x[:-1]
+    trap = (y[:-1] + y[1:]) / 2.0 * dx
+    cum = torch.cat([torch.zeros(1, dtype=y.dtype, device=y.device),
+                     torch.cumsum(trap, dim=0)])
+    return cum
+
+# ----------------- OTG Model -----------------
+def otg_ez(z, alpha=0.22, beta=0.75, Om=0.31):
+    alpha = float(alpha)
+    beta = float(beta)
+    Om = float(Om)
+    w0 = -1.0
+    wa = -alpha * beta
+    x = torch.log(1 + z)
+    integrand = 1 + w0 + wa * (1 - torch.exp(-x))
+    int_w = cumtrapz(integrand, x)
+    rho_de = torch.exp(3.0 * int_w)
+    E2 = Om * (1 + z)**3 + (1 - Om) * rho_de
+    return torch.sqrt(E2)
+
+def otg_dv_rd(z, alpha=0.22, beta=0.75, Om=0.31, rd_scale=1.0):
+    Ez = otg_ez(z, alpha, beta, Om)
+    dc = cumtrapz(1.0 / Ez, z) * (c / (H0_fid * rd_fid))   # ∫ dz/E
+    dM = dc
+    dH = (c / (H0_fid * rd_fid)) / Ez
+    dv = (z * dM**2 * dH)**(1.0/3.0)
+    return dv * rd_scale
+
+# ----------------- χ² -----------------
+def chi2(params):
+    alpha, beta, Om, rd_scale = params
+    dv_rd_th = otg_dv_rd(z_bao, alpha, beta, Om, rd_scale)
+    chi2_val = torch.sum(((dv_rd_th - dv_rd_data) / dv_rd_sigma)**2).item()
+    return chi2_val
+
+# ----------------- Run optimization -----------------
+initial_guess = [0.22, 0.75, 0.31, 1.0]
+bounds = [(0.01, 0.8), (0.1, 2.0), (0.25, 0.40), (0.9, 1.1)]
+
+result = minimize(chi2, initial_guess, bounds=bounds, method='L-BFGS-B', tol=1e-8)
+best_alpha, best_beta, best_Om, best_rd_scale = result.x
+best_chi2 = result.fun
+dof = len(z_bao) - 4
+
+print(f"✅ BEST OTG FIT:")
+print(f"   α          = {best_alpha:.4f}")
+print(f"   β          = {best_beta:.4f}")
+print(f"   Ωm         = {best_Om:.4f}")
+print(f"   rd_scale   = {best_rd_scale:.4f}")
+print(f"   χ²         = {best_chi2:.3f}   (χ²/dof = {best_chi2/dof:.3f})")
+
+# ΛCDM reference
+def lcdm_dv_rd(z, Om=0.31):
+    Ez = torch.sqrt(Om*(1+z)**3 + (1-Om))
+    dc = cumtrapz(1.0/Ez, z) * (c / (H0_fid * rd_fid))
+    dM = dc
+    dH = (c / (H0_fid * rd_fid)) / Ez
+    dv = (z * dM**2 * dH)**(1.0/3.0)
+    return dv
+
+lcdm_chi2 = torch.sum(((lcdm_dv_rd(z_bao) - dv_rd_data)/dv_rd_sigma)**2).item()
+print(f"ΛCDM χ²    = {lcdm_chi2:.3f}")
+print(f"Δχ² (OTG better by) = {lcdm_chi2 - best_chi2:.3f}")
+
+# ----------------- Plots -----------------
+z_plot = torch.linspace(0.1, 2.5, 200)
+dv_rd_otg = otg_dv_rd(z_plot, best_alpha, best_beta, best_Om, best_rd_scale).detach().numpy()
+
+plt.figure(figsize=(10,6))
+plt.errorbar(data[:,0], data[:,1], yerr=data[:,2], fmt='o', color='black', label='DESI DR2 BAO')
+plt.plot(z_plot.numpy(), dv_rd_otg, 'r-', lw=2.5, label=f'OTG (α={best_alpha:.3f}, β={best_beta:.3f})')
+plt.xlabel('Redshift z')
+plt.ylabel('D_V(z) / r_d')
+plt.title('OTG Phenomenological Model vs DESI DR2 BAO')
+plt.legend(); plt.grid(True); plt.show()
+
+w_otg = -1 + best_alpha * (best_beta * z_plot / (1 + z_plot))
+plt.figure(figsize=(8,5))
+plt.plot(z_plot.numpy(), w_otg.numpy(), 'b-', lw=2.5, label='OTG w(z)')
+plt.axhline(-1, color='gray', ls='--', label='ΛCDM')
+plt.xlabel('z'); plt.ylabel('w(z)')
+plt.title('OTG Dark-Energy Evolution')
+plt.legend(); plt.grid(True); plt.show()
