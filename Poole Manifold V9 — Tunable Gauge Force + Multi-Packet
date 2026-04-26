@@ -1,0 +1,179 @@
+import torch
+import torch.nn.functional as F
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+import numpy as np
+import gc
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Poole Manifold V9 — Tunable Gauge Force + Multi-Packet on: {device}")
+
+torch.cuda.empty_cache()
+gc.collect()
+
+GRID_SIZE = 384
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+COUPLING_STRENGTH = 0.65
+GAUGE_STRENGTH = 0.45
+FORCE_SIGN = -1.0                    # ← +1.0 = repulsion, -1.0 = attraction (try both!)
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold_complex_v9(field, metric):
+    with torch.no_grad():
+        mag = field.abs().float().unsqueeze(0).unsqueeze(0)
+        padded = F.pad(mag, (1, 1, 1, 1, 1, 1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0).squeeze(0).squeeze(0)
+
+        resonance = torch.zeros_like(potential, device=device)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p) ** 2) / 0.01)
+
+        total = potential + resonance
+
+        metric_dev = (metric - metric.mean()) * GAUGE_STRENGTH
+        gauge_phase = metric_dev * FORCE_SIGN                     # ← Tunable sign
+
+        prob = (total ** 2).clamp(0, 1)
+        rand = torch.rand_like(field.real, device=device)
+        
+        birth = (field.abs() < 1e-6) & (rand < prob)
+        survive = (field.abs() >= 1e-6) & (rand < prob)
+
+        amplitude = total / (1 + total.abs() + 1e-8)
+        new_field = torch.where(birth | survive,
+                                amplitude * torch.exp(1j * gauge_phase),
+                                torch.zeros_like(field, device=device))
+
+        global_phase = new_field.mean().angle()
+        new_field = new_field * torch.exp(1j * COUPLING_STRENGTH * global_phase)
+
+        density = field.abs() ** 2
+        metric = 0.88 * metric + 0.12 * (1.0 + 0.35 * density)
+        metric = metric.clamp(0.8, 2.2)
+
+        return new_field, metric
+
+# ====================== INITIALIZATION ======================
+field = torch.zeros((GRID_SIZE, GRID_SIZE, GRID_SIZE), dtype=torch.complex64, device=device)
+metric = torch.ones((GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device) * 1.0
+
+x = torch.arange(GRID_SIZE, device=device)
+X, Y, Z = torch.meshgrid(x, x, x, indexing='ij')
+
+# Pair 1 (mid-plane)
+phase_l1 = 0.4 * X
+packet_l1 = torch.exp(-((X - GRID_SIZE//4)**2 + (Y - GRID_SIZE//2)**2 + (Z - GRID_SIZE//2)**2) / (2 * 8**2)) * torch.exp(1j * phase_l1)
+packet_r1 = torch.exp(-((X - 3*GRID_SIZE//4)**2 + (Y - GRID_SIZE//2)**2 + (Z - GRID_SIZE//2)**2) / (2 * 8**2)) * torch.exp(1j * -0.4 * X)
+field += (packet_l1 + packet_r1) * 0.8
+
+# Pair 2 (offset in Y for multi-body test)
+packet_l2 = torch.exp(-((X - GRID_SIZE//4)**2 + (Y - GRID_SIZE//2 - 60)**2 + (Z - GRID_SIZE//2)**2) / (2 * 8**2)) * torch.exp(1j * 0.4 * X)
+packet_r2 = torch.exp(-((X - 3*GRID_SIZE//4)**2 + (Y - GRID_SIZE//2 - 60)**2 + (Z - GRID_SIZE//2)**2) / (2 * 8**2)) * torch.exp(1j * -0.4 * X)
+field += (packet_l2 + packet_r2) * 0.7
+
+# Central seed
+center_seed = torch.exp(-((X - GRID_SIZE//2)**2 + (Y - GRID_SIZE//2)**2 + (Z - GRID_SIZE//2)**2) / (2 * 6**2))
+field += center_seed * 0.6
+
+# ====================== EVOLUTION ======================
+TOTAL_STEPS = 600
+center_amp_history = []
+distant_corr_history = []
+metric_min_history = []
+metric_max_history = []
+
+# CoM tracking for both pairs
+left_com_x1, right_com_x1 = [], []
+left_com_x2, right_com_x2 = [], []
+
+left_mask1 = (X < GRID_SIZE//2).float()
+right_mask1 = (X >= GRID_SIZE//2).float()
+left_mask2 = left_mask1.clone()
+right_mask2 = right_mask1.clone()
+
+for t in tqdm(range(TOTAL_STEPS), desc="V9 Evolution"):
+    field, metric = run_manifold_complex_v9(field, metric)
+    
+    center_amp_history.append(field[GRID_SIZE//2, GRID_SIZE//2, GRID_SIZE//2].abs().item())
+    
+    left = field[GRID_SIZE//8:GRID_SIZE//4, GRID_SIZE//2, GRID_SIZE//2]
+    right = field[3*GRID_SIZE//4:7*GRID_SIZE//8, GRID_SIZE//2, GRID_SIZE//2]
+    corr = (left * right.conj()).abs().mean().item()
+    distant_corr_history.append(corr)
+    
+    metric_min_history.append(metric.min().item())
+    metric_max_history.append(metric.max().item())
+
+    # CoM for Pair 1
+    density = field.abs() ** 2
+    left_mass1 = (density * left_mask1).sum()
+    right_mass1 = (density * right_mask1).sum()
+    if left_mass1 > 1e-8:
+        left_com_x1.append(((density * left_mask1 * X).sum() / left_mass1).item())
+    else:
+        left_com_x1.append(np.nan)
+    if right_mass1 > 1e-8:
+        right_com_x1.append(((density * right_mask1 * X).sum() / right_mass1).item())
+    else:
+        right_com_x1.append(np.nan)
+
+    # CoM for Pair 2
+    left_mass2 = (density * left_mask2).sum()
+    right_mass2 = (density * right_mask2).sum()
+    if left_mass2 > 1e-8:
+        left_com_x2.append(((density * left_mask2 * X).sum() / left_mass2).item())
+    else:
+        left_com_x2.append(np.nan)
+    if right_mass2 > 1e-8:
+        right_com_x2.append(((density * right_mask2 * X).sum() / right_mass2).item())
+    else:
+        right_com_x2.append(np.nan)
+
+# ====================== RESULTS ======================
+print(f"\n✅ V9 RESULTS (FORCE_SIGN = {FORCE_SIGN})")
+print(f"Max interference peak: {max(center_amp_history):.4f}")
+print(f"Max distant correlation: {max(distant_corr_history):.4f}")
+print(f"Final metric range: {min(metric_min_history):.3f} — {max(metric_max_history):.3f}")
+
+print(f"\nPair 1 ΔCoM: Left = {left_com_x1[-1] - left_com_x1[0]:+.2f} | Right = {right_com_x1[-1] - right_com_x1[0]:+.2f}")
+print(f"Pair 2 ΔCoM: Left = {left_com_x2[-1] - left_com_x2[0]:+.2f} | Right = {right_com_x2[-1] - right_com_x2[0]:+.2f}")
+
+# ====================== PLOTS ======================
+steps = np.arange(TOTAL_STEPS)
+
+plt.figure(figsize=(14, 8), facecolor='black')
+ax = plt.gca(); ax.set_facecolor('black')
+ax.plot(steps, center_amp_history, color='#00ffcc', linewidth=3, label='Center amplitude')
+ax.plot(steps, distant_corr_history, color='#ff3366', linewidth=3, label='Distant correlation')
+ax.plot(steps, [0.8] * TOTAL_STEPS, '--', color='white', alpha=0.4, label='Single-packet baseline')
+ax.set_title(f"V9 — Tunable Gauge Force (FORCE_SIGN = {FORCE_SIGN})", color='white', fontsize=16)
+ax.set_xlabel("Time step", color='white')
+ax.set_ylabel("Amplitude / Correlation", color='white')
+ax.legend(); ax.tick_params(colors='white'); ax.grid(True, color='gray', alpha=0.3)
+plt.tight_layout(); plt.show()
+
+# Force trajectories (both pairs)
+plt.figure(figsize=(12, 6), facecolor='black')
+ax = plt.gca(); ax.set_facecolor('black')
+ax.plot(steps, left_com_x1, color='#00ccff', linewidth=2.5, label='Pair 1 Left CoM')
+ax.plot(steps, right_com_x1, color='#ff6600', linewidth=2.5, label='Pair 1 Right CoM')
+ax.plot(steps, left_com_x2, color='#00ffaa', linewidth=2.5, linestyle='--', label='Pair 2 Left CoM')
+ax.plot(steps, right_com_x2, color='#ffaa00', linewidth=2.5, linestyle='--', label='Pair 2 Right CoM')
+ax.set_title("V9 — Multi-Packet Center-of-Mass Trajectories", color='white', fontsize=14)
+ax.set_xlabel("Time step", color='white')
+ax.set_ylabel("X position (cells)", color='white')
+ax.legend(); ax.tick_params(colors='white'); ax.grid(True, color='gray', alpha=0.3)
+plt.tight_layout(); plt.show()
+
+# Metric evolution
+plt.figure(figsize=(10, 5), facecolor='black')
+plt.plot(steps, metric_min_history, color='#ffff00', label='Metric min')
+plt.plot(steps, metric_max_history, color='#ff00ff', label='Metric max')
+plt.title("V9 Dynamical Metric Evolution", color='white')
+plt.xlabel("Time step", color='white')
+plt.ylabel("Metric value", color='white')
+plt.legend(); plt.grid(True, color='gray', alpha=0.3); plt.tight_layout(); plt.show()
