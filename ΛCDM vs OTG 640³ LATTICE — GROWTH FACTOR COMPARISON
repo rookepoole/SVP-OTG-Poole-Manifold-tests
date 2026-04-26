@@ -1,0 +1,44 @@
+# ================================================
+# ΛCDM vs OTG 640³ LATTICE — GROWTH FACTOR COMPARISON
+# Self-contained using your V7 640³ results
+# ================================================
+import numpy as np
+from scipy.integrate import odeint
+import matplotlib.pyplot as plt
+
+# Your 640³ run data
+a_final = 1.78
+observed_growth_approx = 4.5          # approximate effective D(a) from power-spectrum rise
+# (late-time P(k) at low-mid k is ~20× higher → sqrt(20) ≈ 4.5)
+
+# Theoretical ΛCDM growth factor (Ω_m = 0.304)
+def lcdm_growth(y, a, Om=0.304):
+    D, Dp = y
+    H2 = Om / a**3 + (1 - Om)
+    Dpp = -(3/(2*a) + (3*Om/(2*a**3*H2))) * Dp + (3*Om/(2*a**2*H2)) * D
+    return [Dp, Dpp]
+
+a_grid = np.linspace(1.0, a_final, 300)
+D_lcdm = odeint(lcdm_growth, [1.0, 1.0], a_grid, args=(0.304,))[:, 0]
+D_lcdm /= D_lcdm[0]   # normalize D(a=1) = 1
+
+# Plot
+plt.figure(figsize=(10, 6))
+plt.plot(a_grid, D_lcdm, 'b--', lw=2.5, label='ΛCDM theoretical growth factor (Ω_m=0.304)')
+plt.axvline(a_final, color='green', linestyle='-', alpha=0.6, label=f'OTG 640³ final a = {a_final:.2f}')
+plt.plot(a_final, observed_growth_approx, 'ro', markersize=8, label=f'OTG lattice effective D(a) ≈ {observed_growth_approx:.1f}')
+plt.xlabel('Scale factor a')
+plt.ylabel('Growth factor D(a) / D(a=1)')
+plt.title('Perturbation Growth: OTG 640³ Lattice vs ΛCDM')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Numerical comparison
+print("≡ OTG 640³ vs ΛCDM Comparison ≡")
+print(f"Final scale factor a          = {a_final:.2f}")
+print(f"OTG lattice effective D(a)    ≈ {observed_growth_approx:.1f}")
+print(f"ΛCDM theoretical D(a)         = {D_lcdm[-1]:.3f}")
+print(f"Ratio (OTG / ΛCDM)            ≈ {observed_growth_approx / D_lcdm[-1]:.2f}x")
+print(f"⟨Φ⟩ stable at                 = 7.33")
+print(f"Sustained succession flux     = 0.3095")
