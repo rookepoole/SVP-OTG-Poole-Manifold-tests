@@ -1,0 +1,164 @@
+# ================================================
+# FLRW-EMBEDDED POOLE MANIFOLD V5 — 256³ High-Resolution
+# Phase 4 scaled up: perturbations + power spectrum for ΛCDM comparison
+# ================================================
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Running on: {device}")
+
+# Calibrated OTG parameters
+ALPHA = 0.7956
+BETA = 1.9869
+OMEGA_M = 0.304
+
+# Rules from your PDF
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device, dtype=torch.float32)
+kernel[0, 0, 1, 1, 1] = 0.0
+
+def run_manifold(field):
+    with torch.no_grad():
+        padded = F.pad(field.unsqueeze(0).unsqueeze(0), (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0).squeeze(0).squeeze(0)
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        total_phi = potential + resonance + 0.12 + 2.0
+        birth = (field == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (field == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        return (birth | survive).float()
+
+def stamp_macro_orbit(field, center, radius=12):
+    x, y, z = torch.meshgrid(torch.arange(field.shape[0], device=device),
+                             torch.arange(field.shape[1], device=device),
+                             torch.arange(field.shape[2], device=device), indexing='ij')
+    r = torch.sqrt((x-center[0])**2 + (y-center[1])**2 + (z-center[2])**2)
+    amp_ring = (r >= radius-3) & (r <= radius+3)
+    vacuum_eye = (r < radius-7)
+    field[amp_ring] = 1.0
+    field[vacuum_eye] = 0.0
+    return field
+
+# ----------------- High-Resolution Setup -----------------
+GRID_SIZE = 256          # ← change to 192 if OOM
+TOTAL_STEPS = 1200       # reduced for speed on larger grid
+NUM_LATCHES = 24
+PERTURBATION_AMPLITUDE = 0.0008
+
+field = torch.zeros((GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device, dtype=torch.float32)
+
+# Seed macro-orbits
+for i in range(NUM_LATCHES):
+    cx = np.random.randint(40, GRID_SIZE-40)
+    cy = np.random.randint(40, GRID_SIZE-40)
+    cz = np.random.randint(20, GRID_SIZE-20)
+    field = stamp_macro_orbit(field, (cx, cy, cz), radius=12)
+
+# Small initial perturbations
+noise = PERTURBATION_AMPLITUDE * torch.randn_like(field)
+field += noise
+field = torch.clamp(field, 0.0, 1.0)
+
+print(f"Initialized {NUM_LATCHES} macro-orbits + perturbations on {GRID_SIZE}³ lattice")
+
+a_history = [1.0]
+phi_history = []
+succession_history = []
+power_spectra = []
+
+for t in tqdm(range(TOTAL_STEPS), desc=f"Evolving {GRID_SIZE}³ FLRW V5"):
+    field = run_manifold(field)
+    
+    # Global Φ
+    padded = F.pad(field.unsqueeze(0).unsqueeze(0), (1,1,1,1,1,1), mode='circular')
+    potential = F.conv3d(padded, kernel, padding=0).squeeze(0).squeeze(0)
+    resonance = torch.zeros_like(potential)
+    for p in PRIMES:
+        resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+    total_phi = potential + resonance + 0.12 + 2.0
+    avg_phi = total_phi.mean().item()
+    over_frac = (total_phi > 9.0).float().mean().item()
+    
+    phi_history.append(avg_phi)
+    succession_history.append(over_frac)
+    
+    # FLRW expansion
+    z_eff = t / 800.0
+    w = -1 + ALPHA * (BETA * z_eff / (1 + z_eff))
+    da_dt = np.sqrt(OMEGA_M * (1 + z_eff)**3 + (1 - OMEGA_M) * np.exp(3 * (1 + w) * np.log(1 + z_eff)))
+    a_new = a_history[-1] * (1 + da_dt / 1800.0)
+    a_history.append(a_new)
+    
+    # Comoving dilution
+    dilution = (a_history[-2] / a_history[-1]) ** 3
+    field *= dilution
+    
+    # Power spectrum (CPU-safe, every 300 steps)
+    if t % 300 == 0 or t == TOTAL_STEPS-1:
+        density = (field - field.mean()).cpu()
+        fft = torch.fft.fftn(density)
+        power = torch.abs(fft)**2
+        # Radial binning on CPU
+        kx = torch.arange(GRID_SIZE, device='cpu')
+        ky = torch.arange(GRID_SIZE, device='cpu')
+        kz = torch.arange(GRID_SIZE, device='cpu')
+        kx, ky, kz = torch.meshgrid(kx, ky, kz, indexing='ij')
+        k = torch.sqrt(kx**2 + ky**2 + kz**2).flatten()
+        p_flat = power.flatten()
+        bins = torch.linspace(0, GRID_SIZE//2, 60)
+        hist = torch.zeros(len(bins)-1, dtype=torch.float32)
+        count = torch.zeros(len(bins)-1, dtype=torch.float32)
+        for i in range(len(bins)-1):
+            mask = (k >= bins[i]) & (k < bins[i+1])
+            hist[i] = p_flat[mask].sum()
+            count[i] = mask.sum()
+        Pk = hist / (count + 1e-8)
+        power_spectra.append((t, Pk.numpy()))
+
+# ----------------- Results -----------------
+print("\n" + "="*70)
+print("✅ FLRW V5 256³ RESULTS")
+print("="*70)
+print(f"Final scale factor a(final) = {a_history[-1]:.2f}")
+print(f"Final ⟨Φ⟩ = {phi_history[-1]:.3f}")
+print(f"Mean succession flux = {np.mean(succession_history[800:]):.5f}")
+
+# Power spectrum evolution
+plt.figure(figsize=(12, 6))
+for step, Pk in power_spectra:
+    k = np.linspace(0, GRID_SIZE//2, len(Pk))
+    plt.loglog(k[1:], Pk[1:], label=f't={step}')
+plt.xlabel('Wavenumber k')
+plt.ylabel('Power spectrum P(k)')
+plt.title('Structure Formation in 256³ Expanding OTG Lattice')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Evolution plots
+fig, axs = plt.subplots(3, 1, figsize=(12, 10))
+axs[0].plot(a_history, 'g-', lw=2, label='Scale factor a(t)')
+axs[0].set_ylabel('a(t)')
+axs[0].set_title('FLRW V5 — 256³ Cosmic Expansion')
+axs[0].legend(); axs[0].grid(True)
+
+axs[1].plot(phi_history, 'b-', label='⟨Φ⟩(t)')
+axs[1].axhline(9.0, color='red', ls='--', label='Overpressure threshold')
+axs[1].set_ylabel('⟨Φ⟩')
+axs[1].legend(); axs[1].grid(True)
+
+axs[2].plot(succession_history, 'r-', label='Succession Flux')
+axs[2].set_xlabel('Time step t')
+axs[2].set_ylabel('Succession Rate')
+axs[2].legend(); axs[2].grid(True)
+
+plt.tight_layout()
+plt.show()
