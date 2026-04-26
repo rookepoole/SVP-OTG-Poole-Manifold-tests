@@ -1,0 +1,129 @@
+# ================================================
+# TEST B — DISPERSION RELATION
+# Speed vs. Gaussian seed width (effective wavelength)
+# ================================================
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Running on: {device}")
+
+# Exact rules from your PDF
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device, dtype=torch.float32)
+kernel[0, 0, 1, 1, 1] = 0.0
+
+def run_manifold(field):
+    with torch.no_grad():
+        padded = F.pad(field.unsqueeze(0).unsqueeze(0), (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0).squeeze(0).squeeze(0)
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        total_phi = potential + resonance + 0.12 + 2.0
+        birth = (field == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (field == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        return (birth | survive).float()
+
+def stamp_macro_orbit(field, center, radius=12):
+    x, y, z = torch.meshgrid(torch.arange(field.shape[0], device=device),
+                             torch.arange(field.shape[1], device=device),
+                             torch.arange(field.shape[2], device=device), indexing='ij')
+    r = torch.sqrt((x-center[0])**2 + (y-center[1])**2 + (z-center[2])**2)
+    amp_ring = (r >= radius-3) & (r <= radius+3)
+    vacuum_eye = (r < radius-7)
+    field[amp_ring] = 1.0
+    field[vacuum_eye] = 0.0
+    return field
+
+GRID_SIZE = 384
+
+# Background macro-orbits (shared)
+background = torch.zeros((GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device, dtype=torch.float32)
+for i in range(6):
+    cx = np.random.randint(80, GRID_SIZE-80)
+    cy = np.random.randint(80, GRID_SIZE-80)
+    cz = np.random.randint(60, GRID_SIZE-60)
+    background = stamp_macro_orbit(background, (cx, cy, cz), radius=12)
+
+# Test different Gaussian widths (sigma)
+widths = [4, 6, 8, 12, 16, 24, 32]
+results = []
+
+x, y, z = torch.meshgrid(torch.arange(GRID_SIZE, device=device),
+                         torch.arange(GRID_SIZE, device=device),
+                         torch.arange(GRID_SIZE, device=device), indexing='ij')
+
+for sigma in widths:
+    print(f"\nTesting Gaussian width σ = {sigma}")
+    field = background.clone()
+    
+    # Gaussian seed centered at (GRID_SIZE//2, GRID_SIZE//2, GRID_SIZE//2 - 40)
+    r = torch.sqrt((x - GRID_SIZE//2)**2 + (y - GRID_SIZE//2)**2 + (z - GRID_SIZE//2 + 40)**2)
+    seed = 0.9 * torch.exp(-r**2 / (2 * sigma**2))
+    field += seed
+    field = torch.clamp(field, 0.0, 1.0)
+    
+    positions = []
+    for t in tqdm(range(600), desc=f"σ={sigma}", leave=False):
+        field = run_manifold(field)
+        
+        mask = (x > GRID_SIZE//2 - 80) & (x < GRID_SIZE//2 + 80) & \
+               (y > GRID_SIZE//2 - 80) & (y < GRID_SIZE//2 + 80) & \
+               (z > GRID_SIZE//2 - 80) & (z < GRID_SIZE//2 + 120)
+        mass = field[mask].sum()
+        if mass > 1e-4:
+            cx = (field[mask] * x[mask]).sum() / mass
+            cy = (field[mask] * y[mask]).sum() / mass
+            cz = (field[mask] * z[mask]).sum() / mass
+            positions.append((cx.item(), cy.item(), cz.item()))
+    
+    if len(positions) > 20:
+        velocities = []
+        for i in range(1, len(positions)):
+            dx = positions[i][0] - positions[i-1][0]
+            dy = positions[i][1] - positions[i-1][1]
+            dz = positions[i][2] - positions[i-1][2]
+            speed = (dx**2 + dy**2 + dz**2)**0.5
+            velocities.append(speed)
+        avg_speed = np.mean(velocities)
+        std_speed = np.std(velocities)
+        lifetime = len(velocities)
+    else:
+        avg_speed = std_speed = 0.0
+        lifetime = 0
+    
+    results.append({
+        "σ (width)": sigma,
+        "Avg Speed": f"{avg_speed:.4f}",
+        "Dispersion": f"{std_speed:.4f}",
+        "Lifetime": lifetime
+    })
+
+# Results table
+print("\n" + "="*70)
+print("DISPERSION RELATION — Speed vs Gaussian Width")
+print("="*70)
+print(f"{'σ (width)':<12} {'Avg Speed':<12} {'Dispersion':<12} {'Lifetime':<10}")
+print("-"*70)
+for r in results:
+    print(f"{r['σ (width)']:<12} {r['Avg Speed']:<12} {r['Dispersion']:<12} {r['Lifetime']:<10}")
+print("="*70)
+
+# Plot dispersion relation
+sigmas = [r['σ (width)'] for r in results]
+speeds = [float(r['Avg Speed']) for r in results]
+
+plt.figure(figsize=(10, 6))
+plt.plot(sigmas, speeds, 'bo-', linewidth=2, markersize=8)
+plt.xlabel('Gaussian seed width σ')
+plt.ylabel('Average propagation speed (cells/step)')
+plt.title('Dispersion Relation: Speed vs Excitation Size')
+plt.grid(True)
+plt.show()
