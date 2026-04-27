@@ -1,0 +1,141 @@
+import torch
+import torch.nn.functional as F
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+import numpy as np
+import gc
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Poole Manifold V23 — Perihelion Precession Test (Fixed) on: {device}")
+
+torch.cuda.empty_cache()
+gc.collect()
+
+GRID_SIZE = 448
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(field):
+    with torch.no_grad():
+        mag = field.abs().float().unsqueeze(0).unsqueeze(0)
+        padded = F.pad(mag, (1, 1, 1, 1, 1, 1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0).squeeze(0).squeeze(0)
+
+        resonance = torch.zeros_like(potential, device=device)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p) ** 2) / 0.01)
+
+        total = potential + resonance
+
+        prob = (total ** 2).clamp(0, 1)
+        rand = torch.rand_like(field.real, device=device)
+        
+        birth = (field.abs() < 1e-6) & (rand < prob)
+        survive = (field.abs() >= 1e-6) & (rand < prob)
+
+        amplitude = total / (1 + total.abs() + 1e-8)
+        new_field = torch.where(birth | survive, amplitude, torch.zeros_like(field, device=device))
+        return new_field
+
+# ====================== CENTRAL MASS ======================
+def stamp_macro_orbit(field, center, radius=24, amp=5.0):
+    x = torch.arange(GRID_SIZE, device=device)
+    X, Y, Z = torch.meshgrid(x, x, x, indexing='ij')
+    r = torch.sqrt((X - center[0])**2 + (Y - center[1])**2 + (Z - center[2])**2)
+    ring = (r > radius-5) & (r < radius+4)
+    eye  = r < radius-11
+    field[ring] = amp
+    field[eye]  = 0.0
+    return field
+
+# ====================== PLANET ======================
+def stamp_planet(field, center, radius=6, amp=1.8):
+    x = torch.arange(GRID_SIZE, device=device)
+    X, Y, Z = torch.meshgrid(x, x, x, indexing='ij')
+    r = torch.sqrt((X - center[0])**2 + (Y - center[1])**2 + (Z - center[2])**2)
+    field[r < radius] = amp
+    return field
+
+# ====================== INITIALIZATION ======================
+field = torch.zeros((GRID_SIZE, GRID_SIZE, GRID_SIZE), dtype=torch.complex64, device=device)
+
+# Central Sun
+sun_center = (GRID_SIZE//2, GRID_SIZE//2, GRID_SIZE//2)
+field = stamp_macro_orbit(field, sun_center, radius=24, amp=5.0)
+
+# Planet
+planet_r = 110
+planet_start = (sun_center[0] + planet_r, sun_center[1], sun_center[2])
+field = stamp_planet(field, planet_start, radius=6, amp=1.8)
+
+# Meshgrid for phase gradient (tangential velocity)
+X, Y, Z = torch.meshgrid(torch.arange(GRID_SIZE, device=device),
+                         torch.arange(GRID_SIZE, device=device),
+                         torch.arange(GRID_SIZE, device=device), indexing='ij')
+
+# Give initial tangential velocity (approximates orbital motion)
+phase_gradient = 0.35 * (Y - sun_center[1])
+field = field * torch.exp(1j * phase_gradient * 0.08)
+
+# ====================== EVOLUTION & TRACKING ======================
+TOTAL_STEPS = 1800
+planet_com_x = []
+planet_com_y = []
+
+for t in tqdm(range(TOTAL_STEPS), desc="Perihelion Precession Test"):
+    field = run_manifold(field)
+    
+    density = field.abs() ** 2
+    # Track planet (compact packet far from center)
+    mask = (density > 0.3) & ((X - sun_center[0])**2 + (Y - sun_center[1])**2 + (Z - sun_center[2])**2 > 40**2)
+    mass = density[mask].sum()
+    if mass > 1e-6:
+        com_x = (density[mask] * X[mask]).sum() / mass
+        com_y = (density[mask] * Y[mask]).sum() / mass
+        planet_com_x.append(com_x.item())
+        planet_com_y.append(com_y.item())
+
+# ====================== PERIHELION PRECESSION ANALYSIS ======================
+if len(planet_com_x) > 100:
+    dx = np.array(planet_com_x) - sun_center[0]
+    dy = np.array(planet_com_y) - sun_center[1]
+    r = np.sqrt(dx**2 + dy**2)
+    theta = np.arctan2(dy, dx)
+    
+    peri_indices = []
+    for i in range(1, len(r)-1):
+        if r[i] < r[i-1] and r[i] < r[i+1]:
+            peri_indices.append(i)
+    
+    if len(peri_indices) >= 2:
+        precession_per_orbit = []
+        for j in range(1, len(peri_indices)):
+            delta_theta = np.degrees(theta[peri_indices[j]] - theta[peri_indices[j-1]])
+            precession_per_orbit.append(delta_theta)
+        
+        avg_precession = np.mean(precession_per_orbit)
+        num_orbits = len(precession_per_orbit)
+        
+        print(f"\n✅ Perihelion Precession Results")
+        print(f"Number of detected orbits: {num_orbits}")
+        print(f"Average precession per orbit: {avg_precession:.3f} degrees")
+    else:
+        print("\nNot enough periapsis detections to measure precession.")
+else:
+    print("\nNot enough data points for orbit analysis.")
+
+# ====================== PLOTS ======================
+plt.figure(figsize=(10, 10), facecolor='black')
+ax = plt.gca(); ax.set_facecolor('black')
+ax.plot(planet_com_x, planet_com_y, color='#00ffcc', linewidth=2)
+ax.plot(sun_center[0], sun_center[1], 'o', color='yellow', markersize=12, label='Central Mass')
+ax.set_title("V23 — Planet Orbit & Perihelion Precession", color='white', fontsize=14)
+ax.set_xlabel("X position (cells)", color='white')
+ax.set_ylabel("Y position (cells)", color='white')
+ax.legend(); ax.tick_params(colors='white'); ax.grid(True, color='gray', alpha=0.3)
+ax.axis('equal')
+plt.tight_layout(); plt.show()
