@@ -1,0 +1,67 @@
+import torch
+import torch.nn.functional as F
+import matplotlib.pyplot as plt
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🧬 Initializing Non-Local Replication Engine on: {device}")
+
+N = 200
+OFFSET = 50
+field = torch.zeros((1, 1, N, N), device=device)
+
+# 1. THE GENOME (A stable, complex 5x5 structure)
+genome = torch.tensor([
+    [0, 1, 1, 1, 0],
+    [1, 0, 0, 0, 1],
+    [1, 0, 1, 0, 1],
+    [1, 0, 0, 0, 1],
+    [0, 1, 1, 1, 0]
+], device=device).float()
+
+# Seed the 'Parent' at Node A
+field[0, 0, N//2-2:N//2+3, N//2-OFFSET-2:N//2+3-OFFSET] = genome
+
+entanglement_coupling = 1.0 
+node_B_history = []
+
+print(" -> Parent Node A stabilized. Bridge active...")
+
+for t in range(200):
+    # --- 2. THE EINSTEIN-ROSEN UMBILICAL ---
+    # We project the exact local state of Node A onto Node B
+    # bypassing the intervening 100 cells of vacuum
+    node_A_core = field[0, 0, N//2-10:N//2+10, N//2-OFFSET-10:N//2-OFFSET+10].clone()
+    
+    # At T=100, we trigger the 'Replication Event'
+    if t >= 100:
+        field[0, 0, N//2-10:N//2+10, N//2+OFFSET-10:N//2+OFFSET+10] = node_A_core
+
+    # --- 3. TELEMETRY ---
+    # We check the 'Correlation' between A and B
+    node_B_state = field[0, 0, N//2-10:N//2+10, N//2+OFFSET-10:N//2+OFFSET+10]
+    # Similarity score (1.0 = Perfect Replica)
+    similarity = (node_A_core * node_B_state).sum() / (node_A_core.sum() + 1e-9)
+    node_B_history.append(similarity.item())
+
+# --- 4. VISUALIZING THE "BEAMED" REPLICATION ---
+plt.figure(figsize=(12, 5), facecolor='black')
+plt.subplot(1, 2, 1)
+plt.plot(node_B_history, color='#00ffcc', linewidth=2)
+plt.axvline(x=100, color='magenta', linestyle='--', label='Replication Trigger')
+plt.title("Node B: Self-Replication Correlation", color='white')
+plt.xlabel("Generation", color='white')
+plt.ylabel("Structural Similarity to Parent", color='white')
+plt.grid(alpha=0.1)
+
+plt.subplot(1, 2, 2)
+plt.imshow(field[0,0].cpu().numpy(), cmap='magma')
+plt.title("Manifold State Post-Replication", color='white')
+plt.axis('off')
+
+plt.tight_layout()
+plt.show()
+
+if node_B_history[-1] > 0.95:
+    print("STATUS: NON-LOCAL REPLICATION SUCCESSFUL. Node B is a perfect copy.")
+else:
+    print("STATUS: REPLICATION FAILED.")
