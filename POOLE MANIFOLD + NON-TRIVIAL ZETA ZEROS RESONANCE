@@ -1,0 +1,117 @@
+# =============================================================================
+# POOLE MANIFOLD + NON-TRIVIAL ZETA ZEROS RESONANCE
+# Full Colab test script — primes + first 10 non-trivial zeros
+# =============================================================================
+
+!pip install -q torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+from tqdm import tqdm
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device}")
+
+# ====================== CONSTANTS ======================
+GRID_SIZE = 256
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+# First 10 non-trivial zeros of the Riemann zeta function
+ZEROS = torch.tensor([
+    14.134725, 21.022040, 25.010858, 30.424876, 32.935062,
+    37.586178, 40.918719, 43.327073, 48.005151, 49.773832
+], device=device, dtype=torch.float32)
+
+# ====================== KERNEL ======================
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0.0
+
+# ====================== MODIFIED RUN_MANIFOLD ======================
+def run_manifold(f):
+    with torch.no_grad():
+        padded = F.pad(f.unsqueeze(0).unsqueeze(0), (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel).squeeze(0).squeeze(0)
+        
+        # 1. Original prime resonance
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        
+        # 2. Non-trivial zeta zeros resonance (tunable scale)
+        zeta_scale = 0.65          # ← change this to tune zero influence
+        zero_strength = 0.22
+        for z in ZEROS:
+            resonance += zero_strength * torch.exp(-((potential - z * zeta_scale)**2) / 0.008)
+        
+        total_phi = potential + resonance
+        
+        birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        
+        return (birth | survive).float()
+
+# ====================== INITIALIZATION ======================
+print("Initializing random field + macro-orbits...")
+field = torch.zeros((GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device, dtype=torch.float32)
+
+# Add some background macro-orbits
+for _ in range(12):
+    cx = np.random.randint(40, GRID_SIZE-40)
+    cy = np.random.randint(40, GRID_SIZE-40)
+    cz = np.random.randint(40, GRID_SIZE-40)
+    r = torch.sqrt((torch.arange(GRID_SIZE, device=device) - cx)**2 + 
+                   (torch.arange(GRID_SIZE, device=device).unsqueeze(1) - cy)**2 + 
+                   (torch.arange(GRID_SIZE, device=device).unsqueeze(1).unsqueeze(2) - cz)**2)
+    field[(r > 8) & (r < 14)] = 1.0
+
+# Add a strong central seed
+center = GRID_SIZE // 2
+field[center-20:center+20, center-20:center+20, center-20:center+20] += 0.8 * torch.rand(40,40,40, device=device)
+
+field = torch.clamp(field, 0.0, 1.0)
+
+print(f"Initial live cells: {field.sum().item():.0f}")
+
+# ====================== EVOLUTION LOOP ======================
+TOTAL_STEPS = 2000
+density_history = []
+
+print("Evolving with prime + zeta-zero resonance...")
+
+for step in tqdm(range(TOTAL_STEPS)):
+    field = run_manifold(field)
+    
+    if step % 100 == 0 or step == TOTAL_STEPS-1:
+        density = field.mean().item()
+        density_history.append(density)
+        print(f"Step {step:4d} | Density: {density:.4f}")
+        
+        if step % 500 == 0 or step == TOTAL_STEPS-1:
+            clear_output(wait=True)
+            center = GRID_SIZE // 2
+            fig, axes = plt.subplots(1, 3, figsize=(15,5))
+            axes[0].imshow(field[center].cpu().numpy(), cmap='inferno')
+            axes[0].set_title('XY slice')
+            axes[1].imshow(field[:, center, :].cpu().numpy(), cmap='inferno')
+            axes[1].set_title('XZ slice')
+            axes[2].imshow(field[:, :, center].cpu().numpy(), cmap='inferno')
+            axes[2].set_title('YZ slice')
+            plt.suptitle(f"Poole Manifold + Zeta Zeros — Step {step}")
+            plt.show()
+
+print("\n✅ Test finished!")
+print(f"Final density: {density_history[-1]:.4f}")
+
+# Final density plot
+plt.figure(figsize=(10,5))
+plt.plot(density_history, 'b-', linewidth=2)
+plt.title("Density Evolution with Zeta-Zero Resonance")
+plt.xlabel("Step / 100")
+plt.ylabel("Global Density")
+plt.grid(True)
+plt.show()
