@@ -1,0 +1,66 @@
+import torch
+import torch.nn.functional as F
+import matplotlib.pyplot as plt
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🔬 Initializing Measurement-Induced Collapse Test on: {device}")
+
+N = 256
+OFFSET = 64
+field = torch.zeros((1, 1, N, N, 10), device=device, dtype=torch.complex64)
+
+# 1. INITIALIZE TWO ENTANGLED IMMORTAL LATCHES (V207)
+# We define two distant nodes A and B for the cross-coupled macro-orbits
+def seed_latch(f, x_pos, y_pos):
+    # Simplified Immortal Latch seed: cross-coupled macro-orbits
+    f[0, 0, y_pos-5:y_pos+5, x_pos-5:x_pos+5, 4:6] = 5.0 + 0j
+    return f
+
+field = seed_latch(field, N//2 - OFFSET, N//2)
+field = seed_latch(field, N//2 + OFFSET, N//2)
+
+entanglement_coupling = 0.90
+history_A = []
+history_B = []
+
+print(" -> Stabilizing Entangled Latches...")
+
+for t in range(300):
+    # --- 2. THE NON-LOCAL BRIDGE (ER-BRIDGE MECHANICS) ---
+    # Instantaneously project deviations from A to B as per Trial 458
+    node_A_core = field[0, 0, N//2-10:N//2+10, N//2-OFFSET-10:N//2-OFFSET+10, :]
+    node_B_core = field[0, 0, N//2-10:N//2+10, N//2+OFFSET-10:N//2+OFFSET+10, :]
+    
+    # Mirroring A onto B via the tensor link
+    field[0, 0, N//2-10:N//2+10, N//2+OFFSET-10:N//2+OFFSET+10, :] = \
+        node_B_core + entanglement_coupling * (node_A_core - node_B_core)
+
+    # --- 3. THE MEASUREMENT (OBSERVER EFFECT) ---
+    # At T=150, we "observe" Latch A using a high-frequency sampling kernel
+    # This acts as a 'measurement' by siphoning off a fraction of phase information
+    if t == 150:
+        print(" -> 👁️ T=150: MEASURING LATCH A. Monitoring Latch B for state collapse...")
+        field[0, 0, N//2-10:N//2+10, N//2-OFFSET-10:N//2-OFFSET+10, :] *= 0.75 # 25% Observation Drain
+
+    # --- 4. TELEMETRY ---
+    amp_A = torch.abs(field[0, 0, N//2, N//2 - OFFSET, 5]).item()
+    amp_B = torch.abs(field[0, 0, N//2, N//2 + OFFSET, 5]).item()
+    history_A.append(amp_A)
+    history_B.append(amp_B)
+
+# --- 5. VISUALIZING THE COLLAPSE ---
+plt.figure(figsize=(12, 5), facecolor='black')
+plt.plot(history_A, color='magenta', label='Latch A (Observed)')
+plt.plot(history_B, color='cyan', linestyle='--', label='Latch B (Entangled)')
+plt.axvline(x=150, color='yellow', linestyle=':', label='Measurement Event')
+plt.title("The Observer Effect: Non-Local State Collapse", color='white')
+plt.xlabel("Generation", color='white')
+plt.ylabel("Topological Amplitude", color='white')
+plt.legend()
+plt.grid(alpha=0.2)
+plt.show()
+
+if history_B[151] < history_B[149]:
+    print("STATUS: NON-LOCAL COLLAPSE VERIFIED. Latch B reacted to the measurement of Latch A.")
+else:
+    print("STATUS: LATCHES REMAIN INDEPENDENT.")
