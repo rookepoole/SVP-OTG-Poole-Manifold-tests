@@ -1,0 +1,116 @@
+import torch
+import torch.nn.functional as F
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Booting OTG Gravitational Lensing Engine on: {device}")
+
+# Thermodynamic Boundaries
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+
+# Prime Heuristic
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0.0 
+
+# ==========================================
+# THE TENSOR ENGINE (LENSING TOPOLOGY)
+# ==========================================
+def run_lensing_manifold(f, lens_mask):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0)
+        
+        # The Lens exerts a massive +5.0 baseline scalar field distortion
+        potential = torch.where(lens_mask, potential + 5.0, potential)
+        
+        # Prime Resonance (The Topological Lock)
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+            
+        total_phi = potential + resonance
+        
+        # Thermodynamic Collapse
+        birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        
+        return (birth | survive).float()
+
+# ==========================================
+# EXECUTION & TELEMETRY
+# ==========================================
+def test_gravitational_lensing():
+    GRID_Y, GRID_X, GRID_Z = 200, 300, 10
+    field = torch.zeros((1, 1, GRID_Y, GRID_X, GRID_Z), device=device)
+    
+    # Build the Super-Massive Lens
+    lens_mask = torch.zeros_like(field).bool()
+    lens_mask[0, 0, 80:120, 140:160, 3:8] = True
+    
+    # Initialize the Lens matter
+    field = torch.where(lens_mask, torch.ones_like(field), field)
+
+    TOTAL_FRAMES = 200
+    trajectory_x = []
+    trajectory_y = []
+
+    print("--- COMMENCING WEAK-FIELD LENSING CALIBRATION ---")
+    
+    for t in range(TOTAL_FRAMES):
+        # Fire the Kinetic Wave ("Photon") at T=10
+        if t == 10:
+            field[0, 0, 38:42, 10:14, 4:7] = 1.0 
+
+        # Keep the Lens stable
+        field = torch.where(lens_mask, torch.ones_like(field), field)
+        field = run_lensing_manifold(field, lens_mask)
+
+        # --- TELEMETRY: Track the Photon's Center of Mass ---
+        # We isolate the moving wave by masking out the stationary lens area
+        tracking_field = field.clone()
+        tracking_field[0, 0, 70:130, 130:170, :] = 0 
+        
+        mass = tracking_field.sum().item()
+        if mass > 10: # Only track if the wave survives
+            y_indices = torch.arange(GRID_Y, device=device).view(-1, 1, 1).float()
+            x_indices = torch.arange(GRID_X, device=device).view(1, -1, 1).float()
+            
+            com_y = (tracking_field[0, 0] * y_indices).sum().item() / mass
+            com_x = (tracking_field[0, 0] * x_indices).sum().item() / mass
+            
+            trajectory_x.append(com_x)
+            trajectory_y.append(com_y)
+
+    # Plotting
+    clear_output(wait=True)
+    plt.figure(figsize=(12, 6), facecolor='black')
+    ax = plt.gca()
+    ax.set_facecolor('black')
+
+    # Draw the Lens perimeter
+    lens_circle = plt.Circle((150, 100), 25, color='#ff3333', alpha=0.3, label='Super-Massive Lens Topology')
+    ax.add_patch(lens_circle)
+
+    # Draw the Trajectory
+    if trajectory_x:
+        ax.plot(trajectory_x, trajectory_y, color='#00ffcc', linewidth=3, label='Wave Center of Mass Trajectory')
+        ax.scatter(trajectory_x[0], trajectory_y[0], color='white', zorder=5, label='Injection Point')
+        ax.scatter(trajectory_x[-1], trajectory_y[-1], color='yellow', zorder=5, label='Terminal Location')
+
+    plt.title("Emergent Gravitational Lensing (Weak-Field Calibration)", color='white', fontsize=14)
+    plt.xlabel("Lattice X Coordinate", color='white')
+    plt.ylabel("Lattice Y Coordinate", color='white')
+    ax.set_xlim(0, 300)
+    ax.set_ylim(0, 200)
+    ax.tick_params(colors='white')
+    ax.grid(True, color='gray', alpha=0.3)
+    plt.legend(facecolor='black', labelcolor='white', loc='upper right')
+    plt.tight_layout()
+    plt.show()
+
+test_gravitational_lensing()
