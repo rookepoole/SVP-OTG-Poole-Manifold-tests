@@ -1,0 +1,141 @@
+# =============================================================================
+# POOLE MANIFOLD — V38 Parallel Ribbon Cable
+# Proving Multi-Channel Isolation and Parallel Data Routing
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🖧 V38 Parallel Bus Initializing on: {device}")
+
+# Slightly wider grid to comfortably fit parallel channels
+GRID_SIZE = 120
+STEPS = 200
+
+B_LOW, B_HIGH = 5.0, 7.0 
+S_LOW, S_HIGH = 5.0, 9.0
+PRIMES = torch.tensor([2, 3, 5, 7, 11, 13, 17, 19, 23], device=device).view(9, 1, 1, 1)
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f, inh, thr, amp):
+    with torch.no_grad():
+        f5 = f.unsqueeze(0).unsqueeze(0)
+        padded = F.pad(f5, (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0).squeeze(0).squeeze(0)
+        
+        potential = torch.where(inh, potential - 15.0, potential)
+        potential = torch.where(thr, potential - 2.0, potential)
+        potential = torch.where(amp, potential + 1.0, potential)
+        
+        diff = potential.unsqueeze(0) - PRIMES
+        resonance = (0.35 * torch.exp(-(diff**2) / 0.01)).sum(dim=0)
+        
+        total_phi = potential + resonance
+        
+        birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        return (birth | survive).float()
+
+# ====================== LITHOGRAPHY: 3-BIT BUS ======================
+field = torch.zeros((GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+static_inh = torch.ones((GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device, dtype=torch.bool)
+static_thr = torch.zeros((GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device, dtype=torch.bool)
+
+Z_MID = GRID_SIZE // 2
+
+# Channel X-Coordinates
+CH_0 = 30
+CH_1 = 60
+CH_2 = 90
+
+# Carve three 6x6 Goldilocks channels
+static_inh[10:95, CH_0-3:CH_0+3, Z_MID-3:Z_MID+3] = False
+static_inh[10:95, CH_1-3:CH_1+3, Z_MID-3:Z_MID+3] = False
+static_inh[10:95, CH_2-3:CH_2+3, Z_MID-3:Z_MID+3] = False
+
+# Inject Data Payload: [1, 0, 1]
+# Channel 0 gets a slug
+field[12:16, CH_0-2:CH_0+2, Z_MID-2:Z_MID+2] = 1.0
+# Channel 1 is left empty (0)
+# Channel 2 gets a slug
+field[12:16, CH_2-2:CH_2+2, Z_MID-2:Z_MID+2] = 1.0
+
+# ====================== RECEIVER PROBES ======================
+# Monitoring the Receiver Node (Y=80) for all three channels
+ch0_history, ch1_history, ch2_history = [], [], []
+
+HIGH_THRES = 15.0  
+LOW_THRES = 5.0    
+state_0, state_1, state_2 = 0, 0, 0
+
+for t in tqdm(range(STEPS)):
+    clock_center = 14 + (t * 0.45) 
+    
+    # Global clock wave that spans the entire X-width of the bus
+    active_amp = torch.zeros_like(field, dtype=torch.bool)
+    active_ground = torch.zeros_like(field, dtype=torch.bool)
+    
+    amp_start = int(clock_center)
+    amp_end = int(clock_center) + 5
+    if amp_end < GRID_SIZE:
+        active_amp[amp_start:amp_end, :, :] = True
+        
+    ground_end = max(0, int(clock_center) - 3)
+    if ground_end > 0:
+        active_ground[:ground_end, :, :] = True
+        
+    current_inh = static_inh | active_ground
+    current_amp = active_amp & (~static_inh)
+    
+    field = run_manifold(field, current_inh, static_thr, current_amp)
+    
+    # Read Analog Mass at Receiver Nodes (Y: 80-84)
+    mass_0 = field[80:84, CH_0-3:CH_0+3, Z_MID-3:Z_MID+3].sum().item()
+    mass_1 = field[80:84, CH_1-3:CH_1+3, Z_MID-3:Z_MID+3].sum().item()
+    mass_2 = field[80:84, CH_2-3:CH_2+3, Z_MID-3:Z_MID+3].sum().item()
+    
+    # Schmitt Triggers
+    if mass_0 > HIGH_THRES: state_0 = 1
+    elif mass_0 < LOW_THRES: state_0 = 0
+        
+    if mass_1 > HIGH_THRES: state_1 = 1
+    elif mass_1 < LOW_THRES: state_1 = 0
+        
+    if mass_2 > HIGH_THRES: state_2 = 1
+    elif mass_2 < LOW_THRES: state_2 = 0
+        
+    ch0_history.append(state_0)
+    ch1_history.append(state_1)
+    ch2_history.append(state_2)
+
+# ====================== TIMING DIAGRAM ======================
+fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(12, 8), facecolor='#0a0a0a', sharex=True)
+fig.suptitle("V38 Parallel Bus Isolation: Payload [1, 0, 1]", color='white', fontsize=16, y=0.95)
+
+def format_axis(ax, data, title, color):
+    ax.set_facecolor('#0a0a0a')
+    ax.step(range(STEPS), data, color=color, linewidth=3, where='post')
+    ax.set_ylim(-0.2, 1.2)
+    ax.set_yticks([0, 1])
+    ax.set_yticklabels(['LOW', 'HIGH'], color=color, fontweight='bold')
+    ax.set_ylabel(title, color='white', fontsize=12, labelpad=15)
+    ax.grid(True, color='#222222', linestyle='-', linewidth=0.5)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_color('#555555')
+    ax.spines['left'].set_color('#555555')
+    ax.tick_params(axis='x', colors='white')
+
+format_axis(ax1, ch0_history, "CH 0 (Bit 1)\nReceiver", '#00ff44')
+format_axis(ax2, ch1_history, "CH 1 (Bit 2)\nReceiver", '#ff0055')  # This one should stay flat LOW
+format_axis(ax3, ch2_history, "CH 2 (Bit 3)\nReceiver", '#00eaff')
+
+ax3.set_xlabel("System Clock Cycles", color='white', fontsize=12)
+plt.tight_layout(rect=[0, 0, 1, 0.93])
+plt.show()
