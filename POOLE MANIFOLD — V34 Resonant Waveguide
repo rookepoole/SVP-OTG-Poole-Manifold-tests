@@ -1,0 +1,119 @@
+# =============================================================================
+# POOLE MANIFOLD — V34 Resonant Waveguide
+# Dialing in the 6x6 Goldilocks routing channel for stable data transit
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚇 V34 Resonant Waveguide Initializing on: {device}")
+
+GRID_SIZE = 100
+STEPS = 150
+
+# Native OTG Ruleset
+B_LOW, B_HIGH = 5.0, 7.0 
+S_LOW, S_HIGH = 5.0, 9.0
+PRIMES = torch.tensor([2, 3, 5, 7, 11, 13, 17, 19, 23], device=device).view(9, 1, 1, 1)
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f, inh, thr, amp):
+    with torch.no_grad():
+        f5 = f.unsqueeze(0).unsqueeze(0)
+        padded = F.pad(f5, (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0).squeeze(0).squeeze(0)
+        
+        potential = torch.where(inh, potential - 15.0, potential)
+        potential = torch.where(thr, potential - 2.0, potential)
+        # Restoring a solid +1.0 amplifier for strong locomotion
+        potential = torch.where(amp, potential + 1.0, potential)
+        
+        diff = potential.unsqueeze(0) - PRIMES
+        resonance = (0.35 * torch.exp(-(diff**2) / 0.01)).sum(dim=0)
+        
+        total_phi = potential + resonance
+        
+        birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        return (birth | survive).float()
+
+# ====================== LITHOGRAPHY: THE GOLDILOCKS TUBE ======================
+field = torch.zeros((GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+static_inh = torch.ones((GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device, dtype=torch.bool)
+static_thr = torch.zeros((GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device, dtype=torch.bool)
+
+Z_MID, X_MID = GRID_SIZE // 2, GRID_SIZE // 2
+
+# Carve a 6x6 Goldilocks routing channel
+static_inh[10:90, X_MID-3:X_MID+3, Z_MID-3:Z_MID+3] = False
+
+# Inject a dense 4x4x4 "Memory Slug" (Leaves 1 unit of breathing room)
+field[15:19, X_MID-2:X_MID+2, Z_MID-2:Z_MID+2] = 1.0
+
+# ====================== EVOLUTION ======================
+mass_telemetry = []
+y_positions = []
+
+for t in tqdm(range(STEPS)):
+    clock_center = 17 + (t * 0.45) 
+    
+    active_amp = torch.zeros_like(field, dtype=torch.bool)
+    active_ground = torch.zeros_like(field, dtype=torch.bool)
+    
+    amp_start = int(clock_center)
+    amp_end = int(clock_center) + 5
+    if amp_end < GRID_SIZE:
+        active_amp[amp_start:amp_end, :, :] = True
+        
+    ground_end = max(0, int(clock_center) - 3)
+    if ground_end > 0:
+        active_ground[:ground_end, :, :] = True
+        
+    current_inh = static_inh | active_ground
+    current_amp = active_amp & (~static_inh)
+    
+    field = run_manifold(field, current_inh, static_thr, current_amp)
+    
+    current_mass = field.sum().item()
+    mass_telemetry.append(current_mass)
+    
+    if current_mass > 0:
+        y_indices = torch.nonzero(field)[:, 0].float()
+        y_positions.append(y_indices.mean().item())
+    else:
+        y_positions.append(0)
+
+# ====================== FINAL PLOT ======================
+fig, ax1 = plt.subplots(figsize=(14, 7), facecolor='black')
+ax1.set_facecolor('black')
+
+color1 = 'cyan'
+ax1.plot(range(STEPS), mass_telemetry, color=color1, linewidth=2.5, label="Packet Mass")
+ax1.set_xlabel("Generations (Clock Cycles)", color='white', fontsize=12)
+ax1.set_ylabel("Kinetic Mass", color=color1, fontsize=12)
+ax1.tick_params(axis='y', labelcolor=color1)
+ax1.tick_params(axis='x', colors='white')
+ax1.grid(True, color='#333333', linestyle='--')
+# Keeping Y-axis open to track potential expansion limits
+ax1.set_ylim(0, 400) 
+
+ax2 = ax1.twinx()  
+color2 = '#ff00ff'
+ax2.plot(range(STEPS), y_positions, color=color2, linewidth=2.5, linestyle=':', label="Y-Axis Position")
+ax2.set_ylabel("Absolute Y Position", color=color2, fontsize=12)
+ax2.tick_params(axis='y', labelcolor=color2)
+
+fig.suptitle("V34 Arbitrary Composability: The Resonant Waveguide", color='white', fontsize=16)
+
+lines_1, labels_1 = ax1.get_legend_handles_labels()
+lines_2, labels_2 = ax2.get_legend_handles_labels()
+ax1.legend(lines_1 + lines_2, labels_1 + labels_2, facecolor='black', labelcolor='white', loc='center left')
+
+plt.tight_layout()
+plt.show()
