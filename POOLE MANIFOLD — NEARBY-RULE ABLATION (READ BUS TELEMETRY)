@@ -1,0 +1,127 @@
+import torch
+import torch.nn.functional as F
+import matplotlib.pyplot as plt
+
+# =============================================================================
+# POOLE MANIFOLD — NEARBY-RULE ABLATION (READ BUS TELEMETRY)
+# =============================================================================
+# Tracking Information Transit instead of just Core Mass
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Information Transit Ablation Test on: {device}")
+
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+ALPHA = 0.35
+SIGMA_SQ = 0.01
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+ablation_rules = {
+    "B5-7/S5-9 (Control)": (5.0, 7.0, 5.0, 9.0),
+    "B4-7/S5-9 (Permissive Birth)": (4.0, 7.0, 5.0, 9.0),
+    "B6-7/S5-9 (Restrictive Birth)": (6.0, 7.0, 5.0, 9.0),
+    "B5-7/S4-9 (Permissive Survival)": (5.0, 7.0, 4.0, 9.0),
+    "B5-7/S5-8 (Restrictive Survival)": (5.0, 7.0, 5.0, 8.0)
+}
+
+def run_manifold(f, inh, thr, amp, b_lo, b_hi, s_lo, s_hi):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0)
+        
+        potential = torch.where(inh, potential - 15.0, potential)
+        potential = torch.where(thr, potential - 2.0, potential)
+        potential = torch.where(amp, potential + 1.0, potential)
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += ALPHA * torch.exp(-((potential - p)**2) / SIGMA_SQ)
+            
+        total_phi = potential + resonance
+        
+    birth = (f == 0) & (total_phi >= b_lo) & (total_phi <= b_hi)
+    survive = (f == 1) & (total_phi >= s_lo) & (total_phi <= s_hi)
+    
+    del padded, potential, resonance, total_phi, f_float
+    return (birth | survive).float()
+
+class PooleImmortalLatch:
+    def __init__(self):
+        self.ze = slice(3, 8)
+
+    def stamp(self, inh, thr, amp):
+        ze = self.ze
+        # 1. CORE
+        inh[0, 0, 100:120, 100:120, ze] = False; amp[0, 0, 100:120, 100:120, ze] = True 
+        inh[0, 0, 105:115, 105:115, ze] = True;  amp[0, 0, 105:115, 105:115, ze] = False 
+        # 2. WRITE PIN
+        inh[0, 0, 20:105, 97:100, ze] = False; amp[0, 0, 20:105, 97:100, ze] = True 
+        # 3. READ BUS (Exhaust)
+        inh[0, 0, 120:200, 108:111, ze] = False; amp[0, 0, 120:200, 108:111, ze] = True 
+        # 4. RADIATION PATH
+        inh[0, 0, 120:200, 95:102, ze] = False; amp[0, 0, 120:200, 95:102, ze] = True 
+        inh[0, 0, 117:119, 95:102, ze] = False; amp[0, 0, 117:119, 95:102, ze] = True
+
+def run_read_bus_ablation():
+    GRID_Y, GRID_X, GRID_Z = 250, 250, 10
+    TOTAL_FRAMES = 1000
+    
+    results = {}
+
+    for name, (b_lo, b_hi, s_lo, s_hi) in ablation_rules.items():
+        print(f"Running Read Bus Telemetry for {name}...")
+        
+        field = torch.zeros((1, 1, GRID_Y, GRID_X, GRID_Z), device=device)
+        inh_mask = torch.ones_like(field).bool()
+        amp_mask = torch.zeros_like(field).bool()
+        thr_mask = torch.zeros_like(field).bool()
+
+        PooleImmortalLatch().stamp(inh_mask, thr_mask, amp_mask)
+        
+        bus_history = []
+        
+        for t in range(TOTAL_FRAMES):
+            # Ignition
+            if 50 <= t < 100: field[0, 0, 20:23, 97:100, 3:8] = 1.0 
+            # Radiation Strike
+            if 600 <= t < 650: field[0, 0, 197:200, 95:102, 3:8] = 1.0 
+            
+            if t > 0:
+                field[0, 0, :, :, :] = torch.where(amp_mask, field[0, 0, :, :, :], field[0, 0, :, :, :])
+                
+            field = run_manifold(field, inh_mask, thr_mask, amp_mask, b_lo, b_hi, s_lo, s_hi)
+            
+            # TRACKING INFORMATION TRANSIT (Not just dead mass)
+            read_bus_output = field[0, 0, 180:190, 108:111, 3:8].sum().item()
+            bus_history.append(read_bus_output)
+            
+        results[name] = bus_history
+
+    print(">> Telemetry Complete. Plotting Active Circuit Diagnostics...")
+
+    plt.figure(figsize=(16, 8), facecolor='black')
+    ax = plt.gca()
+    ax.set_facecolor('black')
+    
+    colors = ['#00ffcc', '#ff3366', '#ffcc00', '#a366ff', '#0099ff']
+    
+    for i, (name, data) in enumerate(results.items()):
+        linewidth = 3 if "Control" in name else 1.5
+        alpha = 0.9 if "Control" in name else 0.6
+        ax.plot(range(TOTAL_FRAMES), data, color=colors[i], alpha=alpha, linewidth=linewidth, label=name)
+
+    ax.axvline(x=50, color='white', alpha=0.3, linestyle='--', linewidth=1, label='Write Ignition')
+    ax.axvline(x=600, color='red', alpha=0.5, linestyle='--', linewidth=1, label='Radiation Strike')
+    
+    plt.title("Information Transit Test: B5-7/S5-9 vs Nearby Rules (V207 Read Bus)", color='white', fontsize=14)
+    plt.xlabel("Time (T)", color='white')
+    plt.ylabel("Read Bus Kinetic Output (Active Information)", color='white')
+    ax.tick_params(colors='white')
+    ax.grid(True, color='gray', alpha=0.3)
+    plt.legend(loc='upper right', facecolor='black', labelcolor='white')
+    plt.tight_layout()
+    plt.show()
+
+run_read_bus_ablation()
