@@ -1,0 +1,135 @@
+import torch
+import torch.nn.functional as F
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
+
+print("Initializing Poole Manifold Lensing Laboratory (Controlled Environment)...")
+
+# --- 1. System Configuration ---
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Compute Device: {device}")
+
+SIZE = 64
+STEPS = 60
+
+grid = torch.zeros((1, 1, SIZE, SIZE, SIZE), dtype=torch.float32, device=device)
+
+kernel = torch.ones((1, 1, 3, 3, 3), dtype=torch.float32, device=device)
+kernel[0, 0, 1, 1, 1] = 0.0  
+
+prime_sequence = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+ALPHA = 0.35
+
+# TIGHTENED HALO: Stops the vacuum from boiling
+SIGMA_SQ = 0.001  
+
+# --- 2. Topological Masking (The Locked Star) ---
+mask = torch.zeros((1, 1, SIZE, SIZE, SIZE), dtype=torch.float32, device=device)
+center_idx = SIZE // 2
+star_radius = 4
+
+z, y, x = torch.meshgrid(torch.arange(SIZE), torch.arange(SIZE), torch.arange(SIZE), indexing='ij')
+dist_from_center = torch.sqrt((x - center_idx)**2 + (y - center_idx)**2 + (z - center_idx)**2)
+mask[0, 0, dist_from_center <= star_radius] = 1.0  
+
+grid[mask == 1.0] = 1.0 
+
+# --- 3. Telemetry Tracking ---
+trajectory_z = []
+trajectory_y = []
+trajectory_x = []
+
+print("Firing photon beam through the stabilized gravitational halo...")
+
+# --- 4. The OTG Physics Engine Loop ---
+for step in range(STEPS):
+    
+    # INJECTION: Firing the beam past the stabilized star
+    beam_z = center_idx
+    beam_y = center_idx - 8  
+    beam_x_start = step      
+    
+    if beam_x_start < SIZE - 5:
+        # 2x2 kinetic packet
+        grid[0, 0, beam_z-1:beam_z+1, beam_y-1:beam_y+1, beam_x_start:beam_x_start+2] = 1.0
+
+    conv = F.conv3d(grid, kernel, padding=1)
+    
+    resonance = torch.zeros_like(conv)
+    for p in prime_sequence:
+        resonance += ALPHA * torch.exp(-((conv - p)**2) / SIGMA_SQ)
+    
+    resonance = resonance * grid
+    phi_total = conv + mask + resonance 
+
+    survives = (grid == 1.0) & (phi_total >= 5) & (phi_total <= 9)
+    is_born = (grid == 0.0) & (phi_total >= 5) & (phi_total <= 7)
+    
+    new_grid = (survives | is_born).float()
+    
+    # GOD-MODE BYPASS: Lock the star so it doesn't self-destruct
+    new_grid[mask == 1.0] = 1.0
+    
+    grid = new_grid
+    
+    # MEASUREMENT: Strictly isolate the lower half of the grid
+    beam_only = grid.clone()
+    
+    # Put a strict "blinder" on the sensor. 
+    # We zero out EVERYTHING at Y=28 and above. 
+    # This completely erases the star, the mask, and the corona from the telemetry.
+    beam_only[:, :, :, 28:, :] = 0.0 
+    
+    active_indices = torch.nonzero(beam_only[0, 0])
+    
+    if len(active_indices) > 0:
+        cz, cy, cx = active_indices.float().mean(dim=0)
+        trajectory_z.append(cz.item())
+        trajectory_y.append(cy.item())
+        trajectory_x.append(cx.item())
+
+print("Simulation Complete. Rendering Telemetry...")
+
+# --- 5. Output and Visualization ---
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection='3d')
+
+u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
+x_star = center_idx + star_radius * np.cos(u) * np.sin(v)
+y_star = center_idx + star_radius * np.sin(u) * np.sin(v)
+z_star = center_idx + star_radius * np.cos(v)
+ax.plot_surface(x_star, y_star, z_star, color='orange', alpha=0.5, label='Locked Mass (M_mask)')
+
+if len(trajectory_x) > 0:
+    ax.plot(trajectory_x, trajectory_y, trajectory_z, color='cyan', linewidth=3, label='Lensing Trajectory')
+    ax.scatter(trajectory_x, trajectory_y, trajectory_z, color='blue', s=10)
+
+ax.set_xlim(0, SIZE)
+ax.set_ylim(0, SIZE)
+ax.set_zlim(0, SIZE)
+ax.set_xlabel('X Axis (Forward Movement)')
+ax.set_ylabel('Y Axis (Deflection)')
+ax.set_zlabel('Z Axis')
+ax.set_title('Poole Manifold: Topological Lensing Conjecture Proof')
+
+ax.plot([0, SIZE], [center_idx - 8, center_idx - 8], [center_idx, center_idx], 
+        color='red', linestyle='--', alpha=0.5, label='Unlensed Vacuum Path')
+
+plt.legend()
+plt.show()
+
+# Print raw deflection data
+print("\n--- RAW DEFLECTION TELEMETRY ---")
+if len(trajectory_y) > 0:
+    print(f"Starting Y-Coordinate: {trajectory_y[0]:.2f} (Target Center is {center_idx})")
+    print(f"Ending Y-Coordinate:   {trajectory_y[-1]:.2f}")
+    deflection = trajectory_y[-1] - trajectory_y[0]
+    if deflection > 0:
+        print(f"RESULT: Beam deflected INWARD toward the mass by {deflection:.2f} voxels. LENSING ACHIEVED.")
+    elif deflection < 0:
+        print(f"RESULT: Beam deflected OUTWARD by {abs(deflection):.2f} voxels. Repulsion detected.")
+    else:
+        print("RESULT: Beam traveled perfectly straight. No Lensing detected.")
+else:
+    print("RESULT: Beam flash-evaporated.")
