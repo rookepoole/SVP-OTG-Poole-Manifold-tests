@@ -1,0 +1,97 @@
+import os
+import urllib.request
+import torch
+import pandas as pd
+import torch.optim as optim
+
+# --- 1. AUTO-DOWNLOAD PANTHEON+ DATA ---
+# Updated to the correct sub-directory in the Pantheon+ GitHub
+url = "https://raw.githubusercontent.com/PantheonPlusSH0ES/DataRelease/main/Pantheon%2B_Data/4_DISTANCES_AND_COVAR/Pantheon%2BSH0ES.dat"
+filename = "Pantheon+SH0ES.dat"
+
+if not os.path.exists(filename):
+    print(f"Downloading official Pantheon+ dataset from GitHub...")
+    urllib.request.urlretrieve(url, filename)
+    print("Download complete!")
+else:
+    print(f"Found {filename} locally.")
+
+# --- 2. OTG BEST-FIT PARAMETERS ---
+alpha = torch.tensor(0.7944, dtype=torch.float64)
+beta = torch.tensor(1.9869, dtype=torch.float64)
+omega_m = torch.tensor(0.3039, dtype=torch.float64)
+
+# Derived CPL parameters
+w_0 = torch.tensor(-1.0, dtype=torch.float64)
+w_a = alpha * beta  # ~1.5784
+omega_de = 1.0 - omega_m
+
+def dark_energy_density(z):
+    term1 = (1 + z) ** (3 * (1 + w_0 + w_a))
+    term2 = torch.exp(-3 * w_a * (z / (1 + z)))
+    return term1 * term2
+
+def E(z):
+    matter_density = omega_m * (1 + z)**3
+    de_density = omega_de * dark_energy_density(z)
+    return torch.sqrt(matter_density + de_density)
+
+def compute_luminosity_distance(z_array, H_0):
+    c = 299792.458 # km/s
+    D_L = torch.zeros_like(z_array, dtype=torch.float64)
+    
+    # Numerical integration across the redshift array
+    steps = 1000
+    for i, z in enumerate(z_array):
+        z_int = torch.linspace(0, z.item(), steps, dtype=torch.float64)
+        dz = z_int[1] - z_int[0]
+        integral = torch.sum(1.0 / E(z_int)) * dz
+        D_L[i] = (c / H_0) * (1 + z) * integral
+        
+    return D_L
+
+def apparent_magnitude(z_array, H_0, absolute_M=-19.25):
+    d_l_mpc = compute_luminosity_distance(z_array, H_0)
+    m_theory = 5 * torch.log10(d_l_mpc) + 25 + absolute_M
+    return m_theory
+
+# --- 3. PARSE DATA ---
+print("Parsing dataset...")
+# Fixed the deprecation warning by using a raw string for the regex
+df = pd.read_csv(filename, sep=r'\s+')
+
+# Filter for z > 0.01 to remove local peculiar velocity noise
+df_filtered = df[df['zHD'] > 0.01]
+
+z_real = torch.tensor(df_filtered['zHD'].values, dtype=torch.float64)
+m_real = torch.tensor(df_filtered['m_b_corr'].values, dtype=torch.float64)
+mag_errors = torch.tensor(df_filtered['m_b_corr_err_DIAG'].values, dtype=torch.float64)
+
+# --- 4. THE ADAPTIVE OPTIMIZER ---
+# Initialize H0 right in the middle of the Tension (between 67.4 and 73.0)
+H_0 = torch.tensor([70.0], dtype=torch.float64, requires_grad=True)
+
+# Standard Adam optimizer targeting our H0 variable
+optimizer = optim.Adam([H_0], lr=0.2)
+
+print(f"Starting OTG H0 Convergence for {len(z_real)} Supernovae...")
+print(f"Locked parameters: Omega_m = {omega_m.item():.4f}, w_a = {w_a.item():.4f}")
+
+epochs = 150
+for epoch in range(epochs):
+    optimizer.zero_grad()
+    
+    # Forward Pass: Calculate Poole Manifold theoretical magnitudes
+    m_theory = apparent_magnitude(z_real, H_0)
+    
+    # Loss Calculation: Chi-Squared weighted by observational errors
+    chi_squared = torch.sum(((m_theory - m_real) / mag_errors) ** 2)
+    
+    # Backward Pass: Gradient descent
+    chi_squared.backward()
+    optimizer.step()
+    
+    if epoch % 25 == 0:
+        print(f"Epoch {epoch:3d} | H0 Estimate: {H_0.item():.4f} | Chi-Squared: {chi_squared.item():.2f}")
+
+print(f"\n>> FINAL OTG H_0 CONVERGENCE: {H_0.item():.4f} km/s/Mpc")
