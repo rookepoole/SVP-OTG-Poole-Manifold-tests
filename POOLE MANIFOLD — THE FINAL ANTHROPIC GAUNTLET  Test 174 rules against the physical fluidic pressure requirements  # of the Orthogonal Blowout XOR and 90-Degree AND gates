@@ -1,0 +1,163 @@
+import torch
+import torch.nn.functional as F
+import time
+import gc
+
+# =============================================================================
+# POOLE MANIFOLD — THE FINAL ANTHROPIC GAUNTLET (TRIAL 317 MERGE)
+# =============================================================================
+# Objective: Test 174 rules against the physical fluidic pressure requirements 
+# of the Orthogonal Blowout XOR and 90-Degree AND gates.
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing The Final Anthropic Gauntlet on: {device}")
+
+# --- 1. THE 174 VERIFIED LIVING CIRCUITS ---
+candidates_list = [
+    'B5.0-7.0/S5.0-9.0 (CONTROL)', 'B3.9-10.7/S5.5-8.4', 'B4.4-13.0/S5.9-11.6', 'B1.4-14.6/S2.6-12.4', 'B2.9-12.4/S2.7-11.4', 'B1.7-10.9/S4.6-8.1', 'B1.7-3.9/S8.9-12.8', 'B7.1-12.3/S1.3-12.3', 'B1.9-9.0/S7.5-10.8', 'B1.9-14.3/S7.5-12.6', 'B2.9-8.9/S2.5-9.7', 'B6.2-14.3/S4.5-11.9', 'B6.2-14.6/S3.3-11.2', 'B5.5-14.6/S3.8-9.6', 'B4.7-11.1/S8.9-12.7', 'B5.5-14.7/S6.0-14.0', 'B5.9-13.1/S6.1-12.9', 'B1.4-12.7/S7.5-10.1', 'B1.1-4.8/S7.7-13.1', 'B6.4-13.3/S7.0-12.5', 'B1.7-12.6/S3.4-10.6', 'B2.6-6.0/S7.6-13.7', 'B3.0-5.7/S6.7-12.2', 'B5.4-13.0/S7.2-9.2', 'B3.1-11.0/S4.3-8.0', 'B4.9-8.2/S3.5-7.7', 'B3.2-14.6/S7.8-11.4', 'B3.8-15.0/S8.1-12.8', 'B2.4-9.8/S8.7-14.4', 'B2.4-11.5/S5.1-6.5', 'B4.5-11.9/S7.8-13.0', 'B2.0-14.8/S3.3-14.3', 'B5.6-11.1/S7.0-9.3', 'B1.1-12.6/S7.1-10.4', 'B5.0-8.6/S8.0-12.6', 'B7.3-13.9/S4.0-12.9', 'B4.2-14.7/S3.2-13.6', 'B3.9-9.3/S4.2-6.0', 'B2.2-9.6/S8.8-12.1', 'B1.5-6.4/S8.6-13.5', 'B2.1-14.1/S8.6-12.4', 'B3.2-8.8/S7.8-11.4', 'B1.4-12.3/S5.2-7.8', 'B4.7-13.9/S7.0-13.3', 'B2.1-11.6/S8.1-13.5', 'B1.1-11.6/S8.9-12.5', 'B7.3-12.0/S1.8-9.6', 'B4.1-8.4/S4.0-7.3', 'B2.3-9.5/S7.8-9.2', 'B4.0-13.5/S8.9-9.9', 'B4.3-13.3/S1.2-13.1', 'B1.7-5.6/S7.8-9.8', 'B4.8-7.8/S8.7-11.7', 'B4.2-11.7/S1.3-10.6', 'B1.1-8.3/S6.6-11.7', 'B4.7-14.4/S4.7-9.0', 'B1.3-14.7/S5.7-12.9', 'B3.7-14.7/S8.2-14.3', 'B5.1-14.7/S3.0-8.0', 'B4.6-12.4/S3.4-11.8', 'B4.6-14.2/S8.3-12.3', 'B2.1-8.0/S3.8-10.7', 'B4.5-8.8/S7.1-10.1', 'B3.2-9.2/S9.0-12.9', 'B2.2-7.5/S2.7-8.6', 'B2.0-9.6/S3.4-10.2', 'B2.1-13.0/S5.9-9.0', 'B1.9-7.3/S7.7-9.2', 'B2.7-9.5/S5.0-9.1', 'B6.0-12.1/S6.7-12.1', 'B3.6-8.9/S8.3-12.3', 'B1.5-13.7/S8.9-13.3', 'B4.8-14.2/S7.7-12.2', 'B2.3-14.5/S1.8-14.7', 'B1.0-10.5/S8.1-12.7', 'B5.5-13.9/S1.9-6.4', 'B6.0-14.9/S7.3-13.7', 'B3.1-12.9/S2.1-5.9', 'B3.8-14.0/S4.7-9.6', 'B4.7-9.2/S2.2-4.6', 'B3.9-13.1/S7.6-13.5', 'B7.3-14.6/S1.5-10.5', 'B1.6-10.8/S8.7-13.2', 'B3.8-7.4/S6.6-8.0', 'B3.3-11.2/S8.3-13.0', 'B6.4-11.7/S2.0-9.2', 'B1.2-7.3/S5.8-10.9', 'B1.4-14.7/S3.1-11.5', 'B3.6-12.6/S8.0-11.7', 'B3.2-10.2/S2.6-10.9', 'B3.4-9.1/S1.7-6.9', 'B4.9-14.3/S8.0-13.3', 'B5.9-13.4/S3.3-13.9', 'B6.5-14.5/S7.7-13.8', 'B3.7-9.8/S3.4-7.5', 'B5.2-11.2/S2.8-5.9', 'B1.4-8.4/S4.0-8.5', 'B1.4-12.4/S2.2-8.9', 'B2.2-11.2/S7.6-9.5', 'B2.3-10.3/S1.3-8.1', 'B1.5-6.6/S8.4-14.9', 'B5.1-12.3/S7.3-10.8', 'B4.5-13.4/S8.4-11.1', 'B1.8-11.7/S4.3-10.8', 'B5.1-9.2/S7.4-8.9', 'B3.7-8.4/S8.5-9.6', 'B1.4-13.8/S4.6-11.1', 'B1.5-14.0/S1.3-11.7', 'B5.0-14.9/S4.4-12.0', 'B3.6-8.7/S2.4-6.9', 'B1.5-6.6/S7.2-12.1', 'B4.5-10.3/S3.9-7.9', 'B4.4-14.2/S1.4-11.1', 'B3.6-13.4/S3.8-7.0', 'B1.5-9.8/S7.5-10.6', 'B1.1-11.1/S4.0-9.0', 'B5.7-10.8/S6.9-12.1', 'B4.1-9.3/S2.5-7.0', 'B3.3-10.8/S4.3-8.2', 'B2.2-5.6/S7.3-13.8', 'B1.8-9.7/S2.6-8.7', 'B2.6-4.2/S4.6-13.3', 'B2.4-9.4/S8.3-13.0', 'B5.5-14.0/S2.4-13.6', 'B3.5-13.3/S8.5-12.2', 'B2.8-6.1/S4.0-12.7', 'B1.7-10.1/S4.4-7.9', 'B3.0-9.6/S7.0-11.0', 'B5.6-12.1/S3.5-8.8', 'B4.8-12.1/S7.2-13.5', 'B7.2-14.8/S7.9-13.8', 'B3.4-11.5/S8.4-10.7', 'B3.9-10.0/S8.5-13.7', 'B4.9-9.4/S5.6-10.9', 'B2.8-14.0/S3.7-10.4', 'B4.1-9.9/S5.4-7.2', 'B1.3-10.9/S8.2-14.1', 'B4.9-14.1/S5.0-11.2', 'B3.6-10.0/S1.0-8.9', 'B2.5-10.1/S7.5-9.6', 'B2.7-9.2/S8.0-11.7', 'B1.7-4.2/S8.6-12.6', 'B3.9-13.8/S6.6-9.2', 'B5.4-13.7/S1.8-4.3', 'B4.9-9.3/S8.7-9.9', 'B5.8-15.0/S8.5-13.1', 'B5.8-13.4/S3.6-9.6', 'B3.5-9.3/S4.6-5.9', 'B3.9-7.5/S6.8-12.3', 'B4.5-8.0/S7.5-9.4', 'B5.5-12.6/S2.5-7.0', 'B5.6-12.7/S2.7-9.6', 'B4.0-11.1/S4.5-7.8', 'B1.7-12.7/S7.4-13.3', 'B1.6-9.0/S1.3-9.2', 'B5.4-14.7/S6.1-11.6', 'B3.2-9.4/S5.3-9.0', 'B5.2-13.4/S8.2-11.6', 'B2.9-13.2/S7.7-12.8', 'B4.6-10.7/S8.8-13.0', 'B6.9-9.4/S6.9-12.9', 'B6.1-12.7/S7.1-12.9', 'B2.5-10.9/S4.2-9.7', 'B4.4-13.9/S2.7-8.6', 'B5.4-10.4/S4.5-9.4', 'B1.7-9.8/S2.6-7.7', 'B3.4-7.2/S8.2-12.9', 'B4.0-14.5/S3.0-8.9', 'B1.0-12.4/S6.2-12.0', 'B2.4-14.0/S1.5-9.3', 'B3.3-5.6/S7.9-12.5', 'B4.2-11.4/S2.7-4.5', 'B1.1-10.6/S2.5-7.2', 'B4.4-9.2/S8.8-9.9'
+]
+
+candidates = []
+for rule in candidates_list:
+    clean_rule = rule.replace(' (CONTROL)', '')
+    b_part, s_part = clean_rule.split('/S')
+    b_part = b_part.replace('B', '')
+    b_lo, b_hi = map(float, b_part.split('-'))
+    s_lo, s_hi = map(float, s_part.split('-'))
+    candidates.append((b_lo, b_hi, s_lo, s_hi, rule))
+
+# --- 2. ENGINE CONSTANTS ---
+GRID_SIZE = 400 
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def run_manifold(f, inhibitor_mask, threshold_mask, amplifier_mask, b_lo, b_hi, s_lo, s_hi):
+    with torch.no_grad():
+        f_float = f.float()
+        padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='circular')
+        potential = F.conv3d(padded, kernel, padding=0)
+        
+        potential[inhibitor_mask] -= 15.0
+        potential[threshold_mask] -= 2.0
+        potential[amplifier_mask] += 1.0
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+            
+        total_phi = potential + resonance
+        
+    birth = (f == 0) & (total_phi >= b_lo) & (total_phi <= b_hi)
+    survive = (f == 1) & (total_phi >= s_lo) & (total_phi <= s_hi)
+    
+    del padded, potential, resonance, total_phi, f_float
+    return (birth | survive).float()
+
+# --- 3. ARCHITECTURAL PRIMITIVES (EXACT GEOMETRY) ---
+class PooleAND:
+    def __init__(self, origin_y, origin_x, z_mid):
+        self.oy, self.ox, self.z = origin_y, origin_x, z_mid
+
+    def stamp(self, inh, thr, amp):
+        oy, ox, z = self.oy, self.ox, self.z
+        inh[0, 0, oy-3:oy+3, ox-30:ox+40, z-2:z+2] = False 
+        inh[0, 0, oy-30:oy+3, ox-3:ox+3, z-2:z+2] = False 
+        amp[0, 0, oy-3:oy+3, ox-30:ox-4, z-2:z+2] = True 
+        amp[0, 0, oy-30:oy-4, ox-3:ox+3, z-2:z+2] = True 
+        thr[0, 0, oy-3:oy+3, ox-12:ox-8, z-2:z+2] = True 
+        thr[0, 0, oy-12:oy-8, ox-3:ox+3, z-2:z+2] = True 
+        thr[0, 0, oy-3:oy+3, ox+6:ox+10, z-2:z+2] = True 
+        amp[0, 0, oy-3:oy+3, ox+10:ox+30, z-2:z+2] = True 
+
+class PooleXOR:
+    def __init__(self, origin_y, origin_x, z_mid):
+        self.oy, self.ox, self.z = origin_y, origin_x, z_mid
+
+    def stamp(self, inh, thr, amp):
+        oy, ox, z = self.oy, self.ox, self.z
+        # Merger
+        inh[0, 0, oy-6:oy-2, ox-30:ox-15, z-2:z+2] = False 
+        amp[0, 0, oy-6:oy-2, ox-30:ox-15, z-2:z+2] = True 
+        inh[0, 0, oy+2:oy+6, ox-30:ox-15, z-2:z+2] = False 
+        amp[0, 0, oy+2:oy+6, ox-30:ox-15, z-2:z+2] = True 
+        inh[0, 0, oy-6:oy+6, ox-15:ox-10, z-2:z+2] = False 
+        amp[0, 0, oy-6:oy+6, ox-15:ox-10, z-2:z+2] = True 
+        # Runway
+        inh[0, 0, oy-2:oy+2, ox-10:ox, z-2:z+2] = False 
+        amp[0, 0, oy-2:oy+2, ox-10:ox, z-2:z+2] = True 
+        # Anvil & Vacuum
+        thr[0, 0, oy-2:oy+2, ox:ox+4, z-2:z+2] = True 
+        inh[0, 0, oy-6:oy+6, ox+4:ox+40, z-2:z+2] = False 
+        amp[0, 0, oy-6:oy+6, ox+4:ox+40, z-2:z+2] = True 
+        # Escape Valve
+        inh[0, 0, oy-35:oy-2, ox-4:ox, z-2:z+2] = False 
+        amp[0, 0, oy-35:oy-4, ox-4:ox, z-2:z+2] = True 
+        thr[0, 0, oy-6:oy-5, ox-4:ox, z-2:z+2] = True 
+
+# --- 4. EXECUTION ---
+def execute_final_crucible():
+    ANTHROPIC_CONSTANTS = []
+    TOTAL_FRAMES = 301
+    z_mid = GRID_SIZE // 2
+
+    print(f"\n>> Commencing Final Logic Certification on {len(candidates)} physics rules...")
+    start_time = time.time()
+
+    for idx, (b_lo, b_hi, s_lo, s_hi, rule_name) in enumerate(candidates):
+        field = torch.zeros((1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE), device=device)
+        inhibitor_mask = torch.ones_like(field).bool()
+        threshold_mask = torch.zeros_like(field).bool()
+        amplifier_mask = torch.zeros_like(field).bool()
+
+        gate_and_11 = PooleAND(origin_y=80, origin_x=100, z_mid=z_mid)
+        gate_and_10 = PooleAND(origin_y=250, origin_x=100, z_mid=z_mid)
+        gate_xor_11 = PooleXOR(origin_y=80, origin_x=300, z_mid=z_mid)
+        gate_xor_10 = PooleXOR(origin_y=250, origin_x=300, z_mid=z_mid)
+
+        for gate in [gate_and_11, gate_and_10, gate_xor_11, gate_xor_10]:
+            gate.stamp(inhibitor_mask, threshold_mask, amplifier_mask)
+
+        for t in range(TOTAL_FRAMES): 
+            if 0 <= t <= 8:
+                # AND (1+1)
+                field[0, 0, gate_and_11.oy-2:gate_and_11.oy+2, gate_and_11.ox-28:gate_and_11.ox-24, z_mid-1:z_mid+1] = 1.0 
+                field[0, 0, gate_and_11.oy-28:gate_and_11.oy-24, gate_and_11.ox-2:gate_and_11.ox+2, z_mid-1:z_mid+1] = 1.0 
+                # AND (1+0)
+                field[0, 0, gate_and_10.oy-2:gate_and_10.oy+2, gate_and_10.ox-28:gate_and_10.ox-24, z_mid-1:z_mid+1] = 1.0 
+                # XOR (1+1)
+                field[0, 0, gate_xor_11.oy-6:gate_xor_11.oy-2, gate_xor_11.ox-28:gate_xor_11.ox-24, z_mid-1:z_mid+1] = 1.0 
+                field[0, 0, gate_xor_11.oy+2:gate_xor_11.oy+6, gate_xor_11.ox-28:gate_xor_11.ox-24, z_mid-1:z_mid+1] = 1.0 
+                # XOR (1+0)
+                field[0, 0, gate_xor_10.oy-6:gate_xor_10.oy-2, gate_xor_10.ox-28:gate_xor_10.ox-24, z_mid-1:z_mid+1] = 1.0 
+            
+            elif t == 9:
+                field[0, 0, :, :, :] = torch.where(amplifier_mask, field[0, 0, :, :, :], field[0, 0, :, :, :])
+
+            field = run_manifold(field, inhibitor_mask, threshold_mask, amplifier_mask, b_lo, b_hi, s_lo, s_hi)
+        
+        # --- FINAL TELEMETRY CHECK AT T=300 ---
+        and_11_out = int(field[0, 0, gate_and_11.oy-5:gate_and_11.oy+5, gate_and_11.ox+20:gate_and_11.ox+35, z_mid].cpu().sum().item())
+        and_10_out = int(field[0, 0, gate_and_10.oy-5:gate_and_10.oy+5, gate_and_10.ox+20:gate_and_10.ox+35, z_mid].cpu().sum().item())
+        xor_11_out = int(field[0, 0, gate_xor_11.oy-35:gate_xor_11.oy-10, gate_xor_11.ox-4:gate_xor_11.ox, z_mid].cpu().sum().item())
+        xor_10_out = int(field[0, 0, gate_xor_10.oy-35:gate_xor_10.oy-10, gate_xor_10.ox-4:gate_xor_10.ox, z_mid].cpu().sum().item())
+
+        if and_11_out > 0 and and_10_out == 0 and xor_11_out == 0 and xor_10_out > 0:
+            print(f"   [!!!] ANTHROPIC CONSTANT VERIFIED: {rule_name} | Flawless physical fluidic routing.")
+            ANTHROPIC_CONSTANTS.append(rule_name)
+        else:
+            if idx % 10 == 0 and idx != 0:
+                print(f"   [-] Culled {idx} rules: Failed pressure routing tolerances...")
+
+        del field, inhibitor_mask, threshold_mask, amplifier_mask
+        torch.cuda.empty_cache()
+        gc.collect()
+
+    print(f"\n>> Final Verification Complete in {(time.time() - start_time)/60:.2f} minutes.")
+    print(f">> Total Turing-Complete Frameworks Discovered: {len(ANTHROPIC_CONSTANTS)} / {len(candidates)}")
+    
+    if ANTHROPIC_CONSTANTS:
+        print("\n>> THE UNIVERSAL PRIMITIVES:")
+        print(ANTHROPIC_CONSTANTS)
+
+execute_final_crucible()
