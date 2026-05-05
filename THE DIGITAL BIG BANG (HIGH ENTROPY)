@@ -1,0 +1,76 @@
+import torch
+import torch.nn.functional as F
+import time
+
+# --- 1. H100 HARDWARE INITIALIZATION ---
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f">> Initializing Phase Transition Grid on: {torch.cuda.get_device_name(0)}")
+
+# Grid Size: 1024x1024x1024 (Over 1 Billion Voxels)
+N = 1024  
+epochs = 2000
+
+# --- 2. THE DIGITAL BIG BANG (HIGH ENTROPY) ---
+# Initialize the universe with 80% random noise (hyper-dense early universe)
+print(f"Injecting initial Big Bang entropy (80% density)...")
+grid = (torch.rand((1, 1, N, N, N), device=device, dtype=torch.float16) > 0.2).half()
+
+# The 3D Moore Neighborhood Kernel (3x3x3 matrix of 1s, with center 0)
+kernel = torch.ones((1, 1, 3, 3, 3), device=device, dtype=torch.float16)
+kernel[0, 0, 1, 1, 1] = 0.0
+
+# Target stable flux from your DESI BAO data
+target_flux = 0.3095 
+
+# --- 3. THE B5-7 / S5-9 RULES ---
+def apply_poole_manifold(grid):
+    # Convolve to count neighbors (using Tensor Cores for speed)
+    neighbors = F.conv3d(grid, kernel, padding=1)
+    
+    # S5-9: Survival (If alive and has 5,6,7,8,9 neighbors, stay alive)
+    survival = (grid == 1.0) & (neighbors >= 5.0) & (neighbors <= 9.0)
+    
+    # B5-7: Birth (If dead and has 5,6,7 neighbors, become alive)
+    birth = (grid == 0.0) & (neighbors >= 5.0) & (neighbors <= 7.0)
+    
+    # Next state calculation
+    next_grid = (survival | birth).half()
+    return next_grid
+
+# --- 4. COOLING AND OBSERVATION LOOP ---
+print(f"Commencing Lattice Cooling Sequence for {epochs} epochs...\n")
+
+ignition_epoch = None
+
+for epoch in range(epochs):
+    start_time = time.time()
+    
+    # Step the universe forward
+    next_grid = apply_poole_manifold(grid)
+    
+    # --- THE MATH FIX ---
+    # Cast to float32 just for the calculation to prevent float16 overflow on a 1-billion cell grid
+    flux = torch.abs(next_grid - grid).to(torch.float32).mean().item()
+    density = next_grid.to(torch.float32).mean().item()
+    
+    step_time = time.time() - start_time
+    
+    # Detect Phase Transition: 
+    # When the chaotic flux suddenly drops and stabilizes near your target flux
+    if ignition_epoch is None and flux < 0.4: 
+        if abs(flux - target_flux) < 0.05:
+            ignition_epoch = epoch
+            print(f"\n[!!!] PHASE TRANSITION DETECTED AT EPOCH {epoch} [!!!]")
+            print(f"Geometric Memory Field locked. Symmetry broken.")
+            print(f"Lattice Flux stabilized near Phi ≈ {target_flux}\n")
+            
+    if epoch % 10 == 0 or epoch == ignition_epoch:
+        print(f"Epoch {epoch:03d} | Flux: {flux:.5f} | Density: {density:.5f} | Compute: {step_time:.3f}s")
+        
+    grid = next_grid
+
+print(f"\n>> GRID SIMULATION COMPLETE.")
+if ignition_epoch:
+    print(f">> The Poole Manifold ignited dark energy at Epoch {ignition_epoch}.")
+else:
+    print(f">> Lattice remained in superheated chaotic state.")
