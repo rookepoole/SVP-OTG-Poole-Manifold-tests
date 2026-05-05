@@ -1,0 +1,70 @@
+import torch
+
+# --- 1. OTG BEST-FIT PARAMETERS ---
+alpha = torch.tensor(0.7944, dtype=torch.float64)
+beta = torch.tensor(1.9869, dtype=torch.float64)
+omega_m = torch.tensor(0.3039, dtype=torch.float64)
+
+# Derived CPL parameters
+w_0 = torch.tensor(-1.0, dtype=torch.float64)
+w_a = alpha * beta  # ~1.5784
+omega_de = 1.0 - omega_m
+
+# Redshift of the CMB (Surface of Last Scattering)
+z_star = torch.tensor(1089.92, dtype=torch.float64)
+
+def dark_energy_density(z):
+    """
+    Evaluates the Succession Flux / Geometric Memory Field 
+    deep into the early universe.
+    """
+    term1 = (1 + z) ** (3 * (1 + w_0 + w_a))
+    term2 = torch.exp(-3 * w_a * (z / (1 + z)))
+    return term1 * term2
+
+def E(z):
+    """
+    Dimensionless Hubble parameter E(z).
+    We isolate matter and dark energy here (ignoring radiation for the shift parameter approx).
+    """
+    matter_density = omega_m * (1 + z)**3
+    de_density = omega_de * dark_energy_density(z)
+    return torch.sqrt(matter_density + de_density)
+
+def compute_cmb_shift_parameter(z_cmb):
+    """
+    Computes the geometric CMB Shift Parameter (R).
+    R = sqrt(Omega_m) * integral_0^{z_cmb} dz / E(z)
+    """
+    # High-precision numerical integration out to z = 1089
+    steps = 50000 
+    z_int = torch.linspace(0, z_cmb.item(), steps, dtype=torch.float64)
+    dz = z_int[1] - z_int[0]
+    
+    # Calculate 1 / E(z) across the entire history of the universe
+    inverse_E = 1.0 / E(z_int)
+    
+    # Trapezoidal integration for high accuracy
+    integral = torch.trapz(inverse_E, dx=dz)
+    
+    R = torch.sqrt(omega_m) * integral
+    return R
+
+# --- 2. EXECUTE THE TEST ---
+print(">> Commencing Planck CMB Shift Parameter Evaluation...")
+print(f"Targeting z* = {z_star.item():.2f} (Surface of Last Scattering)")
+print(f"Lattice Parameters: Omega_m = {omega_m.item():.4f}, w_a = {w_a.item():.4f}\n")
+
+R_theory = compute_cmb_shift_parameter(z_star)
+
+# Planck 2018 Official Data
+R_planck = 1.74963
+R_error = 0.00736
+
+print(f"--- RESULTS ---")
+print(f"Planck 2018 Target R : {R_planck:.5f} (±{R_error:.5f})")
+print(f"Poole Manifold R     : {R_theory.item():.5f}")
+
+# Calculate the deviation in terms of standard deviations (sigma)
+sigma_diff = abs(R_theory.item() - R_planck) / R_error
+print(f"Deviation            : {sigma_diff:.2f} sigma")
