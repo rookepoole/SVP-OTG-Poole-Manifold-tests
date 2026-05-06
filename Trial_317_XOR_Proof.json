@@ -1,0 +1,3022 @@
+[
+  {
+    "timestamp": 1778107471.619762,
+    "generation": 0,
+    "rule_applied": "ACTIVE_GROUND_INIT",
+    "thermal_state": "Equilibrium",
+    "active_voxels": 0,
+    "geometry_hash": "ff18e8f15bd1b40478433ebafd0b49b46c875ad9e8eabf0cf3747f493ebb6200",
+    "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "entry_hash": "8c850d209ab21ae9accd5f6a43fa14a1495e532ee30954f9a83dbdfb5bfe4ab5"
+  },
+  {
+    "timestamp": 1778107472.8942087,
+    "generation": 0,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 168,
+    "geometry_hash": "86fe9cc26ab5b6d148169064b085d34a36df77f529cb85b20f559abe5625f590",
+    "previous_hash": "8c850d209ab21ae9accd5f6a43fa14a1495e532ee30954f9a83dbdfb5bfe4ab5",
+    "entry_hash": "852efab4430544211556f55c1ac2646ccc97e33d9f82e55ec97d0fb3a47430f6"
+  },
+  {
+    "timestamp": 1778107474.2570727,
+    "generation": 1,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 288,
+    "geometry_hash": "7f00f123c30def8f052d4d5ecb1855faa74f04e9881769ff60c6b0cb79748290",
+    "previous_hash": "852efab4430544211556f55c1ac2646ccc97e33d9f82e55ec97d0fb3a47430f6",
+    "entry_hash": "8ca1b252c9959e0808de87f31bc0ce3bd0b26d32a5554d26e22e31067f95af6c"
+  },
+  {
+    "timestamp": 1778107475.529998,
+    "generation": 2,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 408,
+    "geometry_hash": "5d33c83a7a19a2e74d471eb043235023b428877ffa5d9abc37d84570f79b01a5",
+    "previous_hash": "8ca1b252c9959e0808de87f31bc0ce3bd0b26d32a5554d26e22e31067f95af6c",
+    "entry_hash": "91c1f312e18ef1f13c0a36f8e17f338fccfe0100fda4e6174f08a981f9d313d9"
+  },
+  {
+    "timestamp": 1778107476.803793,
+    "generation": 3,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 312,
+    "geometry_hash": "c042fcd8553f16342a12f2c13dc1b798a84c3ad9c26050987035913a99a87962",
+    "previous_hash": "91c1f312e18ef1f13c0a36f8e17f338fccfe0100fda4e6174f08a981f9d313d9",
+    "entry_hash": "1e61e6e3fba1039a03dde12dd5c0dbaa3b994a64bdc8ba270ce98809ef864b45"
+  },
+  {
+    "timestamp": 1778107478.0815394,
+    "generation": 4,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 348,
+    "geometry_hash": "e2ee070b8c6dd7c608fad056e2793861d4b76347d4520fc19fb0e31eaa636e3a",
+    "previous_hash": "1e61e6e3fba1039a03dde12dd5c0dbaa3b994a64bdc8ba270ce98809ef864b45",
+    "entry_hash": "5d81d3fcfb798e7626728f88880d684aff331fe64f0664b4aae8f803ff0c6f2b"
+  },
+  {
+    "timestamp": 1778107479.353477,
+    "generation": 5,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 348,
+    "geometry_hash": "ca2161396a0deef03f4c90efe53d44ff7547deb6a2ae06a6dba5743c5f043ced",
+    "previous_hash": "5d81d3fcfb798e7626728f88880d684aff331fe64f0664b4aae8f803ff0c6f2b",
+    "entry_hash": "c227f62be02c5b1ac0c47f7e6d9c415d5b4effe50943083328996ae34ccb757a"
+  },
+  {
+    "timestamp": 1778107480.6256335,
+    "generation": 6,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 360,
+    "geometry_hash": "d904869979b546ec762320159f3bb284c6768c3044e0d81075ab069b5667f76d",
+    "previous_hash": "c227f62be02c5b1ac0c47f7e6d9c415d5b4effe50943083328996ae34ccb757a",
+    "entry_hash": "67bcaba6061146237261cf8699cc2aed59ddc3e43fd1db65fec79860f77aafb2"
+  },
+  {
+    "timestamp": 1778107481.897615,
+    "generation": 7,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 456,
+    "geometry_hash": "1f21878a83fe22b907198ebe36dc2088fc7a4927b514b74cd84a54ef15217fc5",
+    "previous_hash": "67bcaba6061146237261cf8699cc2aed59ddc3e43fd1db65fec79860f77aafb2",
+    "entry_hash": "a6cc154f72a7880ed517f1e50f2c457ed83466720c90c8aaf0085760b6728dee"
+  },
+  {
+    "timestamp": 1778107483.1699789,
+    "generation": 8,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 456,
+    "geometry_hash": "3902b8692bd313d074c2023e1402e989f8268ede7ad0beccaf5b6353274cd721",
+    "previous_hash": "a6cc154f72a7880ed517f1e50f2c457ed83466720c90c8aaf0085760b6728dee",
+    "entry_hash": "5899ed8e3f08005ad599c55022f435a86d97e7793f32f53c0b09d3595ee6a378"
+  },
+  {
+    "timestamp": 1778107484.4860232,
+    "generation": 9,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Pressure_Pulse_Impact (Anvil Struck)",
+    "active_voxels": 540,
+    "geometry_hash": "5d330b53f418a582ff62ef17ac320b89fa9055e476d53fb104038cc1ca9c42c9",
+    "previous_hash": "5899ed8e3f08005ad599c55022f435a86d97e7793f32f53c0b09d3595ee6a378",
+    "entry_hash": "a5ba06f7686eaa6cfcc7c67296c4f964e9afb19ddbc572c03e0782f5f1c9774d"
+  },
+  {
+    "timestamp": 1778107485.757944,
+    "generation": 10,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 600,
+    "geometry_hash": "a7535c16925c447cb51c1644315b70572ca0be93bfcd33da304ea15d9d48123e",
+    "previous_hash": "a5ba06f7686eaa6cfcc7c67296c4f964e9afb19ddbc572c03e0782f5f1c9774d",
+    "entry_hash": "98472a26ffb94f04724edc37e52b386396ca626226f85fc798c22103eb96d986"
+  },
+  {
+    "timestamp": 1778107487.0302064,
+    "generation": 11,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 756,
+    "geometry_hash": "3fcfdbff455daa43cb0a2c0aa3b24cb5e0f7da0b05fbd7587690879a85c9b324",
+    "previous_hash": "98472a26ffb94f04724edc37e52b386396ca626226f85fc798c22103eb96d986",
+    "entry_hash": "43353a3c23f1c883cdbf3f3e0645790e2970552b7e1f6f3dad64e6c7210425ec"
+  },
+  {
+    "timestamp": 1778107488.3055975,
+    "generation": 12,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 804,
+    "geometry_hash": "14e8bef390e47acedc89edfae3c4b6e2f5ed22c7a455ac1a441a3f217ca8a9a8",
+    "previous_hash": "43353a3c23f1c883cdbf3f3e0645790e2970552b7e1f6f3dad64e6c7210425ec",
+    "entry_hash": "d08a727aca4820197609ae0bd1cf35cf4710c1d1e1bfd98299171cc790811bf3"
+  },
+  {
+    "timestamp": 1778107489.5842948,
+    "generation": 13,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 774,
+    "geometry_hash": "806803f91d77ae3cfda2641399df408156f6c3fcb31785aee711d74236e5a097",
+    "previous_hash": "d08a727aca4820197609ae0bd1cf35cf4710c1d1e1bfd98299171cc790811bf3",
+    "entry_hash": "8e4385013d8aaf5952db77103519ab784496222a8b9a742650f25f808f616cc5"
+  },
+  {
+    "timestamp": 1778107490.8573716,
+    "generation": 14,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 900,
+    "geometry_hash": "5dde0f52e371be1cd676085d9dbb5088c74daeb457b7333182cfa5332fa92aff",
+    "previous_hash": "8e4385013d8aaf5952db77103519ab784496222a8b9a742650f25f808f616cc5",
+    "entry_hash": "bfb2bec0a2fb0fdcb0a16811004b41854a72ba984253dd76e32ef17206cc2ca9"
+  },
+  {
+    "timestamp": 1778107492.1303048,
+    "generation": 15,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1008,
+    "geometry_hash": "2d535ded4d23dcc63bf6370f8521a14e11a943b664d2737b993064114f36a710",
+    "previous_hash": "bfb2bec0a2fb0fdcb0a16811004b41854a72ba984253dd76e32ef17206cc2ca9",
+    "entry_hash": "64b7a5edb556de8cd6814ee6e4c36fb1e99aec0fc3a029894a0998ac89733af6"
+  },
+  {
+    "timestamp": 1778107493.4024494,
+    "generation": 16,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1030,
+    "geometry_hash": "7f23421f1a16b722bdb28cd9484fb1a63cc927f1d4f53a708bffbd95a2224710",
+    "previous_hash": "64b7a5edb556de8cd6814ee6e4c36fb1e99aec0fc3a029894a0998ac89733af6",
+    "entry_hash": "23e645cd1d862d781942ef1661f69bd37f1fcba97180cd7ad764d04cf17ac7a5"
+  },
+  {
+    "timestamp": 1778107494.6752937,
+    "generation": 17,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 974,
+    "geometry_hash": "2c497fe2d25251e36d5036d45cd4f91bd55ba93c8f4d99f80ec801d26bc91b39",
+    "previous_hash": "23e645cd1d862d781942ef1661f69bd37f1fcba97180cd7ad764d04cf17ac7a5",
+    "entry_hash": "40bdf9de0e89363c0575183ef1b55844d44068e45b435b4e2e8889d211adcfa9"
+  },
+  {
+    "timestamp": 1778107495.9484797,
+    "generation": 18,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1116,
+    "geometry_hash": "d79b70ed4b552ddcc2a14c2b3229afe714676d0b5cae187d570f44d2ac2a0621",
+    "previous_hash": "40bdf9de0e89363c0575183ef1b55844d44068e45b435b4e2e8889d211adcfa9",
+    "entry_hash": "527b7a95888da72eca866747fd0fe44961d7c7abbc0da48c3c004b2c7a2c3bf0"
+  },
+  {
+    "timestamp": 1778107497.2211914,
+    "generation": 19,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1116,
+    "geometry_hash": "4b77ad7ed40bb9e5eda39d1983e4bba2391f4d71bcb19fbaff0483a93a9f55c8",
+    "previous_hash": "527b7a95888da72eca866747fd0fe44961d7c7abbc0da48c3c004b2c7a2c3bf0",
+    "entry_hash": "7e0596b06223050b601531f1736dab7f3b1a9f786555b7d49b6ef6b13e980171"
+  },
+  {
+    "timestamp": 1778107498.4930477,
+    "generation": 20,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1166,
+    "geometry_hash": "0d794aabf48ec74d09ab2b3ac8aa5cdcb085b5f011d7d4747006c61b55f9761c",
+    "previous_hash": "7e0596b06223050b601531f1736dab7f3b1a9f786555b7d49b6ef6b13e980171",
+    "entry_hash": "588361849c11ee631d38eb698e147e69499ade62a60eca796aed421979368368"
+  },
+  {
+    "timestamp": 1778107499.7668726,
+    "generation": 21,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1242,
+    "geometry_hash": "2600e414246dde07cd7f13b66704f90ad1e4f6590d11846ab80c140e4156580b",
+    "previous_hash": "588361849c11ee631d38eb698e147e69499ade62a60eca796aed421979368368",
+    "entry_hash": "68709153b3cd37263690bc4b281cec6f33389356db4e57ff9cd613b776290195"
+  },
+  {
+    "timestamp": 1778107501.0434024,
+    "generation": 22,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1120,
+    "geometry_hash": "bad20be236f510ca491e265be3274e630d6c39ab8da5c19ff5002b0ce068f59b",
+    "previous_hash": "68709153b3cd37263690bc4b281cec6f33389356db4e57ff9cd613b776290195",
+    "entry_hash": "d7728ca3107b029b3c65a3ebcc2add969ecdeeae9d67e7651b09926d9ffc7064"
+  },
+  {
+    "timestamp": 1778107502.315633,
+    "generation": 23,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1204,
+    "geometry_hash": "57547ab4c53d6b81f7e27c5a895d7f4d86bab8491f15ab73ca90f17128011062",
+    "previous_hash": "d7728ca3107b029b3c65a3ebcc2add969ecdeeae9d67e7651b09926d9ffc7064",
+    "entry_hash": "336d0ef93bc481e14e684d95a0d93bec12623467fc6650c88c44a543d5d9a337"
+  },
+  {
+    "timestamp": 1778107503.5890598,
+    "generation": 24,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1172,
+    "geometry_hash": "6e9c95e58d144fbc0284828d2be87ad85e4ea6ac6e68f1e516a96367f59f5493",
+    "previous_hash": "336d0ef93bc481e14e684d95a0d93bec12623467fc6650c88c44a543d5d9a337",
+    "entry_hash": "d5e71233a684e83737a28437c7163cf4ddbf0b8f21911449a6c691e42c39e6dd"
+  },
+  {
+    "timestamp": 1778107504.860298,
+    "generation": 25,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1222,
+    "geometry_hash": "3973ba2610b10284ce498589099516545582b4f770c5526750ee705d3f41890e",
+    "previous_hash": "d5e71233a684e83737a28437c7163cf4ddbf0b8f21911449a6c691e42c39e6dd",
+    "entry_hash": "edc40bafc9d4ddd8304a3d54f18093c14fd6d260b829dc9a59d53f3a6df35066"
+  },
+  {
+    "timestamp": 1778107506.1323245,
+    "generation": 26,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1260,
+    "geometry_hash": "a34f9825e7a993edf2148f60f6f1a1b7a34185a7e6be287cd4e03ece51f0408e",
+    "previous_hash": "edc40bafc9d4ddd8304a3d54f18093c14fd6d260b829dc9a59d53f3a6df35066",
+    "entry_hash": "632c862073e378979e090adba57ac6e97442a5492690b9609179f8124a9e454b"
+  },
+  {
+    "timestamp": 1778107507.4036806,
+    "generation": 27,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1308,
+    "geometry_hash": "2ed97a82e6e022c923f89e6bfaae3f4377468599986a6d793b351a4006008711",
+    "previous_hash": "632c862073e378979e090adba57ac6e97442a5492690b9609179f8124a9e454b",
+    "entry_hash": "e1cf58b9e31ed99c79ea7052e830582d4b5ed78499f8c690b288afff83bcd6f7"
+  },
+  {
+    "timestamp": 1778107508.6762724,
+    "generation": 28,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1230,
+    "geometry_hash": "6877573fdcfeae0f7a6ce5cf42645faf2270e99d37575eda2b2e0e08d014c0b0",
+    "previous_hash": "e1cf58b9e31ed99c79ea7052e830582d4b5ed78499f8c690b288afff83bcd6f7",
+    "entry_hash": "5c4fecb7569db27885dfb6f7e7e406940cec8dca60fdb5ed537f2873a8e2ac91"
+  },
+  {
+    "timestamp": 1778107509.948772,
+    "generation": 29,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1352,
+    "geometry_hash": "6857d55d6e873187f479e1bed7e8f9553884a8f4238d1c4b7be07a0d756646f8",
+    "previous_hash": "5c4fecb7569db27885dfb6f7e7e406940cec8dca60fdb5ed537f2873a8e2ac91",
+    "entry_hash": "c08425f9de4a30fc4b5a4e9566f1b6f72e314e6b16aafec65932ac326555b2a5"
+  },
+  {
+    "timestamp": 1778107511.2214856,
+    "generation": 30,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1314,
+    "geometry_hash": "966299f03bde80b9ae81819404febaa869d1ebbb63a9f34a97d5711d1b72d803",
+    "previous_hash": "c08425f9de4a30fc4b5a4e9566f1b6f72e314e6b16aafec65932ac326555b2a5",
+    "entry_hash": "fea8d07a969059e4884dae5131d13e0cfcba2911382650e1537e28b5e00a63a6"
+  },
+  {
+    "timestamp": 1778107512.4988306,
+    "generation": 31,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1426,
+    "geometry_hash": "a2e07bf675bff1e79f1420882e2746650b91fa09c8312d5792a2dce3c6913635",
+    "previous_hash": "fea8d07a969059e4884dae5131d13e0cfcba2911382650e1537e28b5e00a63a6",
+    "entry_hash": "503530aaa984ec811b3d6c9dae1b4f08c1701d7f87d968934a738881384689d8"
+  },
+  {
+    "timestamp": 1778107513.7729833,
+    "generation": 32,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1338,
+    "geometry_hash": "63fec4af7438a5e48e86f9929b73f4edfb67873c5e52d1f23e39d19a8efa49d0",
+    "previous_hash": "503530aaa984ec811b3d6c9dae1b4f08c1701d7f87d968934a738881384689d8",
+    "entry_hash": "d2479c9f4fe912cce468d5452353fe474ce793b9d4d73c5b6a3a3c917eca5dba"
+  },
+  {
+    "timestamp": 1778107515.045671,
+    "generation": 33,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1460,
+    "geometry_hash": "4ab9f611bb81c570c40a7b73d5f78d4488d66c14428f20d372a01ca184b3177c",
+    "previous_hash": "d2479c9f4fe912cce468d5452353fe474ce793b9d4d73c5b6a3a3c917eca5dba",
+    "entry_hash": "3d81e98db9df68b5a2c8520e36c1258702dd9a91c142605d95f1ce282202fce6"
+  },
+  {
+    "timestamp": 1778107516.3187194,
+    "generation": 34,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1528,
+    "geometry_hash": "ef77620f0394d5d1ed51bf002f9521267d3f886c0d9ece73b4a7276db415a66e",
+    "previous_hash": "3d81e98db9df68b5a2c8520e36c1258702dd9a91c142605d95f1ce282202fce6",
+    "entry_hash": "b640fce8886e4f2d076894bc60115693bc8fd8748f6d9450e8096af40cce4fff"
+  },
+  {
+    "timestamp": 1778107517.5926552,
+    "generation": 35,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1466,
+    "geometry_hash": "d3d66e20e3541da0b62ff7141c8c3bbdb7f8ae9977dad0b61cceb254293aaf3e",
+    "previous_hash": "b640fce8886e4f2d076894bc60115693bc8fd8748f6d9450e8096af40cce4fff",
+    "entry_hash": "61c08f2d90b55677fc47da3f993e337e217549ca7a7f28baf95a9e312965c28d"
+  },
+  {
+    "timestamp": 1778107518.8660474,
+    "generation": 36,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1504,
+    "geometry_hash": "ec2dba047869aa568a81ceeba00e3f648c1ae9e62b27204fde21b7ab7fd5baf7",
+    "previous_hash": "61c08f2d90b55677fc47da3f993e337e217549ca7a7f28baf95a9e312965c28d",
+    "entry_hash": "a6950759d1119b06de3cc2c93901e1ca81ce9250543dbaef1b18359fc9d64df0"
+  },
+  {
+    "timestamp": 1778107520.141404,
+    "generation": 37,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1482,
+    "geometry_hash": "ef4480051ceab83b0bfcbd13594990ef48b66a4799439cb86be3606fcfff5d47",
+    "previous_hash": "a6950759d1119b06de3cc2c93901e1ca81ce9250543dbaef1b18359fc9d64df0",
+    "entry_hash": "6a933d9501895e907b416b19b235916f94da7b2c8a087a20013c46fb11245054"
+  },
+  {
+    "timestamp": 1778107521.4141626,
+    "generation": 38,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1498,
+    "geometry_hash": "3cb5448d8749a703806435226b8665d32d7cfd4b4d796948c920f6c428af590d",
+    "previous_hash": "6a933d9501895e907b416b19b235916f94da7b2c8a087a20013c46fb11245054",
+    "entry_hash": "a2ce86607092fc371f566a04b27ea86eae2e0df0eb13a837778277c86a4b0374"
+  },
+  {
+    "timestamp": 1778107522.687553,
+    "generation": 39,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1552,
+    "geometry_hash": "4e69e7c1fb18809460b9751c0ea1807618a2730da0cab03bbb067f8d5c57bbbb",
+    "previous_hash": "a2ce86607092fc371f566a04b27ea86eae2e0df0eb13a837778277c86a4b0374",
+    "entry_hash": "c9d2ffcc066598a307f472dfc1e5710edf22182c5ed4ab5cf151676bd24280a2"
+  },
+  {
+    "timestamp": 1778107523.9608588,
+    "generation": 40,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1474,
+    "geometry_hash": "1584344e106132d900ad10b074295a5f4e2423b3c51a5441cbdca10b37c1ab90",
+    "previous_hash": "c9d2ffcc066598a307f472dfc1e5710edf22182c5ed4ab5cf151676bd24280a2",
+    "entry_hash": "0004699036b8ea761c6efd6f690a6795895e67b803c0628c43ec09c2fb0f41a2"
+  },
+  {
+    "timestamp": 1778107525.2360916,
+    "generation": 41,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1508,
+    "geometry_hash": "60d284d3e4542a5236197c5d65bb9be46af59d60c099357f44ab7b33f9e45708",
+    "previous_hash": "0004699036b8ea761c6efd6f690a6795895e67b803c0628c43ec09c2fb0f41a2",
+    "entry_hash": "6230011c5720d7ffe4ba71e2ff8bfc018ceb47565a45662f4a3f642052b5743d"
+  },
+  {
+    "timestamp": 1778107526.5085847,
+    "generation": 42,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1578,
+    "geometry_hash": "fd7c10433dad212b88758c8f6036deb35fd6877191d19f77cf8d9faec77e0b34",
+    "previous_hash": "6230011c5720d7ffe4ba71e2ff8bfc018ceb47565a45662f4a3f642052b5743d",
+    "entry_hash": "ed9f8021a9de44edf49f1f577766f7468b155335286ff645481fbec03d2b6a97"
+  },
+  {
+    "timestamp": 1778107527.781037,
+    "generation": 43,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1640,
+    "geometry_hash": "b76d230e19784559592bdb3b7a4dd83a03d77d5ef58e90c8465287a9f2a262de",
+    "previous_hash": "ed9f8021a9de44edf49f1f577766f7468b155335286ff645481fbec03d2b6a97",
+    "entry_hash": "e7a732313b2ab47165b0ea8d36253a6e696b18a0984a55aa870a727f0c53bb7f"
+  },
+  {
+    "timestamp": 1778107529.0523157,
+    "generation": 44,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1616,
+    "geometry_hash": "a1edbcfb15f69d049c687fd8f39f2f45e30b822b9e8db6a1eb55b57234d31da5",
+    "previous_hash": "e7a732313b2ab47165b0ea8d36253a6e696b18a0984a55aa870a727f0c53bb7f",
+    "entry_hash": "65f7c4cb504e6a00998776cadce77a14c8cd23ffe70aa8d6172b672b30a71ef1"
+  },
+  {
+    "timestamp": 1778107530.3234499,
+    "generation": 45,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1658,
+    "geometry_hash": "c442ac824d7b5bcb90a31a34c6c6fed3f8ebff942dcda14283c0a6ecae35814c",
+    "previous_hash": "65f7c4cb504e6a00998776cadce77a14c8cd23ffe70aa8d6172b672b30a71ef1",
+    "entry_hash": "0fa7752e296c85453aea41bee2728f0d06833a392a20e1ab0e1f0d015bc7abc2"
+  },
+  {
+    "timestamp": 1778107531.5947435,
+    "generation": 46,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1690,
+    "geometry_hash": "70ad0e8fab6559622e34825b6119b546f49b003a7e5cffe954ba01c2a8d0c6cf",
+    "previous_hash": "0fa7752e296c85453aea41bee2728f0d06833a392a20e1ab0e1f0d015bc7abc2",
+    "entry_hash": "b5068e928439eb0ec0341be7e184ecc13ab676dd4648c26bf906d09fba504e02"
+  },
+  {
+    "timestamp": 1778107532.8666427,
+    "generation": 47,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1758,
+    "geometry_hash": "999c896c689078aa48323d05bdd43cfd5d0ac5921a234546236fcd865e54fd70",
+    "previous_hash": "b5068e928439eb0ec0341be7e184ecc13ab676dd4648c26bf906d09fba504e02",
+    "entry_hash": "d991c8908663d3c8fde8abfb58cc71f102a4aed7bf7f92793a998ffdfff8d1dc"
+  },
+  {
+    "timestamp": 1778107534.1393898,
+    "generation": 48,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1806,
+    "geometry_hash": "84e840a1c0412f9a2c044f80dfb9584b0bec74302f6e0b94404348fd8139a660",
+    "previous_hash": "d991c8908663d3c8fde8abfb58cc71f102a4aed7bf7f92793a998ffdfff8d1dc",
+    "entry_hash": "c5cc7e201803699cd812f6e0bc80004214227e956d2ec34c5184e62820e2634e"
+  },
+  {
+    "timestamp": 1778107535.4125948,
+    "generation": 49,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1826,
+    "geometry_hash": "429b50ce20fe57a2705b53d2f6cb08b4bedbbdb1ce5665edc14b5a70e2e9f5c2",
+    "previous_hash": "c5cc7e201803699cd812f6e0bc80004214227e956d2ec34c5184e62820e2634e",
+    "entry_hash": "4651e8f5bbdd9890775f4fbab47a668efa61f5ccf18ac6f8c132474f26db5294"
+  },
+  {
+    "timestamp": 1778107536.686098,
+    "generation": 50,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1860,
+    "geometry_hash": "3e675e04e15422b5060877dd12ec606aeb17359baf2dee493a784e168946ed67",
+    "previous_hash": "4651e8f5bbdd9890775f4fbab47a668efa61f5ccf18ac6f8c132474f26db5294",
+    "entry_hash": "e022bf29b206455abbee70e0a920f56895f559b1f9de82fcdde77639780aed48"
+  },
+  {
+    "timestamp": 1778107538.0575056,
+    "generation": 51,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1928,
+    "geometry_hash": "f584819906f874c80c096ea5fc1626161253e88792d5a0c7afcc50966b79cea3",
+    "previous_hash": "e022bf29b206455abbee70e0a920f56895f559b1f9de82fcdde77639780aed48",
+    "entry_hash": "635e20f80007df709e90df5f0b2cf1371fb32108f3d923b46927fea94825bd78"
+  },
+  {
+    "timestamp": 1778107539.3296685,
+    "generation": 52,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1826,
+    "geometry_hash": "8e4c9c643e2fdca84559ffad545aa665418c3589edb171953e8263bced60c6c1",
+    "previous_hash": "635e20f80007df709e90df5f0b2cf1371fb32108f3d923b46927fea94825bd78",
+    "entry_hash": "412ed3fed82536c847b783ebd69eb54f7ab609de3e697976fd12cec0f8b5c99e"
+  },
+  {
+    "timestamp": 1778107540.6046124,
+    "generation": 53,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1970,
+    "geometry_hash": "706853654602790b0d0163e714939501cfd8d758a0d18d5b8225832539b8d8cd",
+    "previous_hash": "412ed3fed82536c847b783ebd69eb54f7ab609de3e697976fd12cec0f8b5c99e",
+    "entry_hash": "7128c4b76862e685e8fe0e65b1b45dcd26d3b7f5a1ee3967e9a2b97db49b07d4"
+  },
+  {
+    "timestamp": 1778107541.8781817,
+    "generation": 54,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 1896,
+    "geometry_hash": "5f6de2aceeac5e9a8e237736438fc6f483273b4a015c57f786a245308905d86d",
+    "previous_hash": "7128c4b76862e685e8fe0e65b1b45dcd26d3b7f5a1ee3967e9a2b97db49b07d4",
+    "entry_hash": "937af6255539cd834fa29203361fce7e06c9db51c80c92c371ec43ecf78afda4"
+  },
+  {
+    "timestamp": 1778107543.1520689,
+    "generation": 55,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2078,
+    "geometry_hash": "989ecd4ed4a6e3c90ed4945cab67846889671ce104e18249f084110623236def",
+    "previous_hash": "937af6255539cd834fa29203361fce7e06c9db51c80c92c371ec43ecf78afda4",
+    "entry_hash": "1409269bc5ba654ec06bbf98718100313cfa23e22cdd80cde90cd101fdb5ec44"
+  },
+  {
+    "timestamp": 1778107544.4257698,
+    "generation": 56,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2012,
+    "geometry_hash": "a58447f2e328f3cf365c21ff1178ef55463d1373b49991b88affb3cdd7b7ca0c",
+    "previous_hash": "1409269bc5ba654ec06bbf98718100313cfa23e22cdd80cde90cd101fdb5ec44",
+    "entry_hash": "772d320c6702a4cde2de3f8de5cdcbb8a2852678c99b3982010fa1d85f477b49"
+  },
+  {
+    "timestamp": 1778107545.6989288,
+    "generation": 57,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2010,
+    "geometry_hash": "1ae294f55a58c6b824448bf1e098cfc72ca063491d127f593141620b508ae8fb",
+    "previous_hash": "772d320c6702a4cde2de3f8de5cdcbb8a2852678c99b3982010fa1d85f477b49",
+    "entry_hash": "13e6c6365fc54206a3c8d8db4a5d7a68b224a68c64c8b3b76bcd43613e63d896"
+  },
+  {
+    "timestamp": 1778107546.9751718,
+    "generation": 58,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2036,
+    "geometry_hash": "ac6eb6a5bdf232d487d450def3466084680701918816b1da2c54792d3f58d49c",
+    "previous_hash": "13e6c6365fc54206a3c8d8db4a5d7a68b224a68c64c8b3b76bcd43613e63d896",
+    "entry_hash": "d58f798efee88d1c36e6b68fbe48e8428a4f0c1691383a86f16f01e4da7b7237"
+  },
+  {
+    "timestamp": 1778107548.2517161,
+    "generation": 59,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2116,
+    "geometry_hash": "bd6655ca4e78180f59182ec31a6bbe3170c6ecce14a2c0d7e53d672dc40b86f3",
+    "previous_hash": "d58f798efee88d1c36e6b68fbe48e8428a4f0c1691383a86f16f01e4da7b7237",
+    "entry_hash": "74e1b128e937d7265ffc8d8930eb395fa483f756be73623b12af40b9ba0ea2a1"
+  },
+  {
+    "timestamp": 1778107549.525764,
+    "generation": 60,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2040,
+    "geometry_hash": "b56e861e1fc8bd3af4c98b02a1b7b8124415ea5268757bcff430ed8ae9a99f76",
+    "previous_hash": "74e1b128e937d7265ffc8d8930eb395fa483f756be73623b12af40b9ba0ea2a1",
+    "entry_hash": "c8e2d5e16478ff156486769eb8d1ddfd5b93a79c0817e40aa3c06f2f143b670d"
+  },
+  {
+    "timestamp": 1778107550.7993941,
+    "generation": 61,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2114,
+    "geometry_hash": "6a17478d8456f15d39a6f05838c05af26f485d385935eff1dfa3cd97a2de1881",
+    "previous_hash": "c8e2d5e16478ff156486769eb8d1ddfd5b93a79c0817e40aa3c06f2f143b670d",
+    "entry_hash": "e4a3cb38c8f168714924f8773e50ebe7444d6b1c7e83ff05e9b633172124f4d1"
+  },
+  {
+    "timestamp": 1778107552.0723386,
+    "generation": 62,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2126,
+    "geometry_hash": "bd9816e3d024658d24a2d6a0ebdd1b60a1524c77da467f2afacc4f05e0bd94e6",
+    "previous_hash": "e4a3cb38c8f168714924f8773e50ebe7444d6b1c7e83ff05e9b633172124f4d1",
+    "entry_hash": "900fc64bcba6c3abae566aeef42a496831065989d4de498ed9a62a6d71098f90"
+  },
+  {
+    "timestamp": 1778107553.3453426,
+    "generation": 63,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2194,
+    "geometry_hash": "0eb0ab2f203d545acd893e5cf0d5dbff22202b19cadb4ceff6b91b8ba86573af",
+    "previous_hash": "900fc64bcba6c3abae566aeef42a496831065989d4de498ed9a62a6d71098f90",
+    "entry_hash": "d307283e3d081db2fa8352e0a6c19f814158eec899088b874e3a00bc27041f44"
+  },
+  {
+    "timestamp": 1778107554.618361,
+    "generation": 64,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2196,
+    "geometry_hash": "a089066235eb52707dbdc34cbd6b1c47a7751b513a26ce265dc7d01230a31ef4",
+    "previous_hash": "d307283e3d081db2fa8352e0a6c19f814158eec899088b874e3a00bc27041f44",
+    "entry_hash": "77127e7d7450a19135c0e0e16a61aec0b1ca5a23979682cde041e4b00303caca"
+  },
+  {
+    "timestamp": 1778107555.8912797,
+    "generation": 65,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2142,
+    "geometry_hash": "45ff3c4e213b44fa0eb7cdbb6a4d5ea288db00b1262814071ca275f9f95700a2",
+    "previous_hash": "77127e7d7450a19135c0e0e16a61aec0b1ca5a23979682cde041e4b00303caca",
+    "entry_hash": "29227ddf45cc4bf74a12b0e19592880a43d76179e7366260876d4b7bc8b83b2c"
+  },
+  {
+    "timestamp": 1778107557.1627946,
+    "generation": 66,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2164,
+    "geometry_hash": "177d99fc5ae0e48a879eab8cb396e243796f7a444904faff6cd310a99496fc34",
+    "previous_hash": "29227ddf45cc4bf74a12b0e19592880a43d76179e7366260876d4b7bc8b83b2c",
+    "entry_hash": "d7031256828f94b6a7b9c07a2194136559d9e2ebfce5a99f4eb39ac292072fc6"
+  },
+  {
+    "timestamp": 1778107558.4379482,
+    "generation": 67,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2248,
+    "geometry_hash": "05c31d99f046f21b9af3ac9fa7aab8e443fdd4502dc5d2bffd6d96a390883db0",
+    "previous_hash": "d7031256828f94b6a7b9c07a2194136559d9e2ebfce5a99f4eb39ac292072fc6",
+    "entry_hash": "54f2df27de9264f3dd7691cb62df71b61ce2746ff7144d42f538cdcaf02f4256"
+  },
+  {
+    "timestamp": 1778107559.7110782,
+    "generation": 68,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2222,
+    "geometry_hash": "b9e2c120de8dc31c36dfe4756808ce902e78c2f50fbe82614b78ed62bab88b3f",
+    "previous_hash": "54f2df27de9264f3dd7691cb62df71b61ce2746ff7144d42f538cdcaf02f4256",
+    "entry_hash": "b2c89c99cedc069471d67900e7e5609c0febbad8e40063d1e1298b0df1318016"
+  },
+  {
+    "timestamp": 1778107560.9840317,
+    "generation": 69,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2228,
+    "geometry_hash": "8dfb13cc2a1a384bfb97ef9624bfeca51eeb02114b1294a2acb9a2e79145c9a1",
+    "previous_hash": "b2c89c99cedc069471d67900e7e5609c0febbad8e40063d1e1298b0df1318016",
+    "entry_hash": "c8aa2c71b2108ec1e1bbb0099b29cbc130163911e3d497d07e48626c0ca481a3"
+  },
+  {
+    "timestamp": 1778107562.257644,
+    "generation": 70,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2266,
+    "geometry_hash": "2c959be078d5983a391863c0c26fc5e69f0f8582a4f800c7a468dfcdef493d5c",
+    "previous_hash": "c8aa2c71b2108ec1e1bbb0099b29cbc130163911e3d497d07e48626c0ca481a3",
+    "entry_hash": "b1e5ba4bfd584fa201c14c53fd3a1f0349b2467b0cfb88a951e08d97f45c681b"
+  },
+  {
+    "timestamp": 1778107563.5324428,
+    "generation": 71,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2324,
+    "geometry_hash": "56b99ae9cd6fdf8b2949c4827a5d934467afe8c6129b5fe8cb3cb4587849f75d",
+    "previous_hash": "b1e5ba4bfd584fa201c14c53fd3a1f0349b2467b0cfb88a951e08d97f45c681b",
+    "entry_hash": "b1b47dd916137954b242bc7b2ad4a9f302ade367cec715b36e09a9198473408a"
+  },
+  {
+    "timestamp": 1778107564.8064055,
+    "generation": 72,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2302,
+    "geometry_hash": "6f79e1a9697517df4ae1825a5e4efd9835b2e04cb6fb71e5353d60799ad800ba",
+    "previous_hash": "b1b47dd916137954b242bc7b2ad4a9f302ade367cec715b36e09a9198473408a",
+    "entry_hash": "34349c9bf0a444692121ef167d8fad9b8f322b7be317ad2cda7414bf6a4a0fe6"
+  },
+  {
+    "timestamp": 1778107566.0799253,
+    "generation": 73,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2304,
+    "geometry_hash": "8898866192e61d49cb3698fafa4814fa381d5b63cbaa0dfb545b678324e84af2",
+    "previous_hash": "34349c9bf0a444692121ef167d8fad9b8f322b7be317ad2cda7414bf6a4a0fe6",
+    "entry_hash": "a4956a1ebbf7ce5182434a070c3229961a40f7d2ed4d598770d74c0db04b6139"
+  },
+  {
+    "timestamp": 1778107567.353069,
+    "generation": 74,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2318,
+    "geometry_hash": "8fafba6f847ac48afb9ef3931c05f362348a6832b8d8d1b41baad1069e60a7f6",
+    "previous_hash": "a4956a1ebbf7ce5182434a070c3229961a40f7d2ed4d598770d74c0db04b6139",
+    "entry_hash": "f2b689c64bf51f15932b83fbecef2d0a071106154fa1699cb7f31b5fb7e03df9"
+  },
+  {
+    "timestamp": 1778107568.6275144,
+    "generation": 75,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2368,
+    "geometry_hash": "0325aeeda6f502dc23b5561d3b600c8c4eabb88863ef6a3fc4fe4c2b60e25580",
+    "previous_hash": "f2b689c64bf51f15932b83fbecef2d0a071106154fa1699cb7f31b5fb7e03df9",
+    "entry_hash": "24a008a0162fe8a5ef8d192faf3bf9862d8d87039d846cdec1da24e09b27ba62"
+  },
+  {
+    "timestamp": 1778107569.904252,
+    "generation": 76,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2358,
+    "geometry_hash": "dddbe6c7b739c5def19b2378f54f0ba1b2e4b47d82bf5c736d24f051557dc791",
+    "previous_hash": "24a008a0162fe8a5ef8d192faf3bf9862d8d87039d846cdec1da24e09b27ba62",
+    "entry_hash": "4e661e49bd8f907ca8b91a6037beb5da6606bdbb65a4c848c45eec9baf43b591"
+  },
+  {
+    "timestamp": 1778107571.177085,
+    "generation": 77,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2438,
+    "geometry_hash": "8f307d327cec551a12d115dafe27b8824a65e82d39396f12fb235e228aba1d03",
+    "previous_hash": "4e661e49bd8f907ca8b91a6037beb5da6606bdbb65a4c848c45eec9baf43b591",
+    "entry_hash": "32ac6a3160086126c212d53a8d4c95d2a4676512a8efb55e5818e5061e725b78"
+  },
+  {
+    "timestamp": 1778107572.4515235,
+    "generation": 78,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2372,
+    "geometry_hash": "46b3c710717f2489ed743d12d57126c27c06f96e4078176f95adb2d5de921201",
+    "previous_hash": "32ac6a3160086126c212d53a8d4c95d2a4676512a8efb55e5818e5061e725b78",
+    "entry_hash": "0b9b3f88737bdcd64d7d4326aba06c86186995aeea59d3e0941c2302509e6e3f"
+  },
+  {
+    "timestamp": 1778107573.7264338,
+    "generation": 79,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2420,
+    "geometry_hash": "6b5d582bfeefa195f53c7859fc9886583b324e5a518d33edb398b3937aed1d87",
+    "previous_hash": "0b9b3f88737bdcd64d7d4326aba06c86186995aeea59d3e0941c2302509e6e3f",
+    "entry_hash": "90f229daa4c18f061fd5feca86bc99c8e0fe2e9aceb9cbe277237daef3ea2b23"
+  },
+  {
+    "timestamp": 1778107575.0012145,
+    "generation": 80,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2450,
+    "geometry_hash": "029fadc8788d8d75217d36e13ec7ad3fdcd7a75f7f90b5f45c40fe7462e771cf",
+    "previous_hash": "90f229daa4c18f061fd5feca86bc99c8e0fe2e9aceb9cbe277237daef3ea2b23",
+    "entry_hash": "762c2148cb637908557fa3115fdc7c46f5ab507855e390a3aab252394a487795"
+  },
+  {
+    "timestamp": 1778107576.2762308,
+    "generation": 81,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2476,
+    "geometry_hash": "7a7ac8d97cdf2b34943bca1062f952ad765e9403f5e2fcfbc641ca6c586160e7",
+    "previous_hash": "762c2148cb637908557fa3115fdc7c46f5ab507855e390a3aab252394a487795",
+    "entry_hash": "b547bab6890067275d107d0ee1a6324cf362c656c200e7dcc155dc7a88650982"
+  },
+  {
+    "timestamp": 1778107577.551594,
+    "generation": 82,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2474,
+    "geometry_hash": "7adc0996cf496dca3fed0f763d14298e2560199ca965e0d59a62b848b9449d8b",
+    "previous_hash": "b547bab6890067275d107d0ee1a6324cf362c656c200e7dcc155dc7a88650982",
+    "entry_hash": "c374d4ea8466d741795eea4c827078936cc38298671ac4d090eff29de8328452"
+  },
+  {
+    "timestamp": 1778107578.826477,
+    "generation": 83,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2494,
+    "geometry_hash": "86ae03ee5154ee0c574bb4fa026248f42f7825ddea767d15ab633fc0ffe55feb",
+    "previous_hash": "c374d4ea8466d741795eea4c827078936cc38298671ac4d090eff29de8328452",
+    "entry_hash": "eedf29a8a82fe447dd82e558070b68320df71b43c929e2a4f3b94b14bd8a62e3"
+  },
+  {
+    "timestamp": 1778107580.100714,
+    "generation": 84,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2514,
+    "geometry_hash": "9c470f5a81c1c9d366a1ea3ea30cad253a87e68a9fe1c2fea3f0489101776a5d",
+    "previous_hash": "eedf29a8a82fe447dd82e558070b68320df71b43c929e2a4f3b94b14bd8a62e3",
+    "entry_hash": "ed281f45c5852ce812960a04a7d15fa84be1436dec8d3089ce7a0a24d5fa9048"
+  },
+  {
+    "timestamp": 1778107581.380006,
+    "generation": 85,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2538,
+    "geometry_hash": "2722b677f7af76a0d3011e6d931bc64e15ee13e4d9ddd41fb66cb5a0aafd8c9c",
+    "previous_hash": "ed281f45c5852ce812960a04a7d15fa84be1436dec8d3089ce7a0a24d5fa9048",
+    "entry_hash": "6abae6e0e34dc0bda94126b534cd393051759ccab1cfc4efdded093d475c777c"
+  },
+  {
+    "timestamp": 1778107582.6535451,
+    "generation": 86,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2550,
+    "geometry_hash": "46327e25c064d137da332653bf69709afd73348db2285dac5a60e3ecadac8252",
+    "previous_hash": "6abae6e0e34dc0bda94126b534cd393051759ccab1cfc4efdded093d475c777c",
+    "entry_hash": "e2881ba81d2fa46476e71246c67ea158794599578fd4d0bfcbad021101973729"
+  },
+  {
+    "timestamp": 1778107583.9267998,
+    "generation": 87,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2538,
+    "geometry_hash": "79e4cdf1f932c0a93d40bb2116d499273440c1474bfd4c277deb1173356c4537",
+    "previous_hash": "e2881ba81d2fa46476e71246c67ea158794599578fd4d0bfcbad021101973729",
+    "entry_hash": "fffa333a1d8cb465cdd9ba88cc1f520fbe5fc7c5e44ed1f5b1ae894e479d08f9"
+  },
+  {
+    "timestamp": 1778107585.1981194,
+    "generation": 88,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2572,
+    "geometry_hash": "ba791a1004104185018841b46e0733014ed0659e5f30f7749de51ddf80eb4ce2",
+    "previous_hash": "fffa333a1d8cb465cdd9ba88cc1f520fbe5fc7c5e44ed1f5b1ae894e479d08f9",
+    "entry_hash": "ab3f712c12b052867678187ddf510c332c40b379522832c020829f9cf33e2a2d"
+  },
+  {
+    "timestamp": 1778107586.4659197,
+    "generation": 89,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2584,
+    "geometry_hash": "305edfdad50d98b3f1b5a3bbe2c8d5edf8c821d55aaa93fb2497879eafe2eb07",
+    "previous_hash": "ab3f712c12b052867678187ddf510c332c40b379522832c020829f9cf33e2a2d",
+    "entry_hash": "1ca6c7056c34b4efe657eb3d43501717117465af571f3913a5a4653d26ade7c7"
+  },
+  {
+    "timestamp": 1778107587.7404222,
+    "generation": 90,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2542,
+    "geometry_hash": "21ef99ff43e78e7a05baeeb869593dafa8aeccf35125ba8e13daba359ce89178",
+    "previous_hash": "1ca6c7056c34b4efe657eb3d43501717117465af571f3913a5a4653d26ade7c7",
+    "entry_hash": "407e13d4503506aa157d982f3221e6e9f52b5828eb404481ea26253954fa5dc2"
+  },
+  {
+    "timestamp": 1778107589.01475,
+    "generation": 91,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2620,
+    "geometry_hash": "de5b48df9e4cf644624ed4bd4f07b5b859d40425ca75208227eaff8a2b6f921d",
+    "previous_hash": "407e13d4503506aa157d982f3221e6e9f52b5828eb404481ea26253954fa5dc2",
+    "entry_hash": "cf679d2a40ac7d4d152e5d9b94b7c50ca84b9316cdb022dcacf9ff5b1b775058"
+  },
+  {
+    "timestamp": 1778107590.287798,
+    "generation": 92,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2614,
+    "geometry_hash": "997c71b599a8614657ccb925f36c718bc664e338fd97ddf66555ad4c37247ef6",
+    "previous_hash": "cf679d2a40ac7d4d152e5d9b94b7c50ca84b9316cdb022dcacf9ff5b1b775058",
+    "entry_hash": "3a6e92bf80604bb16301d2afb842c5d9c3358ebe38faa4a1a6b9057c69cd9bad"
+  },
+  {
+    "timestamp": 1778107591.560931,
+    "generation": 93,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2620,
+    "geometry_hash": "944b7f95dec6ca7f4b21a1e38f87d5e21df76aeddc19caf1844f4a948cb552b7",
+    "previous_hash": "3a6e92bf80604bb16301d2afb842c5d9c3358ebe38faa4a1a6b9057c69cd9bad",
+    "entry_hash": "375c5bd02bf6e732228244eb28d8787d372778b8aa11db3de7352efed8b1b279"
+  },
+  {
+    "timestamp": 1778107592.8396358,
+    "generation": 94,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2624,
+    "geometry_hash": "f5a1a779a9bf043ae6aecedfd7a90bbbe6bf3a5c649ad9ff7125abe33f3c9ced",
+    "previous_hash": "375c5bd02bf6e732228244eb28d8787d372778b8aa11db3de7352efed8b1b279",
+    "entry_hash": "ea2d56af042433b45efd8421e55bd95e26b72a414b6309fce2dc1b65430f8b70"
+  },
+  {
+    "timestamp": 1778107594.1122315,
+    "generation": 95,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2654,
+    "geometry_hash": "b218d45b415245e4842df2affd2e361bb93f4156436bdcf3e94ab23a2108c84d",
+    "previous_hash": "ea2d56af042433b45efd8421e55bd95e26b72a414b6309fce2dc1b65430f8b70",
+    "entry_hash": "09bd9fa02641c6867b7483b4401ddffc859ea056060b9b9ddfff05899b8822b3"
+  },
+  {
+    "timestamp": 1778107595.3853786,
+    "generation": 96,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2622,
+    "geometry_hash": "4dfa7bf4a2293f575d3bd79c00b15fdaca824489ccbc8cc81253503001f26734",
+    "previous_hash": "09bd9fa02641c6867b7483b4401ddffc859ea056060b9b9ddfff05899b8822b3",
+    "entry_hash": "14bb6cae5182db3fa5516ae3e0ce8ff0ffb668dc0d0868ecd7ade1034c431c24"
+  },
+  {
+    "timestamp": 1778107596.659655,
+    "generation": 97,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2646,
+    "geometry_hash": "14a9082a7f6e7adb87333267040feae8af9fb1092eba66489869da320c1b6d34",
+    "previous_hash": "14bb6cae5182db3fa5516ae3e0ce8ff0ffb668dc0d0868ecd7ade1034c431c24",
+    "entry_hash": "26ec7a4895e9a3ee3c3e2882248d7a2c9d9c975e0691892c3d2cc5473faaac8b"
+  },
+  {
+    "timestamp": 1778107597.9323204,
+    "generation": 98,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2634,
+    "geometry_hash": "14cfa9b6882dbe201addb07b674dd6387a7bedebca14e5ecef708b42ec119b35",
+    "previous_hash": "26ec7a4895e9a3ee3c3e2882248d7a2c9d9c975e0691892c3d2cc5473faaac8b",
+    "entry_hash": "10918605e1db3d7b778457133e4b467b496a80ea7d555f533f4a89991f362c34"
+  },
+  {
+    "timestamp": 1778107599.2063653,
+    "generation": 99,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2610,
+    "geometry_hash": "fea6afa5963bfe020ce3504e025c8f338c0ca8e3f2c97fe765a9e51c53900411",
+    "previous_hash": "10918605e1db3d7b778457133e4b467b496a80ea7d555f533f4a89991f362c34",
+    "entry_hash": "c1bfd2543e3cbef785104502f21ed7712fc3b195cb1a66ca1190ec5b863e0f5b"
+  },
+  {
+    "timestamp": 1778107600.481212,
+    "generation": 100,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2628,
+    "geometry_hash": "03ca64282c5dfebc0925f855d6a8f0eae780d6053beacd5ff7eb91067943863c",
+    "previous_hash": "c1bfd2543e3cbef785104502f21ed7712fc3b195cb1a66ca1190ec5b863e0f5b",
+    "entry_hash": "f90caa71fc7e06135fa153dcf190dbb3fb9889fb2d7cb40fd74350276239704a"
+  },
+  {
+    "timestamp": 1778107601.8479114,
+    "generation": 101,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2646,
+    "geometry_hash": "d478baae7dcac24a14db9d93f48c8fcb9ba4ec3058a16626901b799f1d225304",
+    "previous_hash": "f90caa71fc7e06135fa153dcf190dbb3fb9889fb2d7cb40fd74350276239704a",
+    "entry_hash": "38452c329b0f08baa2d1a2c8eddac54757f47577e082d4b00fcea6ac45b58de0"
+  },
+  {
+    "timestamp": 1778107603.1237578,
+    "generation": 102,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2640,
+    "geometry_hash": "906a612f5f133180e8605c038b850e56f0bcda939da96e47204034deb77ee6e6",
+    "previous_hash": "38452c329b0f08baa2d1a2c8eddac54757f47577e082d4b00fcea6ac45b58de0",
+    "entry_hash": "1bd7bede6f0ae6d89709313113caa392cf40252bde786cb776f7835158302167"
+  },
+  {
+    "timestamp": 1778107604.4020464,
+    "generation": 103,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2686,
+    "geometry_hash": "e14368e7181a6c01423bc4f89cee6221c0ad04a05e535b9108fccfb27a13db26",
+    "previous_hash": "1bd7bede6f0ae6d89709313113caa392cf40252bde786cb776f7835158302167",
+    "entry_hash": "b88b4514f994db346d1f42ca62bf84a017fe4a0b5e9a917bd9b3cea16e2bce5d"
+  },
+  {
+    "timestamp": 1778107605.676686,
+    "generation": 104,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2670,
+    "geometry_hash": "a7a0d8dc2acd5f3aebd2ae2a9c714d76f99f3f5ca2db22e25681b37961aefdb3",
+    "previous_hash": "b88b4514f994db346d1f42ca62bf84a017fe4a0b5e9a917bd9b3cea16e2bce5d",
+    "entry_hash": "789dff21b0f0b62ccea087b80219a9b351330bcbb4ab33e97c37a0f32c0b6bfe"
+  },
+  {
+    "timestamp": 1778107606.9506783,
+    "generation": 105,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2632,
+    "geometry_hash": "71e5689ae66c72c687f1db66acb060290b97f69fa1631a3383b79e74a618895f",
+    "previous_hash": "789dff21b0f0b62ccea087b80219a9b351330bcbb4ab33e97c37a0f32c0b6bfe",
+    "entry_hash": "76959f53f988097e0e34fbb694a54b9cc2dc2d8c46657cfd4f98ee49f633cbd0"
+  },
+  {
+    "timestamp": 1778107608.2252457,
+    "generation": 106,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2642,
+    "geometry_hash": "af71f899f5e86003f42442de82fc740369996328b85915cdf00fdbb5fd33a474",
+    "previous_hash": "76959f53f988097e0e34fbb694a54b9cc2dc2d8c46657cfd4f98ee49f633cbd0",
+    "entry_hash": "2bc66b02a9b2eb0d98a1805525fc19ab4c6f37d43e2d41c30c4533b24ac9881f"
+  },
+  {
+    "timestamp": 1778107609.5005176,
+    "generation": 107,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2652,
+    "geometry_hash": "96397df24a580e9124a3f034a777ac374a8c3437630550777a25beb44f7465b5",
+    "previous_hash": "2bc66b02a9b2eb0d98a1805525fc19ab4c6f37d43e2d41c30c4533b24ac9881f",
+    "entry_hash": "dee221e4d2f26cac1007bff4b78ec16c95afa0a3dbbbc0f7e068a06fbdafb078"
+  },
+  {
+    "timestamp": 1778107610.7754164,
+    "generation": 108,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2624,
+    "geometry_hash": "df8ecec70376a2eadc9bc77b15dea43d9232274d4cbac80d81d2f6923470da9f",
+    "previous_hash": "dee221e4d2f26cac1007bff4b78ec16c95afa0a3dbbbc0f7e068a06fbdafb078",
+    "entry_hash": "e40cf011c52c885ad5129a431581148bf72914bd0c18087805d98eabbda62bf2"
+  },
+  {
+    "timestamp": 1778107612.049738,
+    "generation": 109,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2630,
+    "geometry_hash": "70532d115f79d9ec9a38725383c35e8f4e41ceea193711a8e0068375f56fb9d5",
+    "previous_hash": "e40cf011c52c885ad5129a431581148bf72914bd0c18087805d98eabbda62bf2",
+    "entry_hash": "c194890197dc5d31e79970e22b5cb7fcbb1e1fd2ff827c66427eafad8039ca0f"
+  },
+  {
+    "timestamp": 1778107613.3240733,
+    "generation": 110,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2640,
+    "geometry_hash": "0197cd5e484e048ebea810dda51eac0358475af3760187e51990d09b8eec776a",
+    "previous_hash": "c194890197dc5d31e79970e22b5cb7fcbb1e1fd2ff827c66427eafad8039ca0f",
+    "entry_hash": "0270d9722e47a36e7b3eabf25c3eac9af8fd2a7d9a4a26a12f50ff1b88c0ba16"
+  },
+  {
+    "timestamp": 1778107614.5978634,
+    "generation": 111,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2642,
+    "geometry_hash": "f042578490e87b4ef56fad9e40e2fb1ab0076ae8d5956100d0f0c1a280b3d2a7",
+    "previous_hash": "0270d9722e47a36e7b3eabf25c3eac9af8fd2a7d9a4a26a12f50ff1b88c0ba16",
+    "entry_hash": "882196cb1a4f54f055d2c007307189f675298efb5f3ef7ae62a1a16c37cdf7d8"
+  },
+  {
+    "timestamp": 1778107615.8757877,
+    "generation": 112,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2680,
+    "geometry_hash": "500155681093e6a1c1376bce27abf4c6019928ea48ba5e32dd775af0d496bad7",
+    "previous_hash": "882196cb1a4f54f055d2c007307189f675298efb5f3ef7ae62a1a16c37cdf7d8",
+    "entry_hash": "a14518d35bd5b83f3acb1fc24a05ad2e4e36e393e9c10792669b4fccf6e7a35b"
+  },
+  {
+    "timestamp": 1778107617.1510997,
+    "generation": 113,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2678,
+    "geometry_hash": "08919fff026d22ada23a66b0e7f803378e1ff935d82b84e39dc8ba2d257f0f5a",
+    "previous_hash": "a14518d35bd5b83f3acb1fc24a05ad2e4e36e393e9c10792669b4fccf6e7a35b",
+    "entry_hash": "7b994250f2c9c91e703bbb9170a12092ca01737e9c608d5aa146e3f0557152bd"
+  },
+  {
+    "timestamp": 1778107618.429279,
+    "generation": 114,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2648,
+    "geometry_hash": "debdc4471cedba3bfd3f7ba56c5186d4a0e94a05aef19b8a612f87c0656da345",
+    "previous_hash": "7b994250f2c9c91e703bbb9170a12092ca01737e9c608d5aa146e3f0557152bd",
+    "entry_hash": "44038ccac988b3c0f0b98fdd2acd6b08c8f9b1727fcbbd3ddd967a695bb3170f"
+  },
+  {
+    "timestamp": 1778107619.7049289,
+    "generation": 115,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2652,
+    "geometry_hash": "f9899dc1661b7a017ded353162260d66dc3326470a1c97913dd5946834cdfbb4",
+    "previous_hash": "44038ccac988b3c0f0b98fdd2acd6b08c8f9b1727fcbbd3ddd967a695bb3170f",
+    "entry_hash": "a34364d629c1c093caf6c96b49e073b983d4c454b88897b6f99f2802e40fb52e"
+  },
+  {
+    "timestamp": 1778107620.9809535,
+    "generation": 116,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2650,
+    "geometry_hash": "bc4c863bfa105eaf72b4ba16cb2d63403e7022b4426570771c95b5ebfe50a6e4",
+    "previous_hash": "a34364d629c1c093caf6c96b49e073b983d4c454b88897b6f99f2802e40fb52e",
+    "entry_hash": "8e8aed6da03a566630285a89439ba493c7327af9b503027929398192e9777209"
+  },
+  {
+    "timestamp": 1778107622.2564626,
+    "generation": 117,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2634,
+    "geometry_hash": "71f3f71735812d21a12e64dc69ac81ac211cf3438a952540eb2ed5e587207d63",
+    "previous_hash": "8e8aed6da03a566630285a89439ba493c7327af9b503027929398192e9777209",
+    "entry_hash": "a996f49c9c44a267845c92a68dfad8bde328b9a42864b107b288be152e34e246"
+  },
+  {
+    "timestamp": 1778107623.5318878,
+    "generation": 118,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2640,
+    "geometry_hash": "2dfa3e99df47a190266a17dcce4c11be955c5a44fe1c9f724f2d90807cf0ba97",
+    "previous_hash": "a996f49c9c44a267845c92a68dfad8bde328b9a42864b107b288be152e34e246",
+    "entry_hash": "509dc875af9d8700bd7efd9ccf67351cef3028ae1e4d4aaa1645f61054d13d7d"
+  },
+  {
+    "timestamp": 1778107624.8049176,
+    "generation": 119,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2624,
+    "geometry_hash": "60ec798dc9db0a6e56d59019e167844231ed4d9387e331cd5d70b4b4ac10e72d",
+    "previous_hash": "509dc875af9d8700bd7efd9ccf67351cef3028ae1e4d4aaa1645f61054d13d7d",
+    "entry_hash": "49dae0885143338e68fa2b345d764716e0acb3c4a2851f5f498ba54e12e4720d"
+  },
+  {
+    "timestamp": 1778107626.0781586,
+    "generation": 120,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2634,
+    "geometry_hash": "825d9874427d3f135db417169b784eb914620ac9ad1076c30dc47ce3dcd331d6",
+    "previous_hash": "49dae0885143338e68fa2b345d764716e0acb3c4a2851f5f498ba54e12e4720d",
+    "entry_hash": "7cffc153123575ab4eb86d56b667920deb2c33b02cd15ba409c01a1f307e1fc6"
+  },
+  {
+    "timestamp": 1778107627.3533762,
+    "generation": 121,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2678,
+    "geometry_hash": "9b07d68b3b83ad1aa5b4d1067dd49f8d3a0aeb2bc71967017fee16882e0c7c5b",
+    "previous_hash": "7cffc153123575ab4eb86d56b667920deb2c33b02cd15ba409c01a1f307e1fc6",
+    "entry_hash": "8619d0ffd0509e1a9db1a16354407b05c3039cfc730b1ce7f1ce7a928527f0b0"
+  },
+  {
+    "timestamp": 1778107628.6276135,
+    "generation": 122,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2652,
+    "geometry_hash": "cc24f8d8e1b16ded8f71ce6b56543e3affa0151ea4735d7cb04bc624e6f470f6",
+    "previous_hash": "8619d0ffd0509e1a9db1a16354407b05c3039cfc730b1ce7f1ce7a928527f0b0",
+    "entry_hash": "5f0918047c8b0275592f75d756eaaa40ff8fa606a9999ab15caaeca8afd057d2"
+  },
+  {
+    "timestamp": 1778107629.9001372,
+    "generation": 123,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2656,
+    "geometry_hash": "5968b01cc74cd36248f6acb9cae28d8535bfb9e188bdf2092797288ed434a3cc",
+    "previous_hash": "5f0918047c8b0275592f75d756eaaa40ff8fa606a9999ab15caaeca8afd057d2",
+    "entry_hash": "2e2d74ff86f9d09f70bd27013dd6b1557a9ea0ce26ee415d65afbbf12b043d76"
+  },
+  {
+    "timestamp": 1778107631.1704345,
+    "generation": 124,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2652,
+    "geometry_hash": "21663541b086ead34b97bcc1ececfa4f57c9e99574dd753296461a27061550d2",
+    "previous_hash": "2e2d74ff86f9d09f70bd27013dd6b1557a9ea0ce26ee415d65afbbf12b043d76",
+    "entry_hash": "73bce11186286b8a3e015391f154cd442df4df94135c2f36fd617c88909285f3"
+  },
+  {
+    "timestamp": 1778107632.4405959,
+    "generation": 125,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2650,
+    "geometry_hash": "bad2ae8a92860b66a92ec5367367c99e86f2bc1e7ed828442954fed1ebe78ba6",
+    "previous_hash": "73bce11186286b8a3e015391f154cd442df4df94135c2f36fd617c88909285f3",
+    "entry_hash": "c8849397f94b7dd59d1cb95236595c227efa1e1d01f646bea6f1a1998aa29cf6"
+  },
+  {
+    "timestamp": 1778107633.7124484,
+    "generation": 126,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2664,
+    "geometry_hash": "e2c3c4638d2830d0ec678640b07f5b11be621706479e1017d4cbd56f9c58721d",
+    "previous_hash": "c8849397f94b7dd59d1cb95236595c227efa1e1d01f646bea6f1a1998aa29cf6",
+    "entry_hash": "e8061fd60e7babe1bfac345c43538c630a7afe1a44c8cf12e51504d6bce98943"
+  },
+  {
+    "timestamp": 1778107634.98434,
+    "generation": 127,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2654,
+    "geometry_hash": "19b25030d861138dff621e0b832b2974a74fa199ca0c671e81c8be5d47c8df4b",
+    "previous_hash": "e8061fd60e7babe1bfac345c43538c630a7afe1a44c8cf12e51504d6bce98943",
+    "entry_hash": "2a174a96f185e71a99ccdfddb05b3e89d544b5098e31c97c1fac29485ad5c0fc"
+  },
+  {
+    "timestamp": 1778107636.2572389,
+    "generation": 128,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2634,
+    "geometry_hash": "00c10c24754c8f3492296ed14d04f52cc992578e182e40c9ebc7c47fd16e8a1d",
+    "previous_hash": "2a174a96f185e71a99ccdfddb05b3e89d544b5098e31c97c1fac29485ad5c0fc",
+    "entry_hash": "a69a8e471a30db7b3e48df5723e390c417c82d9aebef3d3b6a77654ca1f61f34"
+  },
+  {
+    "timestamp": 1778107637.5309944,
+    "generation": 129,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2622,
+    "geometry_hash": "50f20278a61bf26b2f364908b31aee4686ba9d0e83ce25d39b18a345d260787e",
+    "previous_hash": "a69a8e471a30db7b3e48df5723e390c417c82d9aebef3d3b6a77654ca1f61f34",
+    "entry_hash": "114d0175c168f2788156b101d91a29a16c291017ca75747d96221df563a2f6d6"
+  },
+  {
+    "timestamp": 1778107638.8077676,
+    "generation": 130,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2640,
+    "geometry_hash": "fb19bec680aaabe6215dc75c1feee95e625cec25dc9eb7eda676344bac742a48",
+    "previous_hash": "114d0175c168f2788156b101d91a29a16c291017ca75747d96221df563a2f6d6",
+    "entry_hash": "c259c629be0768b0b91d957e60510fe345a928d3ce406c7dec069ef51afe7cd5"
+  },
+  {
+    "timestamp": 1778107640.0809076,
+    "generation": 131,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2648,
+    "geometry_hash": "fdd440ae53071b8552d9986855f9d028cb0cf562166b9523c8e81e5b961209b8",
+    "previous_hash": "c259c629be0768b0b91d957e60510fe345a928d3ce406c7dec069ef51afe7cd5",
+    "entry_hash": "e4b39ff322cc67f5aadeaf1fea5b4fe0f3c9048b5bee5d90e9ab470286859d5e"
+  },
+  {
+    "timestamp": 1778107641.35494,
+    "generation": 132,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2668,
+    "geometry_hash": "aaab5ee3031d217e2c707a1e0b939cb85b820187237d5e9e957e0a38c90a880d",
+    "previous_hash": "e4b39ff322cc67f5aadeaf1fea5b4fe0f3c9048b5bee5d90e9ab470286859d5e",
+    "entry_hash": "ffc6afa57dff9f04f99834d9f75464605f4af01c774c167f5480457ee700b771"
+  },
+  {
+    "timestamp": 1778107642.6279294,
+    "generation": 133,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2690,
+    "geometry_hash": "94dda1205ed44150e4c1e1c10853f8c2ddf9ebaa9eed6b113b1b12efb349c93d",
+    "previous_hash": "ffc6afa57dff9f04f99834d9f75464605f4af01c774c167f5480457ee700b771",
+    "entry_hash": "5c6f9fc86dd5ab0b1fab85baee90982fd2a656de447c15c3a16b2e274731d641"
+  },
+  {
+    "timestamp": 1778107643.9011726,
+    "generation": 134,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2678,
+    "geometry_hash": "2a194892af80c2ab395d265003dd5f16c80a9e67b294abdf991a6cc0d5ade0f4",
+    "previous_hash": "5c6f9fc86dd5ab0b1fab85baee90982fd2a656de447c15c3a16b2e274731d641",
+    "entry_hash": "73ef01326c428fc3bfce7e63abe534707638e62acf45817c3bbf785eeeed4b42"
+  },
+  {
+    "timestamp": 1778107645.1743994,
+    "generation": 135,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2684,
+    "geometry_hash": "c1a2514e481505c5206a8f3b8a958b0c7ebf1d6080b068278e01d1f922bec426",
+    "previous_hash": "73ef01326c428fc3bfce7e63abe534707638e62acf45817c3bbf785eeeed4b42",
+    "entry_hash": "694868f58fc8d5a995fee68aae433c18802de7354ca8ae093e669a248f885256"
+  },
+  {
+    "timestamp": 1778107646.4460626,
+    "generation": 136,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2698,
+    "geometry_hash": "b0d6329495480a42b2625bdb156d0ff3fb1cc0d89c4e8ffde334957e6029dee2",
+    "previous_hash": "694868f58fc8d5a995fee68aae433c18802de7354ca8ae093e669a248f885256",
+    "entry_hash": "89cecc8241bfae965a9920966d08cc02aa167c180f3716c9671a443d7daf9ca1"
+  },
+  {
+    "timestamp": 1778107647.7168827,
+    "generation": 137,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2672,
+    "geometry_hash": "d22f3016de56f8cbb4c710c62eae634f121d1a4336b8b5ef8471c16270cb7da7",
+    "previous_hash": "89cecc8241bfae965a9920966d08cc02aa167c180f3716c9671a443d7daf9ca1",
+    "entry_hash": "68e92839568722189d814df8576ad0acbbb36d2d50fb62e0596db780053c1a8f"
+  },
+  {
+    "timestamp": 1778107648.9906592,
+    "generation": 138,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2636,
+    "geometry_hash": "8e3f2cf0ed9bf23f49e992b957bd19a0c50b1466eb48da13da4357ddd8076467",
+    "previous_hash": "68e92839568722189d814df8576ad0acbbb36d2d50fb62e0596db780053c1a8f",
+    "entry_hash": "d640c4b8cbd899e6c26a1e9f9108cc45d9ad1f62a6a238e39ad0ef84e5579d83"
+  },
+  {
+    "timestamp": 1778107650.2683845,
+    "generation": 139,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2672,
+    "geometry_hash": "7ed491d0b805daff18080ff582a0c758a8499774b5bc02745aed88d609981eb4",
+    "previous_hash": "d640c4b8cbd899e6c26a1e9f9108cc45d9ad1f62a6a238e39ad0ef84e5579d83",
+    "entry_hash": "ae36be2deebfa43019f3b716c313a187ebdc62f913583afbf7d33802cf9a4229"
+  },
+  {
+    "timestamp": 1778107651.5470967,
+    "generation": 140,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2662,
+    "geometry_hash": "872290c4cf26f2f67101f2413c47313d4ecdb44a47e867bd7d4c46e323db7a24",
+    "previous_hash": "ae36be2deebfa43019f3b716c313a187ebdc62f913583afbf7d33802cf9a4229",
+    "entry_hash": "0594a1f679ac104226d213fcf0307fab4e5328bf8e320776f026da9abe89e1ef"
+  },
+  {
+    "timestamp": 1778107652.8199477,
+    "generation": 141,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2676,
+    "geometry_hash": "91ce1de33dc0cc28288b580e8edff057350884d3bdcf416900b76a7fd35e9941",
+    "previous_hash": "0594a1f679ac104226d213fcf0307fab4e5328bf8e320776f026da9abe89e1ef",
+    "entry_hash": "b268a0a52af6b9617466c91bb959714c4296578cd0c95b7480698505cb2b70c0"
+  },
+  {
+    "timestamp": 1778107654.092909,
+    "generation": 142,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2660,
+    "geometry_hash": "f569d4a5f0d0bbfb54c7d1d834bbc9021b0d4759d444b5298f12f56f48e50e7f",
+    "previous_hash": "b268a0a52af6b9617466c91bb959714c4296578cd0c95b7480698505cb2b70c0",
+    "entry_hash": "156303d5666618dfbf9f7dab30f48c415bf0dfc8e5dd1c21d57632a222fa85fe"
+  },
+  {
+    "timestamp": 1778107655.3665764,
+    "generation": 143,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2660,
+    "geometry_hash": "860cc39f22e8c81d9c02bd03510060d6bc0416a2435eca3a33c50a74ff56f2c4",
+    "previous_hash": "156303d5666618dfbf9f7dab30f48c415bf0dfc8e5dd1c21d57632a222fa85fe",
+    "entry_hash": "2d00be653b4e00953600b9d0837aa9b2ff95188e4928c8af3276b01ec52d0edd"
+  },
+  {
+    "timestamp": 1778107656.6407166,
+    "generation": 144,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2660,
+    "geometry_hash": "f0b8d06b01c2949ff29f73e7a699f28249b0460b0a7086596f10a1020ff64013",
+    "previous_hash": "2d00be653b4e00953600b9d0837aa9b2ff95188e4928c8af3276b01ec52d0edd",
+    "entry_hash": "b0600d80fe7bc8e33557449c5031f2ac483d8c6353d0364fd132d195d25ee3fc"
+  },
+  {
+    "timestamp": 1778107657.914305,
+    "generation": 145,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2668,
+    "geometry_hash": "119d7aae533ae99cda9920bba80d5aca359002557f674dab87ca3c8565e82787",
+    "previous_hash": "b0600d80fe7bc8e33557449c5031f2ac483d8c6353d0364fd132d195d25ee3fc",
+    "entry_hash": "6808147a262fbf87ba5e13e75330af5692d9fc9324eeff4713446d15d0b64c32"
+  },
+  {
+    "timestamp": 1778107659.1877115,
+    "generation": 146,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2688,
+    "geometry_hash": "1b443f2e34709cb6418a8f5f2aff350491fdff2c3b4d8c7a7f3009dbaa534e94",
+    "previous_hash": "6808147a262fbf87ba5e13e75330af5692d9fc9324eeff4713446d15d0b64c32",
+    "entry_hash": "04a8c412028483fee0bf80d20cdf75f029311c8363227480b13e69561dc8220c"
+  },
+  {
+    "timestamp": 1778107660.4616554,
+    "generation": 147,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2670,
+    "geometry_hash": "e613be5fd548be18aae377a135ab2549646c5a0ef62fa7a607313191c4e66175",
+    "previous_hash": "04a8c412028483fee0bf80d20cdf75f029311c8363227480b13e69561dc8220c",
+    "entry_hash": "2f7c5fa094a2a100a937d73138772b576c30ae08d7b386aa0cd73d20054b877d"
+  },
+  {
+    "timestamp": 1778107661.7384245,
+    "generation": 148,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2686,
+    "geometry_hash": "710ce3f8fc796c3bb631bde037e78c30cbd4c8dbec0a3c6a3f176f4e6fe0ef55",
+    "previous_hash": "2f7c5fa094a2a100a937d73138772b576c30ae08d7b386aa0cd73d20054b877d",
+    "entry_hash": "fb7d89940cd28b87c0fc030db839ff2b07149a9b33b467e3405723fce7188fad"
+  },
+  {
+    "timestamp": 1778107663.0174544,
+    "generation": 149,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2688,
+    "geometry_hash": "61caea65af582fdbb28fbdec29c2064bee14ab0ac091bde37b7c63987d30169a",
+    "previous_hash": "fb7d89940cd28b87c0fc030db839ff2b07149a9b33b467e3405723fce7188fad",
+    "entry_hash": "c8c25d0c2918435a59779ae978f164edc956ea8b31db8f86ac3b3f96145260f6"
+  },
+  {
+    "timestamp": 1778107664.2929738,
+    "generation": 150,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2692,
+    "geometry_hash": "c791279cfe59dcddac63a78eec069fbf2190cead06d0537d9718856649e842be",
+    "previous_hash": "c8c25d0c2918435a59779ae978f164edc956ea8b31db8f86ac3b3f96145260f6",
+    "entry_hash": "6ec8bf4f82f2ba4b8a9ad2c5daef726af18d5dfaae80d0c2ae908cd1bbdbad52"
+  },
+  {
+    "timestamp": 1778107665.6639576,
+    "generation": 151,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2706,
+    "geometry_hash": "65dffa80f8c6f2cfac5b449736afb120cbdbdefdea9900f4a0164f9a30084700",
+    "previous_hash": "6ec8bf4f82f2ba4b8a9ad2c5daef726af18d5dfaae80d0c2ae908cd1bbdbad52",
+    "entry_hash": "ede3b4b57ceaa117286f103c400836d3fbb3141dec184fdcf6dd908943832084"
+  },
+  {
+    "timestamp": 1778107666.9371545,
+    "generation": 152,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2722,
+    "geometry_hash": "91482118ea8860df0670b2dbf438c7cb53fd5de0429c00672e38a0f3dd2f6ed6",
+    "previous_hash": "ede3b4b57ceaa117286f103c400836d3fbb3141dec184fdcf6dd908943832084",
+    "entry_hash": "0298fa2836c6d80dc6cf5663330a54a855ece3702c8f5e57481f00f8a551855a"
+  },
+  {
+    "timestamp": 1778107668.209331,
+    "generation": 153,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2714,
+    "geometry_hash": "a42b1697bd8fa619833910eac44c993b7d696db59eaaa34d89b1981b530b465b",
+    "previous_hash": "0298fa2836c6d80dc6cf5663330a54a855ece3702c8f5e57481f00f8a551855a",
+    "entry_hash": "e8d4e962233a0c631198ab3af9ad60a69c65839f5ba8b8cfa06c5625b2ad8682"
+  },
+  {
+    "timestamp": 1778107669.4816527,
+    "generation": 154,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2724,
+    "geometry_hash": "34063d90da57042d92c43ead59e5b826870845ecc199a9c068a75245add96d1b",
+    "previous_hash": "e8d4e962233a0c631198ab3af9ad60a69c65839f5ba8b8cfa06c5625b2ad8682",
+    "entry_hash": "3ab3fb8d6581f8ddeddc07c4dea5e0a7e07ed35b535b0865da40a6b9d741b576"
+  },
+  {
+    "timestamp": 1778107670.753386,
+    "generation": 155,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2716,
+    "geometry_hash": "ae7d4fb519bd90261051f2930d5afe949235a72a16ebd7f557f5a59613512b2b",
+    "previous_hash": "3ab3fb8d6581f8ddeddc07c4dea5e0a7e07ed35b535b0865da40a6b9d741b576",
+    "entry_hash": "d55c97ba7cb6e6e19c91132af778746b91875c2e10c2bf4c196fae0afc6e62fe"
+  },
+  {
+    "timestamp": 1778107672.0255995,
+    "generation": 156,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2702,
+    "geometry_hash": "cb92606a3f00aeb001214a4187f324ee0c81564a9256c0ea158091be04ce3faa",
+    "previous_hash": "d55c97ba7cb6e6e19c91132af778746b91875c2e10c2bf4c196fae0afc6e62fe",
+    "entry_hash": "6664547449946144954890b6b4a0b8aa4863b85d14e0d466c5781f78e2ad687d"
+  },
+  {
+    "timestamp": 1778107673.306721,
+    "generation": 157,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2732,
+    "geometry_hash": "638ede2a6e10dbf5a0897a08d8c682662080814d0ad07bd23f02a95681a42ebd",
+    "previous_hash": "6664547449946144954890b6b4a0b8aa4863b85d14e0d466c5781f78e2ad687d",
+    "entry_hash": "2b5e6fcfb0cb2ba7c8bfc9e2b7e76fd5ed434866b83889f42dcdcf96e2cde793"
+  },
+  {
+    "timestamp": 1778107674.581433,
+    "generation": 158,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2724,
+    "geometry_hash": "96c3de3e6f736b56d2a4c62ebdad328d21d8158def6bdb4bf6a6ce8bde941b39",
+    "previous_hash": "2b5e6fcfb0cb2ba7c8bfc9e2b7e76fd5ed434866b83889f42dcdcf96e2cde793",
+    "entry_hash": "fd262833aa883179bad7c4dab92c4df9ce35fffb5a80db8604b8b5c4045783fb"
+  },
+  {
+    "timestamp": 1778107675.8540335,
+    "generation": 159,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2720,
+    "geometry_hash": "6eaf63510f186c75fafa2e9164beb9e72c450d1f59976a81003d79b3d1de382d",
+    "previous_hash": "fd262833aa883179bad7c4dab92c4df9ce35fffb5a80db8604b8b5c4045783fb",
+    "entry_hash": "d1d462d550c2e4f7e0202f04fd373b36625f5d5d1d07b0311c95e3de6f643356"
+  },
+  {
+    "timestamp": 1778107677.1260965,
+    "generation": 160,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2750,
+    "geometry_hash": "ec89c29730ea8fa2d8bcaf36528852c50355afe1a88050453f1032d1957e210b",
+    "previous_hash": "d1d462d550c2e4f7e0202f04fd373b36625f5d5d1d07b0311c95e3de6f643356",
+    "entry_hash": "80a4f10414108877a3285fd302f532557b1bd0d2584ee6f98a0068e1e2c9eca0"
+  },
+  {
+    "timestamp": 1778107678.3971374,
+    "generation": 161,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2708,
+    "geometry_hash": "5fcf31fd6b3c508536a085cb07ba007d3cac4d2744d452a026a512cd103fdec6",
+    "previous_hash": "80a4f10414108877a3285fd302f532557b1bd0d2584ee6f98a0068e1e2c9eca0",
+    "entry_hash": "d57c68f007995b62cdeaa9237ef207b8905dd2ce26ef066c3dbd17f1a484d418"
+  },
+  {
+    "timestamp": 1778107679.6685028,
+    "generation": 162,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2726,
+    "geometry_hash": "18e16f0c70a58d669264bc71255dce07721e6dd13c0b30a37db36152f09e2397",
+    "previous_hash": "d57c68f007995b62cdeaa9237ef207b8905dd2ce26ef066c3dbd17f1a484d418",
+    "entry_hash": "eb7ca01fa3d395a93e81968de04c7d178e041f3faea212052d571209dbef5664"
+  },
+  {
+    "timestamp": 1778107680.9396474,
+    "generation": 163,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2738,
+    "geometry_hash": "ba11022fd9e10e4b7f4c9917cb912275a279a58a54cd558a59c7d0fb6aa2f97b",
+    "previous_hash": "eb7ca01fa3d395a93e81968de04c7d178e041f3faea212052d571209dbef5664",
+    "entry_hash": "5fec361790eb210ef21aa854a1449135f8480f9b9d2343ac9fd94d6f4198bdd7"
+  },
+  {
+    "timestamp": 1778107682.2105792,
+    "generation": 164,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2744,
+    "geometry_hash": "8a2458b5cf0600b2361a824e9ce6b8d3bae308d2562b98384210b32c11d16eab",
+    "previous_hash": "5fec361790eb210ef21aa854a1449135f8480f9b9d2343ac9fd94d6f4198bdd7",
+    "entry_hash": "49483185fa2fc6ab4eb470198ac258a5ab4a9c17db3d70153b1ad0fc5fd06f1d"
+  },
+  {
+    "timestamp": 1778107683.4823596,
+    "generation": 165,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2762,
+    "geometry_hash": "c2afb54d8b52e6491c3f43685e426cf957b3b82f9fa10b0af44faa010e668065",
+    "previous_hash": "49483185fa2fc6ab4eb470198ac258a5ab4a9c17db3d70153b1ad0fc5fd06f1d",
+    "entry_hash": "227b096dba381bd3704fe617a0f14b808fee781b7836c57a2b01dba0523ac952"
+  },
+  {
+    "timestamp": 1778107684.7579956,
+    "generation": 166,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2778,
+    "geometry_hash": "ed05443bd2a6664e788eb20401e3c53eeac6813374e221cae9fdac7bc66c7468",
+    "previous_hash": "227b096dba381bd3704fe617a0f14b808fee781b7836c57a2b01dba0523ac952",
+    "entry_hash": "5af542801ff2b96cf15d123b7c05a3444b3155387a9f6dfa492125453963d818"
+  },
+  {
+    "timestamp": 1778107686.0400114,
+    "generation": 167,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2770,
+    "geometry_hash": "7edb9cd2b46f3c825a5106adaea77d3a7a8a9494f9c86bc4e290463ad0183900",
+    "previous_hash": "5af542801ff2b96cf15d123b7c05a3444b3155387a9f6dfa492125453963d818",
+    "entry_hash": "35b387b89d6605880cae7e8055c3dc7c39525254328bde68ac0633a82f74e9ba"
+  },
+  {
+    "timestamp": 1778107687.312783,
+    "generation": 168,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2800,
+    "geometry_hash": "21bfaa2d51d335c712cef0698f1b0099d11ce2b38732e9cff81ee855b024288b",
+    "previous_hash": "35b387b89d6605880cae7e8055c3dc7c39525254328bde68ac0633a82f74e9ba",
+    "entry_hash": "625d8718054e5f4ad7189fbb468ec4566b44eba95e9ae5d377ee0d286fb44bf8"
+  },
+  {
+    "timestamp": 1778107688.5860367,
+    "generation": 169,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2810,
+    "geometry_hash": "342217185d52b1125607c7cc1c2d6bbe6ad14252e5d8ea44c401ded238eed8ac",
+    "previous_hash": "625d8718054e5f4ad7189fbb468ec4566b44eba95e9ae5d377ee0d286fb44bf8",
+    "entry_hash": "355afc238afb787270b20496000fd3eed2dea2717f4027054365a88383240c7e"
+  },
+  {
+    "timestamp": 1778107689.8595665,
+    "generation": 170,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2830,
+    "geometry_hash": "6fc4b64d2e5fe10d867f69112d3d956f0e4a9de1cfb6bd6d3c66e3568ae0db8a",
+    "previous_hash": "355afc238afb787270b20496000fd3eed2dea2717f4027054365a88383240c7e",
+    "entry_hash": "848c79b9c53e37a9bc0332b431c8481c5914071ed19f19b10cbef16fb01e9a8e"
+  },
+  {
+    "timestamp": 1778107691.1320922,
+    "generation": 171,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2760,
+    "geometry_hash": "271a2f6be7972ebefde15631f44cef4529a0da42fade0b5e513f91dd0c12775c",
+    "previous_hash": "848c79b9c53e37a9bc0332b431c8481c5914071ed19f19b10cbef16fb01e9a8e",
+    "entry_hash": "7c0d4bf83ce6f03c8821ec703052dc366d8a47224e127d7f99f2d5e66e13b2b9"
+  },
+  {
+    "timestamp": 1778107692.4048328,
+    "generation": 172,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2776,
+    "geometry_hash": "214f2ed330c11439cf526197f948cafdfcbfcb564ce4b3e0ab70f8afbe5e9226",
+    "previous_hash": "7c0d4bf83ce6f03c8821ec703052dc366d8a47224e127d7f99f2d5e66e13b2b9",
+    "entry_hash": "ea20919c3a53a6ed6b390d718a428114d48cde56bb7c17a0f41c236e4b778ac7"
+  },
+  {
+    "timestamp": 1778107693.6780627,
+    "generation": 173,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2756,
+    "geometry_hash": "549fe3fbb40f62c07c3a66e0b37399ee79e9f76efb7492d6b80c6fcccae23025",
+    "previous_hash": "ea20919c3a53a6ed6b390d718a428114d48cde56bb7c17a0f41c236e4b778ac7",
+    "entry_hash": "c4ca8f6aff08eef1afce4b6edbf9a57ab326ce7087326c2e1e6744734e620755"
+  },
+  {
+    "timestamp": 1778107694.951227,
+    "generation": 174,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2752,
+    "geometry_hash": "3fe6b58fec422b96f487a7993e93d002e2b10f993d0963bdfee8fca52d56914d",
+    "previous_hash": "c4ca8f6aff08eef1afce4b6edbf9a57ab326ce7087326c2e1e6744734e620755",
+    "entry_hash": "dd906d06a82ee9279a1497d0f1dab97b805a9703d92aa1095d52e9b1b68a981a"
+  },
+  {
+    "timestamp": 1778107696.226572,
+    "generation": 175,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2808,
+    "geometry_hash": "c7968ac073367287133d51761238f810064c08a31fc7e7b23cb9d450a750698f",
+    "previous_hash": "dd906d06a82ee9279a1497d0f1dab97b805a9703d92aa1095d52e9b1b68a981a",
+    "entry_hash": "fb7d8380fabb3a1c7875b7c2fb7a19edb32421eb9e954355c44d3a1a800a1128"
+  },
+  {
+    "timestamp": 1778107697.5052063,
+    "generation": 176,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2840,
+    "geometry_hash": "cc8c14c2cfdf7a0b7359ce42badc1a37bb98dda98aed7a62f0271e978a6761f0",
+    "previous_hash": "fb7d8380fabb3a1c7875b7c2fb7a19edb32421eb9e954355c44d3a1a800a1128",
+    "entry_hash": "505fa256f1da87f1265c3470021fb2b68a55f19d0e4eed0b9093453bce62a896"
+  },
+  {
+    "timestamp": 1778107698.7773707,
+    "generation": 177,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2840,
+    "geometry_hash": "10977d639a979ce772322a9f34180922b91a5c8687e9945774a9c36e11e551d4",
+    "previous_hash": "505fa256f1da87f1265c3470021fb2b68a55f19d0e4eed0b9093453bce62a896",
+    "entry_hash": "9aca93523fececb20834dd13d9586ecc9a6fcd6684be50ccb091f7c00c84684f"
+  },
+  {
+    "timestamp": 1778107700.050397,
+    "generation": 178,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2870,
+    "geometry_hash": "397c27696ba2fe5183ab11fa1f3fe6bc69b9caa68581d82a15a6e128326cd962",
+    "previous_hash": "9aca93523fececb20834dd13d9586ecc9a6fcd6684be50ccb091f7c00c84684f",
+    "entry_hash": "dd1cc72133f93de618e0ea19746975422bad06b1c6f7ff8c9a5cc5b22df4fc5c"
+  },
+  {
+    "timestamp": 1778107701.3221653,
+    "generation": 179,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2834,
+    "geometry_hash": "b8c160ff0ce6fc5308ef9d56999f5987c7509642dff305827bbd9c2055c64051",
+    "previous_hash": "dd1cc72133f93de618e0ea19746975422bad06b1c6f7ff8c9a5cc5b22df4fc5c",
+    "entry_hash": "2581904bc2ff49e5d23b83789f570c270d3a5cdb61bbd44ce7a542cbbd1e6791"
+  },
+  {
+    "timestamp": 1778107702.594013,
+    "generation": 180,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2854,
+    "geometry_hash": "d113891e8d6967bfaf69fcb22abe1509aede90607adcaf07679360f2ff565c57",
+    "previous_hash": "2581904bc2ff49e5d23b83789f570c270d3a5cdb61bbd44ce7a542cbbd1e6791",
+    "entry_hash": "9aa3e62d776bdccc438c292a829623430838b59209e59c5b7cf60f98c5f18943"
+  },
+  {
+    "timestamp": 1778107703.8664787,
+    "generation": 181,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2872,
+    "geometry_hash": "767926d4b0cff74babab05a0a7bb3b7bbc3e88230f924baa14785c5f5c286c24",
+    "previous_hash": "9aa3e62d776bdccc438c292a829623430838b59209e59c5b7cf60f98c5f18943",
+    "entry_hash": "f4d42ec945c36117493fdfcd5001cc26e0231b76b94533ca620b0dc119df1818"
+  },
+  {
+    "timestamp": 1778107705.1415095,
+    "generation": 182,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2884,
+    "geometry_hash": "ebcf4748b6f916c987d08b5ce8273ba2347db8baeb903b2f54afde742d159850",
+    "previous_hash": "f4d42ec945c36117493fdfcd5001cc26e0231b76b94533ca620b0dc119df1818",
+    "entry_hash": "e976d91ac9a3503b6c4dbaee3e17e3c53f7dd6ee3456cc5fa199d43390dfbfa5"
+  },
+  {
+    "timestamp": 1778107706.4139383,
+    "generation": 183,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2890,
+    "geometry_hash": "9edd10b52d852d3937dc6c46355b8b9f45be6461abe7ae685bdbb4b9c46bb71b",
+    "previous_hash": "e976d91ac9a3503b6c4dbaee3e17e3c53f7dd6ee3456cc5fa199d43390dfbfa5",
+    "entry_hash": "2f64b96c92fe606b597c54ee23f81aa80c125cb314220862a22ca8fd4b956056"
+  },
+  {
+    "timestamp": 1778107707.6888316,
+    "generation": 184,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2890,
+    "geometry_hash": "92157376baff84816448de69f13049969f1f9e52ba00f7c0e66c8c64436fccdc",
+    "previous_hash": "2f64b96c92fe606b597c54ee23f81aa80c125cb314220862a22ca8fd4b956056",
+    "entry_hash": "3c17d69b0a1a36c1ef31aa124e6fe1fa2f36c3510d5b42eba59486bc1bf5630e"
+  },
+  {
+    "timestamp": 1778107708.9677172,
+    "generation": 185,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2884,
+    "geometry_hash": "eb4f6eed8297a77c72b26138f8a56888bc68d52a04ae9ea13e76d3463a1a54d1",
+    "previous_hash": "3c17d69b0a1a36c1ef31aa124e6fe1fa2f36c3510d5b42eba59486bc1bf5630e",
+    "entry_hash": "4fb687d7194e16f61594596bb6042fa49b19b342a76008d75b19ade9bac8b3c4"
+  },
+  {
+    "timestamp": 1778107710.2403603,
+    "generation": 186,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2916,
+    "geometry_hash": "21b597a3738602dacd895e20dd68b0a6fe799d6c4241bf10be96385bb1c8aa1e",
+    "previous_hash": "4fb687d7194e16f61594596bb6042fa49b19b342a76008d75b19ade9bac8b3c4",
+    "entry_hash": "b72b619b5d48759bc1dc96a6282bc850104fc6c03defd7b86489d0629563493e"
+  },
+  {
+    "timestamp": 1778107711.5138702,
+    "generation": 187,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2922,
+    "geometry_hash": "12680d8c216360a6dcea543337419e0de7aaad10ac76d3a055b323c813919037",
+    "previous_hash": "b72b619b5d48759bc1dc96a6282bc850104fc6c03defd7b86489d0629563493e",
+    "entry_hash": "3eb90a857114323525ebda140f03b7100209afcb9ac0dac16d7fa1ba76f08b0c"
+  },
+  {
+    "timestamp": 1778107712.7871675,
+    "generation": 188,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2934,
+    "geometry_hash": "5232a085a364874ef18e036086f37762ddc52129f14438aecdf53fbd56b65215",
+    "previous_hash": "3eb90a857114323525ebda140f03b7100209afcb9ac0dac16d7fa1ba76f08b0c",
+    "entry_hash": "3f478c950e21e9ffeb7d5e1ca4606a70e7684e164cac574ed46dc86857595e4e"
+  },
+  {
+    "timestamp": 1778107714.059782,
+    "generation": 189,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2948,
+    "geometry_hash": "41299dd4907afa3532a9cc0ae1890f5a72f3094ec692230ed3bfccaa981f70ba",
+    "previous_hash": "3f478c950e21e9ffeb7d5e1ca4606a70e7684e164cac574ed46dc86857595e4e",
+    "entry_hash": "56372783d44fa21f7ea6a9d68b94bb845e516a4024fa414cdf4267387942a833"
+  },
+  {
+    "timestamp": 1778107715.332971,
+    "generation": 190,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2988,
+    "geometry_hash": "729f2a2826b81d273c7fae6aa96199d116e7e355132deb480cb93ce394444c9f",
+    "previous_hash": "56372783d44fa21f7ea6a9d68b94bb845e516a4024fa414cdf4267387942a833",
+    "entry_hash": "2e8c15a53855632e165f89b8a1547ef67122605df2bd7368ffc812eb8e3f0ce4"
+  },
+  {
+    "timestamp": 1778107716.6059804,
+    "generation": 191,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2974,
+    "geometry_hash": "eb50ea94624afefdc20d49d7327c7db85a9b1ae882d8cfc9c807f9c6c0184156",
+    "previous_hash": "2e8c15a53855632e165f89b8a1547ef67122605df2bd7368ffc812eb8e3f0ce4",
+    "entry_hash": "6af90b35a2962ca4fe7646adbf814442f0cf2a1c67c27945bed03a51d7858b72"
+  },
+  {
+    "timestamp": 1778107717.8794127,
+    "generation": 192,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2962,
+    "geometry_hash": "b39b33703019bbecd3d51097a7bd9b38af41dc57c2ed3339e43341873ecb3bf2",
+    "previous_hash": "6af90b35a2962ca4fe7646adbf814442f0cf2a1c67c27945bed03a51d7858b72",
+    "entry_hash": "23caba8a6cf7e278426860251a628f1ed256f34c12e8dcaf8160b9c4bf054745"
+  },
+  {
+    "timestamp": 1778107719.1525655,
+    "generation": 193,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2972,
+    "geometry_hash": "87732d3588c08f92d6624c265bbdd94dcf749a6dd5b31c1e51da7aa940868dff",
+    "previous_hash": "23caba8a6cf7e278426860251a628f1ed256f34c12e8dcaf8160b9c4bf054745",
+    "entry_hash": "a2405dbb69e2d4f1b441836390b12ab06349b9bc0f3777f650f3d5104fdf5c96"
+  },
+  {
+    "timestamp": 1778107720.4264457,
+    "generation": 194,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2996,
+    "geometry_hash": "8288dd776d297c20cded1e07d04407b2b80e55550b5e9c38e986e1f6c9d75f91",
+    "previous_hash": "a2405dbb69e2d4f1b441836390b12ab06349b9bc0f3777f650f3d5104fdf5c96",
+    "entry_hash": "ed89ada1cc080a8cb893c3d9f77743455b57204c06bbdccad64d2f6943b3911c"
+  },
+  {
+    "timestamp": 1778107721.6995804,
+    "generation": 195,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2982,
+    "geometry_hash": "8e835a4ddb8ac6d91547d49651f91a9b3b34d3d2e20b13106a15ad16a0749a5b",
+    "previous_hash": "ed89ada1cc080a8cb893c3d9f77743455b57204c06bbdccad64d2f6943b3911c",
+    "entry_hash": "2fc9fd1189866adea209d997902bc8d8f190228a7df50dbb0f1340ae27dfde6f"
+  },
+  {
+    "timestamp": 1778107722.9732087,
+    "generation": 196,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3022,
+    "geometry_hash": "0d2981e547279473cc2db24c0db4367d84fbc38d548bd9a257613b5dc30ca293",
+    "previous_hash": "2fc9fd1189866adea209d997902bc8d8f190228a7df50dbb0f1340ae27dfde6f",
+    "entry_hash": "b37fbade77b7cb8a1256ac1c607e7dbc498a1472c6a36a060efffa2feaba69e7"
+  },
+  {
+    "timestamp": 1778107724.246053,
+    "generation": 197,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2968,
+    "geometry_hash": "283216307f3fcbea175ac1603dc786e3832e127ba3d2e95e3b63851f1c142819",
+    "previous_hash": "b37fbade77b7cb8a1256ac1c607e7dbc498a1472c6a36a060efffa2feaba69e7",
+    "entry_hash": "c4bc2af23beb239548f9d6a880754f94c98cbdbbfc9f8f7b9ed7a7a7064a8b46"
+  },
+  {
+    "timestamp": 1778107725.5141914,
+    "generation": 198,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2986,
+    "geometry_hash": "04b9c9b84bdd6cc4b1aa2454b0404eda0b8e56a8d03ca9f6feebd2c36f5f385d",
+    "previous_hash": "c4bc2af23beb239548f9d6a880754f94c98cbdbbfc9f8f7b9ed7a7a7064a8b46",
+    "entry_hash": "7d23342b139f06ca5e01b35204beb8b4edbf5d13d288223b4c9a47083a628cc3"
+  },
+  {
+    "timestamp": 1778107726.7857447,
+    "generation": 199,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3028,
+    "geometry_hash": "14e2247af451993e058b078ab10145279275bb07b378b86da1fc58c8f0fbb9be",
+    "previous_hash": "7d23342b139f06ca5e01b35204beb8b4edbf5d13d288223b4c9a47083a628cc3",
+    "entry_hash": "68be8a0d049710f5f88e5dbc618f7d3a4234a8628a0e671c75a932ea3a509276"
+  },
+  {
+    "timestamp": 1778107728.0586236,
+    "generation": 200,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3000,
+    "geometry_hash": "7b067292f153e4dbdbb64f46a30a34e55b109a2e2d85584a866fb062432e464d",
+    "previous_hash": "68be8a0d049710f5f88e5dbc618f7d3a4234a8628a0e671c75a932ea3a509276",
+    "entry_hash": "0f2e917ad68d2cd317e3ce3881a756674277bfd01d7a410336798ce255d2ac5e"
+  },
+  {
+    "timestamp": 1778107729.4278657,
+    "generation": 201,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2984,
+    "geometry_hash": "a718e513e431b342477f3c1bf26c8f9e54075958e0577b15112992f4be34379f",
+    "previous_hash": "0f2e917ad68d2cd317e3ce3881a756674277bfd01d7a410336798ce255d2ac5e",
+    "entry_hash": "13f1810d21f4f8a3a9cfb287c1aa130a15a151405c59147512cf502f0680db97"
+  },
+  {
+    "timestamp": 1778107730.701925,
+    "generation": 202,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3010,
+    "geometry_hash": "6162098300b0ab6026395472535c074168615caedbd93ba4ea9bc71f94724abc",
+    "previous_hash": "13f1810d21f4f8a3a9cfb287c1aa130a15a151405c59147512cf502f0680db97",
+    "entry_hash": "3c419dcedbcbffe1a1693706cd5d2a215d74eb617e5a21101fd78eb7590dd729"
+  },
+  {
+    "timestamp": 1778107731.975764,
+    "generation": 203,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3020,
+    "geometry_hash": "ec09ab9e973f41f975a88d149eaef770ee827f5b2e86054ec4f2a9a7e8a391c1",
+    "previous_hash": "3c419dcedbcbffe1a1693706cd5d2a215d74eb617e5a21101fd78eb7590dd729",
+    "entry_hash": "d88ff90feb8d5c21d2d8ae43fa8fdef8a56ea1ea6b138ae21640fec4353a81f6"
+  },
+  {
+    "timestamp": 1778107733.2484272,
+    "generation": 204,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3034,
+    "geometry_hash": "97f766017eb541fbcfd52886a29d78c503f7e9efb61f28541763210d73c642d0",
+    "previous_hash": "d88ff90feb8d5c21d2d8ae43fa8fdef8a56ea1ea6b138ae21640fec4353a81f6",
+    "entry_hash": "0e2cf02cd16010bac6dd93addde45b42d00e0f3bce89549556ab5b7a754b6c1b"
+  },
+  {
+    "timestamp": 1778107734.5203068,
+    "generation": 205,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3056,
+    "geometry_hash": "52c5a7ff4a70b18dcefc6c7c551ff4b4b87033d56d9d544d7d32cea9a1289649",
+    "previous_hash": "0e2cf02cd16010bac6dd93addde45b42d00e0f3bce89549556ab5b7a754b6c1b",
+    "entry_hash": "e91560e913c9abe9fe1dd03579437fe11c005bbe7568a307b428fd4c52fa59e6"
+  },
+  {
+    "timestamp": 1778107735.7926247,
+    "generation": 206,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3000,
+    "geometry_hash": "0c724dd8158f040911c79f9cb0b08303443732f3ad1b0c8bd54bb6271818ed06",
+    "previous_hash": "e91560e913c9abe9fe1dd03579437fe11c005bbe7568a307b428fd4c52fa59e6",
+    "entry_hash": "2fa22dad22c4997128eb191c95b24f714d2306e27818bfc99f07646debc1fe57"
+  },
+  {
+    "timestamp": 1778107737.0651512,
+    "generation": 207,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2996,
+    "geometry_hash": "d7b17eb2c6842e4fc738388df781cecfd946cdfab56a1a9223348974a822fce9",
+    "previous_hash": "2fa22dad22c4997128eb191c95b24f714d2306e27818bfc99f07646debc1fe57",
+    "entry_hash": "07988903eebaf0436326e65a201b11921712465cc3b5585f12e7441336faf2e3"
+  },
+  {
+    "timestamp": 1778107738.3367538,
+    "generation": 208,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3044,
+    "geometry_hash": "7fa4c7b6a302275c457fafaec90997605f533749b379f10f91a70e3e900be6fe",
+    "previous_hash": "07988903eebaf0436326e65a201b11921712465cc3b5585f12e7441336faf2e3",
+    "entry_hash": "e9751c74bd4131240f714425779315fee373f3ad3a9d867fc5d808f69173a1ec"
+  },
+  {
+    "timestamp": 1778107739.6112623,
+    "generation": 209,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3016,
+    "geometry_hash": "a92498d8955a3cfb9e4c73b8c0ce010d11fefa314d3b8173e047fb599f38f58b",
+    "previous_hash": "e9751c74bd4131240f714425779315fee373f3ad3a9d867fc5d808f69173a1ec",
+    "entry_hash": "97cb5c1c6560ad960ed286101c6e3c2b64917b108f2022abda11ba8cc7940f15"
+  },
+  {
+    "timestamp": 1778107740.8852873,
+    "generation": 210,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3010,
+    "geometry_hash": "8564e7bce942c07632ac035d0d41751b7d09680d38fd4ff735c62943faa1a5b4",
+    "previous_hash": "97cb5c1c6560ad960ed286101c6e3c2b64917b108f2022abda11ba8cc7940f15",
+    "entry_hash": "41f708640436e95404750801f4037c6ec085787e1a3644829cf09ae22b74b965"
+  },
+  {
+    "timestamp": 1778107742.158754,
+    "generation": 211,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3014,
+    "geometry_hash": "4f4ff7ed3a05fab721a2811d513f36029c3e01a545a873350a403891b0948977",
+    "previous_hash": "41f708640436e95404750801f4037c6ec085787e1a3644829cf09ae22b74b965",
+    "entry_hash": "32d7d3e7b8e6a05f9e8741db546277fe543421fc6a08deb5e5880e4d5b9ef13f"
+  },
+  {
+    "timestamp": 1778107743.4361432,
+    "generation": 212,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3032,
+    "geometry_hash": "6b2bc89d3395a29fe950f9d8c921c8ae41a553800b64f2a29d013b3d8c17ed8b",
+    "previous_hash": "32d7d3e7b8e6a05f9e8741db546277fe543421fc6a08deb5e5880e4d5b9ef13f",
+    "entry_hash": "77de402e55bb2a76fe23918633abcb10847efbdf7662fdd532b78fb562376347"
+  },
+  {
+    "timestamp": 1778107744.7106698,
+    "generation": 213,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3024,
+    "geometry_hash": "ba4960cdacf58685d9ce0a9d4c6fb4dd1feebd7b433332e9d0b9ce05177f321e",
+    "previous_hash": "77de402e55bb2a76fe23918633abcb10847efbdf7662fdd532b78fb562376347",
+    "entry_hash": "5233f3db4da05299ff6d370c1286d4c5bd9f9dcf7bf5664822fa4f3816238eb2"
+  },
+  {
+    "timestamp": 1778107745.9851966,
+    "generation": 214,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3046,
+    "geometry_hash": "0f52447131ef3c9388570069e44a3eb876c65e2bb8039b2e76431f17ba1a6c4f",
+    "previous_hash": "5233f3db4da05299ff6d370c1286d4c5bd9f9dcf7bf5664822fa4f3816238eb2",
+    "entry_hash": "d35b8cce57cd2c5fb7acc6b30d123a2d1cc0505cafdc248fba126f421ddf4c11"
+  },
+  {
+    "timestamp": 1778107747.259612,
+    "generation": 215,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3034,
+    "geometry_hash": "3179e6fd0da5a88a02f8d8ae8d3eddc1958e3307d791fb8922a8a14cae46e884",
+    "previous_hash": "d35b8cce57cd2c5fb7acc6b30d123a2d1cc0505cafdc248fba126f421ddf4c11",
+    "entry_hash": "145209f7699751f840b5781fdadaff4412b7bb0bf91bcf478f2102a63e2cd6f9"
+  },
+  {
+    "timestamp": 1778107748.5342317,
+    "generation": 216,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3036,
+    "geometry_hash": "935b77350f5a36327126c7b27c6f2449d77d22e664469577174658ddf6eda163",
+    "previous_hash": "145209f7699751f840b5781fdadaff4412b7bb0bf91bcf478f2102a63e2cd6f9",
+    "entry_hash": "1aa1fcab0d7b8b5c5753f31377821cb26d6391e644edbceb6ebf132975532a81"
+  },
+  {
+    "timestamp": 1778107749.807835,
+    "generation": 217,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3048,
+    "geometry_hash": "c7067ec264661d024b7bbf7a4a947a7110e4c2210e8028d0e11cc69b88da0f52",
+    "previous_hash": "1aa1fcab0d7b8b5c5753f31377821cb26d6391e644edbceb6ebf132975532a81",
+    "entry_hash": "6f112b179a45b5c28b60f33486b09a9f43b6c8484c69b403ec0c1905ef1e7378"
+  },
+  {
+    "timestamp": 1778107751.0820432,
+    "generation": 218,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3038,
+    "geometry_hash": "1b5b6e01a70318758bdd3d574b94f8286d048252a25862aedb90f73be92ad037",
+    "previous_hash": "6f112b179a45b5c28b60f33486b09a9f43b6c8484c69b403ec0c1905ef1e7378",
+    "entry_hash": "0c3834bb93f517384a1113ab903b8acb096eeb71cd0c17addfcfe2fa9786fa39"
+  },
+  {
+    "timestamp": 1778107752.3548343,
+    "generation": 219,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3026,
+    "geometry_hash": "5cbd34e1d7f33b131aea86b8df3fe82c632cec8022fe4a35f7d995f3c4c77b2e",
+    "previous_hash": "0c3834bb93f517384a1113ab903b8acb096eeb71cd0c17addfcfe2fa9786fa39",
+    "entry_hash": "4ce17878777d3870921b3b68c430b479a5cac374f0b378e069de07feb8b7cda6"
+  },
+  {
+    "timestamp": 1778107753.6271627,
+    "generation": 220,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3074,
+    "geometry_hash": "2af2bc0a17cfe90451144b5cc196a0094cdc73797b93473b53d1d5200ce5d0f4",
+    "previous_hash": "4ce17878777d3870921b3b68c430b479a5cac374f0b378e069de07feb8b7cda6",
+    "entry_hash": "591c66dd656b08816454938144d255a240dc4f2b0154cf4075e9617806af380f"
+  },
+  {
+    "timestamp": 1778107754.9018104,
+    "generation": 221,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3016,
+    "geometry_hash": "de71322c38733f43cff4f0a6ac4b8240e1a1f5696b7bd386704662f8434b282e",
+    "previous_hash": "591c66dd656b08816454938144d255a240dc4f2b0154cf4075e9617806af380f",
+    "entry_hash": "0bb3c63350e90138f7ce525a6666e3d158345cb192a8110fa02de52b14fb1749"
+  },
+  {
+    "timestamp": 1778107756.1754982,
+    "generation": 222,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2992,
+    "geometry_hash": "76ef0798305bfc8ea7ea51fd5e40104fd163cbefe5dd21b6ce7e29e8c12ec720",
+    "previous_hash": "0bb3c63350e90138f7ce525a6666e3d158345cb192a8110fa02de52b14fb1749",
+    "entry_hash": "8668c2555ab0aa977926979c5edd40059cae4d2a5a1b8832e05f68f75b222de4"
+  },
+  {
+    "timestamp": 1778107757.4491901,
+    "generation": 223,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3010,
+    "geometry_hash": "c4a0246f3850d274213ea9c05b09eed5f0e8a0a6237dc77a69edba8bbafcbe8b",
+    "previous_hash": "8668c2555ab0aa977926979c5edd40059cae4d2a5a1b8832e05f68f75b222de4",
+    "entry_hash": "46c24e0a27fa8a4f5ad42576574ed18276783e612bcd3b0f9b77c42304fa3ee0"
+  },
+  {
+    "timestamp": 1778107758.72308,
+    "generation": 224,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3014,
+    "geometry_hash": "aabdba47fc901f14cc5777024b7ea0717b5073dc55fc7c0b3d3b9d79181e2de1",
+    "previous_hash": "46c24e0a27fa8a4f5ad42576574ed18276783e612bcd3b0f9b77c42304fa3ee0",
+    "entry_hash": "b48bd5630dedbff1e0e67b58297273eaa6fc10b96e5d7f81bc8645d1b640a4fb"
+  },
+  {
+    "timestamp": 1778107759.996528,
+    "generation": 225,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3022,
+    "geometry_hash": "ace5a394fa70ee12a0069b2275777e767c91a02e8a9fabad6c460154744a0323",
+    "previous_hash": "b48bd5630dedbff1e0e67b58297273eaa6fc10b96e5d7f81bc8645d1b640a4fb",
+    "entry_hash": "679b05aafea7601451ba20dec70e4ef896deaafe2936eac66b1f48952fb45d1b"
+  },
+  {
+    "timestamp": 1778107761.2701519,
+    "generation": 226,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3008,
+    "geometry_hash": "c26432490ab2b459103bc924f268ed7e9fd90aac036f4e5a9e68f96a0d86b8fb",
+    "previous_hash": "679b05aafea7601451ba20dec70e4ef896deaafe2936eac66b1f48952fb45d1b",
+    "entry_hash": "cde36285c6d8f918acb22d20e4e8f26d36def428a63e2ab954bb72882878ae59"
+  },
+  {
+    "timestamp": 1778107762.5443158,
+    "generation": 227,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2978,
+    "geometry_hash": "82a75bcb20f382bd5e077f4f83919dacc0ee78f62416cf589dd7e46f211e42c5",
+    "previous_hash": "cde36285c6d8f918acb22d20e4e8f26d36def428a63e2ab954bb72882878ae59",
+    "entry_hash": "6de1718001a9c70a9582c97cddac3a8ad50ff2ae56d2c855d7afdd9ea7ca252d"
+  },
+  {
+    "timestamp": 1778107763.8180697,
+    "generation": 228,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2992,
+    "geometry_hash": "bdc2b0699c2d51cbe2ae0869745936eb29fff962c6954db29f3e1caa642918b9",
+    "previous_hash": "6de1718001a9c70a9582c97cddac3a8ad50ff2ae56d2c855d7afdd9ea7ca252d",
+    "entry_hash": "72be7f3377dd7b8030d0679d1bc7582c0476d3b293f7cf9f3949ad9acbace972"
+  },
+  {
+    "timestamp": 1778107765.0918672,
+    "generation": 229,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3020,
+    "geometry_hash": "21a04963d80fb9f6d9d0219a125a95fa2bcc0dbef6904491a9159b6c6afcb8f8",
+    "previous_hash": "72be7f3377dd7b8030d0679d1bc7582c0476d3b293f7cf9f3949ad9acbace972",
+    "entry_hash": "846dca11fe9d683b6f668c48a84d75b4beb6f6703b360c4231e84e343bef7992"
+  },
+  {
+    "timestamp": 1778107766.3702996,
+    "generation": 230,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2990,
+    "geometry_hash": "558427cc13b76d38f14d70eef51468601fe5247b292fc9c1e9699124686c57a3",
+    "previous_hash": "846dca11fe9d683b6f668c48a84d75b4beb6f6703b360c4231e84e343bef7992",
+    "entry_hash": "04f70f2eba25481d8600346ad94d0cb12c466d9b31cf5bd0992538e78392864d"
+  },
+  {
+    "timestamp": 1778107767.6448271,
+    "generation": 231,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3022,
+    "geometry_hash": "084f9ce0e77b50a126307e12fac964e791401d4a5d67e55982a9b387cc708361",
+    "previous_hash": "04f70f2eba25481d8600346ad94d0cb12c466d9b31cf5bd0992538e78392864d",
+    "entry_hash": "7cc91907b3280f522778b7c46e42812a48b8e8ed01b54be04f3c088b42c471d6"
+  },
+  {
+    "timestamp": 1778107768.918504,
+    "generation": 232,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3020,
+    "geometry_hash": "aa0d762a1735cad2ef6b5dc0c89ea03f21985af37f98db3f79e804d77f3846bc",
+    "previous_hash": "7cc91907b3280f522778b7c46e42812a48b8e8ed01b54be04f3c088b42c471d6",
+    "entry_hash": "42fb17af2915e766706f06c34e2ec9ddcfb7d9ad9f71fd8ed44c77213c8998de"
+  },
+  {
+    "timestamp": 1778107770.1930547,
+    "generation": 233,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3046,
+    "geometry_hash": "2bbfd771d191cdd30d044ca05bec5595adda9c7d0ed5a322a3ff50ebeb5b3887",
+    "previous_hash": "42fb17af2915e766706f06c34e2ec9ddcfb7d9ad9f71fd8ed44c77213c8998de",
+    "entry_hash": "61acd09156503022261921030aa1c493791bb79ef8eb5a938281255a7d195a1b"
+  },
+  {
+    "timestamp": 1778107771.467768,
+    "generation": 234,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3020,
+    "geometry_hash": "d24948023aecb7b257e26cd30b5848063a68bf09dcc4ad47938d6e5c2d8eae47",
+    "previous_hash": "61acd09156503022261921030aa1c493791bb79ef8eb5a938281255a7d195a1b",
+    "entry_hash": "5e1789ef8751591e8f8d4507812c95413678572d855230503220bfb5278bf886"
+  },
+  {
+    "timestamp": 1778107772.7428524,
+    "generation": 235,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3020,
+    "geometry_hash": "9cea78a5db5eea663cee25555cd47e2009250eee498943e771018ec0fc11c4f4",
+    "previous_hash": "5e1789ef8751591e8f8d4507812c95413678572d855230503220bfb5278bf886",
+    "entry_hash": "29d92213cf4e2b360050b8955d0ca5790f576851ff47fa4775e063a7b882f697"
+  },
+  {
+    "timestamp": 1778107774.0171216,
+    "generation": 236,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3002,
+    "geometry_hash": "3d2fa6ce3291227293db8877aa14031f7e5cca686f98ee7bf2da5fb10aabde54",
+    "previous_hash": "29d92213cf4e2b360050b8955d0ca5790f576851ff47fa4775e063a7b882f697",
+    "entry_hash": "657331c2963f8649fd13829166f0c52ca04a94acbad730480e287998c0c367cd"
+  },
+  {
+    "timestamp": 1778107775.2917025,
+    "generation": 237,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3006,
+    "geometry_hash": "73380531efc2884f9a6d1ab955d83c15a03af71855a755ddf1049995f929ca75",
+    "previous_hash": "657331c2963f8649fd13829166f0c52ca04a94acbad730480e287998c0c367cd",
+    "entry_hash": "1162fc4b845ea5e61e673ba40267250a0348ea410f8811d4884dead60f6ace87"
+  },
+  {
+    "timestamp": 1778107776.5670826,
+    "generation": 238,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3042,
+    "geometry_hash": "020e8f926532b449f4c404d0eec57cfb2e954886ebcd214f64412aeb79496a70",
+    "previous_hash": "1162fc4b845ea5e61e673ba40267250a0348ea410f8811d4884dead60f6ace87",
+    "entry_hash": "5080e06b692c3a9fcb764b368ca5230baa6b7d4edc1c249ef78365f7f6063616"
+  },
+  {
+    "timestamp": 1778107777.8458822,
+    "generation": 239,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3048,
+    "geometry_hash": "a2e721b0144627c83169b20438d3e19b188e68f987efd2d7a464bcf60241b394",
+    "previous_hash": "5080e06b692c3a9fcb764b368ca5230baa6b7d4edc1c249ef78365f7f6063616",
+    "entry_hash": "5bb55c5fa1df81c2f1b140d4b6438fc89c782ae61fb518be2ef9816190fbb3ce"
+  },
+  {
+    "timestamp": 1778107779.1199813,
+    "generation": 240,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3040,
+    "geometry_hash": "738cf7b69ca688200bb58697ba6a812edbc282dce197458d8cdd3404a731c064",
+    "previous_hash": "5bb55c5fa1df81c2f1b140d4b6438fc89c782ae61fb518be2ef9816190fbb3ce",
+    "entry_hash": "771a24e63f04a9b973418e3b9186404b95a151285f7fad8eb0b3f1285a8d4e20"
+  },
+  {
+    "timestamp": 1778107780.395413,
+    "generation": 241,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3038,
+    "geometry_hash": "03b53fcf8b002abbde55f3c5c03b36f2cc46d45abf20869cf1d94a19b1f276c4",
+    "previous_hash": "771a24e63f04a9b973418e3b9186404b95a151285f7fad8eb0b3f1285a8d4e20",
+    "entry_hash": "4ac0a32dfcbbff4d2ed99dce864fa23a1b548fa4eab178f221c0514496850f87"
+  },
+  {
+    "timestamp": 1778107781.6709146,
+    "generation": 242,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2990,
+    "geometry_hash": "f2732411162c4c487a0750020fbddfe25d8fbfc74c6bef9383ed07c62922b6f5",
+    "previous_hash": "4ac0a32dfcbbff4d2ed99dce864fa23a1b548fa4eab178f221c0514496850f87",
+    "entry_hash": "c9cd6ec25475576f0ef279b3976111522a8e58519a6111dd9c40e7ee6b8f94ba"
+  },
+  {
+    "timestamp": 1778107782.9472947,
+    "generation": 243,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 2996,
+    "geometry_hash": "a8df789452c241fe32b891edeed3536b135e664bf38e4e947fa169ea87cbe5e2",
+    "previous_hash": "c9cd6ec25475576f0ef279b3976111522a8e58519a6111dd9c40e7ee6b8f94ba",
+    "entry_hash": "6f226090ad923cb2222117eff08bf22b9a8c35a8cfe59e65bc9414970e4ef02d"
+  },
+  {
+    "timestamp": 1778107784.2227774,
+    "generation": 244,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3046,
+    "geometry_hash": "a9d6240e0c13c75d701f3a02d3c66ab8f8a31ccc11d4daf541ab0f93746cdf7a",
+    "previous_hash": "6f226090ad923cb2222117eff08bf22b9a8c35a8cfe59e65bc9414970e4ef02d",
+    "entry_hash": "85d3e50d7e774c68a41357602c6522b636d972c7493e4f822f14fc4fca7ad2b3"
+  },
+  {
+    "timestamp": 1778107785.4981,
+    "generation": 245,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3032,
+    "geometry_hash": "02890039a8ee2072ed8ead64ec6eeaba504209e181d267ef636f3c97aeddd686",
+    "previous_hash": "85d3e50d7e774c68a41357602c6522b636d972c7493e4f822f14fc4fca7ad2b3",
+    "entry_hash": "12d6292bf8ae1b981f4fed11c0fdef7946b673af8b966e6b34b4d4ea1e441240"
+  },
+  {
+    "timestamp": 1778107786.7731404,
+    "generation": 246,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3028,
+    "geometry_hash": "e75dc72e9273dce191f279b8b1be7ee858c7f61e28b55583a704f77ae344f37f",
+    "previous_hash": "12d6292bf8ae1b981f4fed11c0fdef7946b673af8b966e6b34b4d4ea1e441240",
+    "entry_hash": "415dcfa5421ec97c6328eb7e44e58eb73ced89cc8da6410733d093a34a344652"
+  },
+  {
+    "timestamp": 1778107788.0490324,
+    "generation": 247,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3044,
+    "geometry_hash": "9fb067593cf816a412aa8af8f7a6abe2239ff7ff4c452b356b1fcbd7b87b163b",
+    "previous_hash": "415dcfa5421ec97c6328eb7e44e58eb73ced89cc8da6410733d093a34a344652",
+    "entry_hash": "17bb26ffd7dd56336362c8ac06ef69fc5543aaa3aff112ea77dc8c6915cfb4c6"
+  },
+  {
+    "timestamp": 1778107789.3262317,
+    "generation": 248,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3014,
+    "geometry_hash": "987005221baa22d09bc76a837c854a279c6871ce991a5a8677298e63ef63135e",
+    "previous_hash": "17bb26ffd7dd56336362c8ac06ef69fc5543aaa3aff112ea77dc8c6915cfb4c6",
+    "entry_hash": "42c404e05accd6d31319d9d91a26008a12750e3b87bcaccd38ed379dc1b2a7e5"
+  },
+  {
+    "timestamp": 1778107790.602216,
+    "generation": 249,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3012,
+    "geometry_hash": "5717415e4af7dccc4b4026648cd8d392dde1470182ff25eb1aae467262a5b153",
+    "previous_hash": "42c404e05accd6d31319d9d91a26008a12750e3b87bcaccd38ed379dc1b2a7e5",
+    "entry_hash": "2168a99e0dc71e80d1b15bbc69a4260e67777ce852cb41609edde629aeb2e480"
+  },
+  {
+    "timestamp": 1778107791.8780546,
+    "generation": 250,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3036,
+    "geometry_hash": "3df6976650a5c305eb570e5760373ac1a1d91ff778c316c8f482f7615017a639",
+    "previous_hash": "2168a99e0dc71e80d1b15bbc69a4260e67777ce852cb41609edde629aeb2e480",
+    "entry_hash": "a19d9ac82abb31e8fd6d2de157999bec4e1c0bc2333f435fb43c11280c92c473"
+  },
+  {
+    "timestamp": 1778107793.2496223,
+    "generation": 251,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3042,
+    "geometry_hash": "9ca206fd86def74faf3cf14b308ce4d5ec456d947403d1da0f5a2a4e31aa4ea1",
+    "previous_hash": "a19d9ac82abb31e8fd6d2de157999bec4e1c0bc2333f435fb43c11280c92c473",
+    "entry_hash": "e88eda207cd964fa0535d90133326807cb2b56dcebef3752a52770d254d9ed41"
+  },
+  {
+    "timestamp": 1778107794.5262237,
+    "generation": 252,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3036,
+    "geometry_hash": "9cdaf9fea21e3c55fb3c5cb062d9d0044c95a91c66ab7f3980e7257eaa0c3a59",
+    "previous_hash": "e88eda207cd964fa0535d90133326807cb2b56dcebef3752a52770d254d9ed41",
+    "entry_hash": "8d91db0e634dc8405d96246fc515a57271d94cc8cd9206389c0ed8a61610419d"
+  },
+  {
+    "timestamp": 1778107795.8013701,
+    "generation": 253,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3036,
+    "geometry_hash": "294bef2f04d1fbfbe78b4e7bf2654dc0ac70ec97c59328b3c135a32beb99f05f",
+    "previous_hash": "8d91db0e634dc8405d96246fc515a57271d94cc8cd9206389c0ed8a61610419d",
+    "entry_hash": "a8ca7fa4e4f661b6361322a50f0b1a8b9085e3182fa622e90b668e23e0b97a72"
+  },
+  {
+    "timestamp": 1778107797.0762126,
+    "generation": 254,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3038,
+    "geometry_hash": "b7c288b18b2e5db6f0e87f0f982d94cb7a9229c434923110605e7584a34ce4eb",
+    "previous_hash": "a8ca7fa4e4f661b6361322a50f0b1a8b9085e3182fa622e90b668e23e0b97a72",
+    "entry_hash": "7270c3daa0e69e3abb8af973fdf16b1a288892fdef42cde3ae43b431317a70ee"
+  },
+  {
+    "timestamp": 1778107798.349605,
+    "generation": 255,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3020,
+    "geometry_hash": "01deccc4973dd6090b733fd358e5090e092c91ba27ad27c3a5065cd61744084b",
+    "previous_hash": "7270c3daa0e69e3abb8af973fdf16b1a288892fdef42cde3ae43b431317a70ee",
+    "entry_hash": "89d8ee192e531f931bb415abe1156cb6b628b8a16afb219017bb6a1fbbfbb998"
+  },
+  {
+    "timestamp": 1778107799.626913,
+    "generation": 256,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3040,
+    "geometry_hash": "9142442c3fee82798c3bd2ef06b0a1815fbae396654959d5c536d4a15b290b94",
+    "previous_hash": "89d8ee192e531f931bb415abe1156cb6b628b8a16afb219017bb6a1fbbfbb998",
+    "entry_hash": "75520b9c5544772e092347b3a820d534b9fa3b6153ae8c5bbbd9bcba3f006ccf"
+  },
+  {
+    "timestamp": 1778107800.905252,
+    "generation": 257,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3046,
+    "geometry_hash": "a5b705a195ac650a5379100b30464be9dca3910040222daf520c26a31751de29",
+    "previous_hash": "75520b9c5544772e092347b3a820d534b9fa3b6153ae8c5bbbd9bcba3f006ccf",
+    "entry_hash": "c0c8b35e17212d86948a58606f52d902c4be4b6c9679470e34d292b7f76f8d9b"
+  },
+  {
+    "timestamp": 1778107802.1787906,
+    "generation": 258,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3048,
+    "geometry_hash": "f353b56f2f8940bd9509e977bb3dd28dd05c581ceeeda1797bc21b201297acab",
+    "previous_hash": "c0c8b35e17212d86948a58606f52d902c4be4b6c9679470e34d292b7f76f8d9b",
+    "entry_hash": "b2d6504b308b6f8ae9c00a4c22090e44342f8763cb28b84a9ba0f3fe04b14279"
+  },
+  {
+    "timestamp": 1778107803.4529014,
+    "generation": 259,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3044,
+    "geometry_hash": "cc3f46788ed82b68ce59730a3dcf4114e5c6d4d79fda3828a3decfeb8b40ce13",
+    "previous_hash": "b2d6504b308b6f8ae9c00a4c22090e44342f8763cb28b84a9ba0f3fe04b14279",
+    "entry_hash": "ea79def624f1725d8615b1a7c66d22345b19bbb58c9b99fd79f441e37ab0a32a"
+  },
+  {
+    "timestamp": 1778107804.7270997,
+    "generation": 260,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3028,
+    "geometry_hash": "65d2731ad9afdd6981fb0d01f3a4dba043bf930bb91f43c5ac052e2bf19bef06",
+    "previous_hash": "ea79def624f1725d8615b1a7c66d22345b19bbb58c9b99fd79f441e37ab0a32a",
+    "entry_hash": "4745b7d2f749ea8017eeb45836ef40084447c8faed4e69e465530122795bf7da"
+  },
+  {
+    "timestamp": 1778107806.0008676,
+    "generation": 261,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3034,
+    "geometry_hash": "f9ad3981d5fc23a4a0ebe89acf738cc8727cd8c6feeef388631eb0931a69da75",
+    "previous_hash": "4745b7d2f749ea8017eeb45836ef40084447c8faed4e69e465530122795bf7da",
+    "entry_hash": "8a3d7f7483a7f89cafb349dbae779a6f7a87f8ba025bde0d8f380c81f301dbac"
+  },
+  {
+    "timestamp": 1778107807.274377,
+    "generation": 262,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3058,
+    "geometry_hash": "c93f6f09efb6f11c1eb8a1f47b9d1a8aaa659b4929dce82ec8d3241c71595acd",
+    "previous_hash": "8a3d7f7483a7f89cafb349dbae779a6f7a87f8ba025bde0d8f380c81f301dbac",
+    "entry_hash": "4ea00e8a90aac36d0f1538860a226283ae0ec753d6da9fdb2aa276f246d46224"
+  },
+  {
+    "timestamp": 1778107808.5480618,
+    "generation": 263,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3028,
+    "geometry_hash": "78152e8c88a6725582633296cd5763fb5d629c7035d888f05854243c04c5d79c",
+    "previous_hash": "4ea00e8a90aac36d0f1538860a226283ae0ec753d6da9fdb2aa276f246d46224",
+    "entry_hash": "7f421cc9e02891031f96f2f194a1d1123565e8d0233bf4e0ffbdc487c2a87563"
+  },
+  {
+    "timestamp": 1778107809.822628,
+    "generation": 264,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3040,
+    "geometry_hash": "2650791ae510fe3043a42b54cacc1ed00201ef28b5148f2e0198f15cfc7741a4",
+    "previous_hash": "7f421cc9e02891031f96f2f194a1d1123565e8d0233bf4e0ffbdc487c2a87563",
+    "entry_hash": "cac3e3a767796d4b1f44b37cb57fc00acb59dc2c7f2f17d2ab46ecf4c682dc28"
+  },
+  {
+    "timestamp": 1778107811.097001,
+    "generation": 265,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3048,
+    "geometry_hash": "5e45ff844352df7f0e5452753e513e74bcd022637df660758f3266af6d636a5d",
+    "previous_hash": "cac3e3a767796d4b1f44b37cb57fc00acb59dc2c7f2f17d2ab46ecf4c682dc28",
+    "entry_hash": "52f4721f3c5519c30a26636d7548a5ffe5e9b43f88863f0b7fc04d72f91aafbd"
+  },
+  {
+    "timestamp": 1778107812.3750489,
+    "generation": 266,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3032,
+    "geometry_hash": "37254ebda084b2c8d41e235ac5d815a4cb4cbf4798be85f9cc1aaa75d4834265",
+    "previous_hash": "52f4721f3c5519c30a26636d7548a5ffe5e9b43f88863f0b7fc04d72f91aafbd",
+    "entry_hash": "19ea937f82a05bdb672a50dedd8a77de6f412948f4dacc0339024ce385c731e7"
+  },
+  {
+    "timestamp": 1778107813.6466038,
+    "generation": 267,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3020,
+    "geometry_hash": "e1d72304677c8c9d95d11d7290d61c1ce865b9d5dbcc9c5f3069b4f457bb2881",
+    "previous_hash": "19ea937f82a05bdb672a50dedd8a77de6f412948f4dacc0339024ce385c731e7",
+    "entry_hash": "fab6db7b982ee709696ff051f1573087e93fd8e4f34a986fc68d9381957eb304"
+  },
+  {
+    "timestamp": 1778107814.9210596,
+    "generation": 268,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3022,
+    "geometry_hash": "3d21a3f59924fc421fea66a05e450093d4100f50413348ac67f6df3115039835",
+    "previous_hash": "fab6db7b982ee709696ff051f1573087e93fd8e4f34a986fc68d9381957eb304",
+    "entry_hash": "109590e32684ee9c6932c74bec7002145644db4d4744f8e1004d5610179dbd10"
+  },
+  {
+    "timestamp": 1778107816.1950362,
+    "generation": 269,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3014,
+    "geometry_hash": "d767e0d5959b1ca5ad7bacc05255504bb4a210a366d9e0f40fbed31df5cc8bb4",
+    "previous_hash": "109590e32684ee9c6932c74bec7002145644db4d4744f8e1004d5610179dbd10",
+    "entry_hash": "7b6ae30c2e7785c9343fa26d21b6b5a2660e75b1f82f0c42522374924a1db609"
+  },
+  {
+    "timestamp": 1778107817.4690902,
+    "generation": 270,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3040,
+    "geometry_hash": "03f1b33b3e100bcdb72ade3bbad8c8448a4e9f7d952242736e095a5890df2815",
+    "previous_hash": "7b6ae30c2e7785c9343fa26d21b6b5a2660e75b1f82f0c42522374924a1db609",
+    "entry_hash": "48ee2a04289c8375c9d4e75f80a8dcd10ae04be201587467ed47b7f56863a084"
+  },
+  {
+    "timestamp": 1778107818.7432766,
+    "generation": 271,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3080,
+    "geometry_hash": "b0ba5fc1c12987bdba261b90349bf888c4f0bc181f0fa332761c2c669d652f93",
+    "previous_hash": "48ee2a04289c8375c9d4e75f80a8dcd10ae04be201587467ed47b7f56863a084",
+    "entry_hash": "4e7decabc2db71342f91f9640fd3f1679793b06d0740a70701c6dbb206969a50"
+  },
+  {
+    "timestamp": 1778107820.016544,
+    "generation": 272,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3050,
+    "geometry_hash": "211b058132fd382c625d14ac4dbbd3cd41035cb2a105061bd725a69cd9383a91",
+    "previous_hash": "4e7decabc2db71342f91f9640fd3f1679793b06d0740a70701c6dbb206969a50",
+    "entry_hash": "9527e792002a754fe7d15e53de9e4837977765fb907f6c989eb353d0dac9b550"
+  },
+  {
+    "timestamp": 1778107821.2888613,
+    "generation": 273,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3034,
+    "geometry_hash": "0351d09e14d1af3f68c66867894056f66a8181a25a3cc4a7790a6433c719342f",
+    "previous_hash": "9527e792002a754fe7d15e53de9e4837977765fb907f6c989eb353d0dac9b550",
+    "entry_hash": "f806652df6e844ec3bcb8f0d904ebe05bd0e1e01e0c3aa920bc3d9e1cfbf2a30"
+  },
+  {
+    "timestamp": 1778107822.5610857,
+    "generation": 274,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3044,
+    "geometry_hash": "0c8a1f8a1e4db40d362452d2ec99495dedf79274eb9effce2eab8337eae7c5bc",
+    "previous_hash": "f806652df6e844ec3bcb8f0d904ebe05bd0e1e01e0c3aa920bc3d9e1cfbf2a30",
+    "entry_hash": "e7aa376556ce31322f37f3d9110f6bca279afef75bcd8c12f47f6642f990514d"
+  },
+  {
+    "timestamp": 1778107823.8412993,
+    "generation": 275,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3054,
+    "geometry_hash": "aa80651e8d86e0fd8f5cad1fe80c1fd992d5d3ac7f0608154e1b05b89be90d1c",
+    "previous_hash": "e7aa376556ce31322f37f3d9110f6bca279afef75bcd8c12f47f6642f990514d",
+    "entry_hash": "57b7525188ab362cde32d29e46a0214e3592ee778cfe9aa9f5f50a49c9472ee5"
+  },
+  {
+    "timestamp": 1778107825.1170251,
+    "generation": 276,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3026,
+    "geometry_hash": "d1126887dba768f68021b27b1f40d471d3717a518941ba2b8d6f995e450c79d1",
+    "previous_hash": "57b7525188ab362cde32d29e46a0214e3592ee778cfe9aa9f5f50a49c9472ee5",
+    "entry_hash": "15292cdf0ded6511639714bbbadb672b9b19d2fe55be8decbbf063c12b0506e8"
+  },
+  {
+    "timestamp": 1778107826.3917572,
+    "generation": 277,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3018,
+    "geometry_hash": "06a6c58cd65d389b774908295345fa4380f32bd82a16aa13212d2b711399be0c",
+    "previous_hash": "15292cdf0ded6511639714bbbadb672b9b19d2fe55be8decbbf063c12b0506e8",
+    "entry_hash": "d14476ef1f8ebca233f4bd7661e4a284415ff2d5954678243d08d7d2b47d5649"
+  },
+  {
+    "timestamp": 1778107827.6660314,
+    "generation": 278,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3032,
+    "geometry_hash": "ecff32b7648a872b24e52228dbedbab1258c53f95ed2c46fd92cc96e02ac4893",
+    "previous_hash": "d14476ef1f8ebca233f4bd7661e4a284415ff2d5954678243d08d7d2b47d5649",
+    "entry_hash": "949a8a1b8fb54e327940b4d8eee134b14f120868f4b38301d70f80948362f55a"
+  },
+  {
+    "timestamp": 1778107828.9403841,
+    "generation": 279,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3036,
+    "geometry_hash": "72e90ea7855a17eb1111c6f9b80a510ed86dc168df4d2e6df554d401390aabd5",
+    "previous_hash": "949a8a1b8fb54e327940b4d8eee134b14f120868f4b38301d70f80948362f55a",
+    "entry_hash": "28136bb584b61bf0fef623714a9cbbf9eb3d7a64ea9545ac03ea7e2a92dea33b"
+  },
+  {
+    "timestamp": 1778107830.2150714,
+    "generation": 280,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3052,
+    "geometry_hash": "b71cb4a01456c5664a688c0b43901214ca134c2c6d55a8ed7e40e888ddafb4c4",
+    "previous_hash": "28136bb584b61bf0fef623714a9cbbf9eb3d7a64ea9545ac03ea7e2a92dea33b",
+    "entry_hash": "5dcc81dbc9a10ee281a307004030da5b25204804bdba34fe8f3d0fc53a76134d"
+  },
+  {
+    "timestamp": 1778107831.4893656,
+    "generation": 281,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3058,
+    "geometry_hash": "fb621fafeaaa133e8a3cfb75dff1c1ae46751e12c355d216661f549a0ce87109",
+    "previous_hash": "5dcc81dbc9a10ee281a307004030da5b25204804bdba34fe8f3d0fc53a76134d",
+    "entry_hash": "2f9c20ed40ba8bda20180be91de114878e8025556305623517379889ab3988a5"
+  },
+  {
+    "timestamp": 1778107832.7647226,
+    "generation": 282,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3070,
+    "geometry_hash": "474c539c63665e84f099a76e6c995753f51e876c42bf28a3a99e6a7eae0fd67e",
+    "previous_hash": "2f9c20ed40ba8bda20180be91de114878e8025556305623517379889ab3988a5",
+    "entry_hash": "bf9f19143145eb7de3347ae8e2a3e989404ef1176e51f28b7b4fb3a7951aaa52"
+  },
+  {
+    "timestamp": 1778107834.0383408,
+    "generation": 283,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3100,
+    "geometry_hash": "4e1167a71f67d98eef6af149d0e5e05ed76ab2f90983bad39314b66ae33f22ac",
+    "previous_hash": "bf9f19143145eb7de3347ae8e2a3e989404ef1176e51f28b7b4fb3a7951aaa52",
+    "entry_hash": "fd0e0bc95ff030dc1d8f07cc5025e4cb8768bacc4a3cf20f45aa43e75c399130"
+  },
+  {
+    "timestamp": 1778107835.31675,
+    "generation": 284,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3084,
+    "geometry_hash": "0cde6edaabd404eafbd42499fbe491e248e4790af522f0f348441c4f8b75fe8d",
+    "previous_hash": "fd0e0bc95ff030dc1d8f07cc5025e4cb8768bacc4a3cf20f45aa43e75c399130",
+    "entry_hash": "03c07d0e208e32819761514a67d4f7798a5a3c7f4f0cd7a62f5db937957dc0c3"
+  },
+  {
+    "timestamp": 1778107836.5931077,
+    "generation": 285,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3050,
+    "geometry_hash": "f8248c4aba80c9a0f708bd46cbc5cf4d7c3fb90715ca9394b69cf1c6bfdd1741",
+    "previous_hash": "03c07d0e208e32819761514a67d4f7798a5a3c7f4f0cd7a62f5db937957dc0c3",
+    "entry_hash": "907f900e999657b0002a0557b1c013f6feee6ff761cf4d46b67269c89772993c"
+  },
+  {
+    "timestamp": 1778107837.8679872,
+    "generation": 286,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3058,
+    "geometry_hash": "00a4c02d3fae89b566d939add68c4ff2b558e198a7d5784c981af5635d825a30",
+    "previous_hash": "907f900e999657b0002a0557b1c013f6feee6ff761cf4d46b67269c89772993c",
+    "entry_hash": "f5ef4bde2fdfe12144becd0e028fdda3de31650226db13dc8523b24cf52f11a3"
+  },
+  {
+    "timestamp": 1778107839.1396751,
+    "generation": 287,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3074,
+    "geometry_hash": "4a6c7ea00536bb092dcdcd004b3ead62c1df7e62398630474c8748f30f788fcd",
+    "previous_hash": "f5ef4bde2fdfe12144becd0e028fdda3de31650226db13dc8523b24cf52f11a3",
+    "entry_hash": "4ae8c9c68aa292ab483a8c21c5067aef387f37bbc1db4b9774b429b2eac17ebb"
+  },
+  {
+    "timestamp": 1778107840.410651,
+    "generation": 288,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3088,
+    "geometry_hash": "c041127cec41fc4b29cd03917d001667076d9f7dcf56609d4f04d79b0b5e4c06",
+    "previous_hash": "4ae8c9c68aa292ab483a8c21c5067aef387f37bbc1db4b9774b429b2eac17ebb",
+    "entry_hash": "d6ef3b2ead35ae72f1646af54b6427437fcc10665060613f36524cef1bdaed9a"
+  },
+  {
+    "timestamp": 1778107841.6831732,
+    "generation": 289,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3072,
+    "geometry_hash": "46e9f02363357ea31c2866c61d9d60c5dd3761471cdfe027908ca38431183c50",
+    "previous_hash": "d6ef3b2ead35ae72f1646af54b6427437fcc10665060613f36524cef1bdaed9a",
+    "entry_hash": "841cdf581836e77c1fdd88fa1b6f0f7d7016a18f5649a50227ebbe8b7adc541e"
+  },
+  {
+    "timestamp": 1778107842.957921,
+    "generation": 290,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3056,
+    "geometry_hash": "ab34e719bcb6bd86a79b648be6bce91a7bdec711d085061939d7eaea3026fd01",
+    "previous_hash": "841cdf581836e77c1fdd88fa1b6f0f7d7016a18f5649a50227ebbe8b7adc541e",
+    "entry_hash": "1b39ac6d9f8a86cc59cf8457ac0ef990c7486b794cd0b623ca01ea79007d44eb"
+  },
+  {
+    "timestamp": 1778107844.2307951,
+    "generation": 291,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3052,
+    "geometry_hash": "efa14ba412262e9e67c2d61b916a793cdfdedb24f1424824c909f2421f7edc74",
+    "previous_hash": "1b39ac6d9f8a86cc59cf8457ac0ef990c7486b794cd0b623ca01ea79007d44eb",
+    "entry_hash": "448f213f3fbe5bd36cc1b43ff03e922a876f08dd142ebd78e099429f8e071d18"
+  },
+  {
+    "timestamp": 1778107845.5036697,
+    "generation": 292,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3074,
+    "geometry_hash": "6d608aead693db120b0eb78a18688bbba772536c70fa29568f810fef54be35ed",
+    "previous_hash": "448f213f3fbe5bd36cc1b43ff03e922a876f08dd142ebd78e099429f8e071d18",
+    "entry_hash": "0154b822f75be8503d563b44c2eea58f1016f64725908708d9b36fb07be5f9f2"
+  },
+  {
+    "timestamp": 1778107846.780777,
+    "generation": 293,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3056,
+    "geometry_hash": "ca1047e41c502d28b83952bf9ed0247fc36c272876f959fe605c016df9c26d81",
+    "previous_hash": "0154b822f75be8503d563b44c2eea58f1016f64725908708d9b36fb07be5f9f2",
+    "entry_hash": "f08e217aef2b0f74528ad8fa05f48c3eff2fce5d79431b7952e7618918425c13"
+  },
+  {
+    "timestamp": 1778107848.0555973,
+    "generation": 294,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3050,
+    "geometry_hash": "1c3f85e0cd5a11f59a7d05339e66b46a04b0325c9405da9059a12b09fab9609a",
+    "previous_hash": "f08e217aef2b0f74528ad8fa05f48c3eff2fce5d79431b7952e7618918425c13",
+    "entry_hash": "1052c3e4172a3c5cbe20d4dc65b191eb3e9bbe58f4f262967d4d0c0735c567d2"
+  },
+  {
+    "timestamp": 1778107849.3298786,
+    "generation": 295,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3070,
+    "geometry_hash": "4820a52fc8d140312480be1535f530d9880702903babe4dd31d2ccdbfcddd5ed",
+    "previous_hash": "1052c3e4172a3c5cbe20d4dc65b191eb3e9bbe58f4f262967d4d0c0735c567d2",
+    "entry_hash": "fb079cbc2d8484a812c76944caacf6e8de43201645957fb2e3290545117bfb74"
+  },
+  {
+    "timestamp": 1778107850.6029713,
+    "generation": 296,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3072,
+    "geometry_hash": "50039578d20e6d6f69a3a1f19562d0313e6774f548ec34b241509dce8f74ce33",
+    "previous_hash": "fb079cbc2d8484a812c76944caacf6e8de43201645957fb2e3290545117bfb74",
+    "entry_hash": "d9a1614c5bd20a8b86f0dee24082d1becaa0c758da14a3376d8ffac177e7b43e"
+  },
+  {
+    "timestamp": 1778107851.8759675,
+    "generation": 297,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3026,
+    "geometry_hash": "ac218bdacebfe1063be7cd328b760e7b97871231577aa10b0f8bca46f9a474fe",
+    "previous_hash": "d9a1614c5bd20a8b86f0dee24082d1becaa0c758da14a3376d8ffac177e7b43e",
+    "entry_hash": "a6336a7988f8bd525c9d18d975071cf40eb8164e2aec8d7bdaf2d045b1397476"
+  },
+  {
+    "timestamp": 1778107853.148792,
+    "generation": 298,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3026,
+    "geometry_hash": "6b60b6e2cde995214c45e1d70394aa31d7ba1b6ce8da31322a849fead3413887",
+    "previous_hash": "a6336a7988f8bd525c9d18d975071cf40eb8164e2aec8d7bdaf2d045b1397476",
+    "entry_hash": "0511c09a03099d71587f8931cc3b42809793542ced79a7971730767e1c747f3d"
+  },
+  {
+    "timestamp": 1778107854.420646,
+    "generation": 299,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3014,
+    "geometry_hash": "e4aa3fe86733be92c31cc30b002d11c3a4dc377de6456fe6cd527ee4593fbad4",
+    "previous_hash": "0511c09a03099d71587f8931cc3b42809793542ced79a7971730767e1c747f3d",
+    "entry_hash": "150766d1bb87853171310600e8e004f79507337f21f2c81992fa9473d37e0f41"
+  },
+  {
+    "timestamp": 1778107855.6944342,
+    "generation": 300,
+    "rule_applied": "OTG_Thermodynamic_B[5-7]_S[5-9]",
+    "thermal_state": "Equilibrium_Maintained",
+    "active_voxels": 3014,
+    "geometry_hash": "ccfc8d6c7606f8cd54db296b63a6c6207cfd41b6c5a98ff51f409dcb1445ad18",
+    "previous_hash": "150766d1bb87853171310600e8e004f79507337f21f2c81992fa9473d37e0f41",
+    "entry_hash": "a2224b0bb7fc00f29fb4d637da257e3a1bdd598051d39983d5bde1d9fd0ae4a8"
+  }
+]
