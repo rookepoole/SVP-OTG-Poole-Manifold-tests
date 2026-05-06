@@ -1,0 +1,144 @@
+import torch
+import torch.nn.functional as F
+import torch.optim as optim
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Poole Manifold Autograd Optimization on: {device}")
+
+# --- Fixed Quantum Parameters ---
+GRID_SIZE = 512
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+MEMORY_FIELD_COUPLING = 0.005
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+# --- The Physics Optimizer Class ---
+class MacroscopicPhysicsEngine(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        # These are the coupling constants the AI will hunt for.
+        # Initialized near our best guesses, but allowed to float.
+        self.b_center = torch.nn.Parameter(torch.tensor(6.0, device=device))  # Midpoint of 5-7
+        self.b_width = torch.nn.Parameter(torch.tensor(1.0, device=device))   # Distance to edge
+        self.s_center = torch.nn.Parameter(torch.tensor(7.0, device=device))  # Midpoint of 5-9
+        self.s_width = torch.nn.Parameter(torch.tensor(2.0, device=device))
+        self.steepness = torch.nn.Parameter(torch.tensor(8.0, device=device)) # Fluidity factor
+
+    def forward(self, f, memory_field):
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel)
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+            
+        total_phi = potential + resonance
+        
+        # Differentiable Continuous Envelopes
+        # We use absolute values to ensure widths stay positive mathematically
+        b_low = self.b_center - torch.abs(self.b_width)
+        b_high = self.b_center + torch.abs(self.b_width)
+        s_low = self.s_center - torch.abs(self.s_width)
+        s_high = self.s_center + torch.abs(self.s_width)
+
+        birth_prob = torch.sigmoid((total_phi - b_low) * self.steepness) * \
+                     torch.sigmoid((b_high - total_phi) * self.steepness)
+        
+        survive_prob = torch.sigmoid((total_phi - s_low) * self.steepness) * \
+                       torch.sigmoid((s_high - total_phi) * self.steepness)
+        
+        base_fluid_state = f * survive_prob + (1.0 - f) * birth_prob
+        
+        # Memory Field (Detached from gradients to prevent exploding backprop through time)
+        with torch.no_grad():
+            memory_field = memory_field * 0.99 + (base_fluid_state.detach() * 0.01)
+        
+        spontaneous_injection = (1.0 - f) * memory_field * MEMORY_FIELD_COUPLING
+        new_state = torch.clamp(base_fluid_state + spontaneous_injection, 0.0, 1.0)
+        
+        state_changes = torch.abs(new_state - f).sum()
+        return new_state, memory_field, state_changes
+
+# --- Helper Functions (Standard Quantum Rules) ---
+def run_discrete_micro_poole(f, memory_field):
+    """Runs the pure B5-7/S5-9 rules (Ground Truth)"""
+    with torch.no_grad():
+        padded = F.pad(f.float(), (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel)
+        
+        resonance = sum([0.35 * torch.exp(-((potential - p)**2) / 0.01) for p in PRIMES])
+        total_phi = potential + resonance
+        
+        birth = (f == 0) & (total_phi >= 5.0) & (total_phi <= 7.0)
+        survive = (f == 1) & (total_phi >= 5.0) & (total_phi <= 9.0)
+        
+        memory_field = memory_field * 0.99 + (birth.float() * 0.01) 
+        new_state = (birth | survive | ((f == 0) & (torch.rand_like(f) < (memory_field * MEMORY_FIELD_COUPLING)))).float()
+        
+        changes = torch.abs(new_state - f).sum().item()
+        return new_state, memory_field, changes
+
+def coarse_grain_to_fluid(f):
+    with torch.no_grad():
+        return F.avg_pool3d(f, kernel_size=2, stride=2)
+
+# === INITIALIZATION ===
+print("[1] Initializing Macro-Physics Engine...")
+macro_engine = MacroscopicPhysicsEngine().to(device)
+optimizer = optim.Adam(macro_engine.parameters(), lr=0.05)
+
+print("[2] Seeding and Stabilizing Micro-Universe (100 gens)...")
+micro_f = (torch.rand(1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE, device=device) > 0.95).float()
+micro_mem = torch.zeros_like(micro_f)
+
+for _ in range(100):
+    micro_f, micro_mem, _ = run_discrete_micro_poole(micro_f, micro_mem)
+
+# === THE TRAINING LOOP ===
+print("\n[3] INITIATING AUTOGRAD OPTIMIZATION")
+print("Hunting for the Effective Macroscopic Field Theory...")
+print("-" * 80)
+
+EPOCHS = 50
+
+for epoch in range(EPOCHS):
+    optimizer.zero_grad()
+    
+    # 1. Generate Target from Quantum Ground Truth (Time Dilation: 2 steps)
+    micro_f, micro_mem, changes_1 = run_discrete_micro_poole(micro_f, micro_mem)
+    micro_f, micro_mem, changes_2 = run_discrete_micro_poole(micro_f, micro_mem)
+    
+    micro_flux = (changes_1 + changes_2) / (GRID_SIZE**3)
+    target_H0 = micro_flux * 72.88 / 0.3095
+    
+    # 2. Coarse-Grain to Fluid State
+    macro_f_initial = coarse_grain_to_fluid(micro_f)
+    macro_mem_initial = coarse_grain_to_fluid(micro_mem)
+    
+    # 3. Forward Pass through our Trainable Engine
+    macro_f_new, _, macro_changes = macro_engine(macro_f_initial, macro_mem_initial)
+    
+    macro_flux = macro_changes / ((GRID_SIZE // 2)**3)
+    predicted_H0 = macro_flux * 72.88 / 0.3095
+    
+    # 4. Calculate Loss (Mean Squared Error)
+    loss = F.mse_loss(predicted_H0, torch.tensor(target_H0, device=device))
+    
+    # 5. Backpropagate and Optimize
+    loss.backward()
+    optimizer.step()
+    
+    # Extract current parameters for logging
+    b_l = macro_engine.b_center.item() - abs(macro_engine.b_width.item())
+    b_h = macro_engine.b_center.item() + abs(macro_engine.b_width.item())
+    s_l = macro_engine.s_center.item() - abs(macro_engine.s_width.item())
+    s_h = macro_engine.s_center.item() + abs(macro_engine.s_width.item())
+    st = macro_engine.steepness.item()
+    
+    if epoch % 5 == 0 or epoch == EPOCHS - 1:
+        print(f"Epoch {epoch:02d} | Target H0: {target_H0:.4f} | Macro H0: {predicted_H0.item():.4f} | Loss: {loss.item():.6f}")
+        print(f"       -> Calibrating Laws: B[{b_l:.2f}-{b_h:.2f}] / S[{s_l:.2f}-{s_h:.2f}] | Fluidity: {st:.2f}")
+
+print("-" * 80)
+print("✅ Optimization Complete.")
