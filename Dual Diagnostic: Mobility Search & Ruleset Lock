@@ -1,0 +1,87 @@
+import torch
+import torch.nn.functional as F
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Dual Diagnostic: Mobility Search & Ruleset Lock...")
+
+# --- Constants ---
+GRID_SIZE = 512
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+
+# Moore Kernel
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def step_universe(f, mem, locked_mask=None):
+    with torch.no_grad():
+        padded = F.pad(f, (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel)
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        total_phi = potential + resonance
+        
+        # Standard Rules
+        birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        
+        if locked_mask is not None:
+            # Shielded Rules (Stiffer threshold to represent a stable Latch ruleset)
+            # Example: B6 / S5-6 (Highly stable)
+            l_birth = (f == 0) & (total_phi >= 6.0) & (total_phi <= 6.0)
+            l_survive = (f == 1) & (total_phi >= 5.0) & (total_phi <= 6.0)
+            
+            # Apply Shield
+            birth = torch.where(locked_mask, l_birth, birth)
+            survive = torch.where(locked_mask, l_survive, survive)
+
+        mem = mem * 0.99 + (birth.float() * 0.01)
+        spontaneous = (f == 0) & (torch.rand_like(f) < (mem * 0.005))
+        
+        return (birth | survive | spontaneous).float(), mem
+
+# --- Setup ---
+c = GRID_SIZE // 2
+beacon = (torch.rand(1, 1, 5, 5, 5, device=device) > 0.5).float()
+
+# Universe A: Standard (Testing Mobility)
+field_a = (torch.rand(1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE, device=device) > 0.99).float()
+field_a[0, 0, c:c+5, c:c+5, c:c+5] = beacon[0, 0]
+mem_a = torch.zeros_like(field_a)
+
+# Universe B: Shielded (Testing the 417 Stability)
+field_b = field_a.clone()
+mem_b = torch.zeros_like(field_b)
+shield_mask = torch.zeros_like(field_b, dtype=torch.bool)
+shield_mask[0, 0, c-2:c+7, c-2:c+7, c-2:c+7] = True # Buffer shield
+
+print("\n[Running Simulation: 100 Generations]")
+for g in range(100):
+    field_a, mem_a = step_universe(field_a, mem_a)
+    field_b, mem_b = step_universe(field_b, mem_b, locked_mask=shield_mask)
+
+# --- Analysis: Test A (The Searcher) ---
+# We use the beacon as a kernel to find its "ghost" anywhere in the grid
+print("[Analyzing Test A: Global Mobility Search...]")
+with torch.no_grad():
+    # Normalize for correlation
+    search_kernel = beacon * 2 - 1 
+    target_field = field_a * 2 - 1
+    # Cross-correlation search
+    correlation_map = F.conv3d(target_field, search_kernel, padding=2)
+    max_corr = torch.max(correlation_map).item()
+    # Normalize correlation to 0-1 (125 is max possible sum for 5x5x5)
+    mobility_gamma = (max_corr / 125.0 + 1) / 2 
+
+# --- Analysis: Test B (The Shield) ---
+print("[Analyzing Test B: Shielded Latch Integrity...]")
+current_b_beacon = field_b[0, 0, c:c+5, c:c+5, c:c+5]
+shielded_gamma = (current_b_beacon == beacon[0,0]).float().sum() / 125.0
+
+print("-" * 60)
+print(f"RESULT A (Mobility Search): Max Global Persistence = {mobility_gamma:.4f}")
+print(f"RESULT B (Shielded Latch): Direct Persistence      = {shielded_gamma:.4f}")
+print("-" * 60)
