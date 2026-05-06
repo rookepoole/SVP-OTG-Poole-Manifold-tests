@@ -1,0 +1,78 @@
+import torch
+import torch.nn.functional as F
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"🚀 Initializing Temporal Read-Head Test on: {device}")
+
+# --- Constants ---
+GRID_SIZE = 512
+B_LOW, B_HIGH = 5.0, 7.0
+S_LOW, S_HIGH = 5.0, 9.0
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+GMF_COUPLING = 0.005
+
+kernel = torch.ones((1, 1, 3, 3, 3), device=device).float()
+kernel[0, 0, 1, 1, 1] = 0
+
+def step_universe(f, mem):
+    with torch.no_grad():
+        padded = F.pad(f, (1,1,1,1,1,1), mode='circular')
+        potential = F.conv3d(padded, kernel)
+        
+        resonance = torch.zeros_like(potential)
+        for p in PRIMES:
+            resonance += 0.35 * torch.exp(-((potential - p)**2) / 0.01)
+        
+        total_phi = potential + resonance
+        
+        birth = (f == 0) & (total_phi >= B_LOW) & (total_phi <= B_HIGH)
+        survive = (f == 1) & (total_phi >= S_LOW) & (total_phi <= S_HIGH)
+        
+        # Memory Field update
+        mem = mem * 0.99 + (birth.float() * 0.01)
+        spontaneous = (f == 0) & (torch.rand_like(f) < (mem * GMF_COUPLING))
+        
+        return (birth | survive | spontaneous).float(), mem
+
+# --- [1] The "Source Code" Injection ---
+print("\n[1] Etching 'Source Code' into the Immortal Latch at Gen 0...")
+field = (torch.rand(1, 1, GRID_SIZE, GRID_SIZE, GRID_SIZE, device=device) > 0.99).float()
+mem = torch.zeros_like(field)
+
+# Create a unique 5x5x5 "Beacon" at the center
+c = GRID_SIZE // 2
+beacon_pattern = (torch.rand(5, 5, 5, device=device) > 0.5).float()
+field[0, 0, c:c+5, c:c+5, c:c+5] = beacon_pattern
+original_beacon = beacon_pattern.clone()
+
+# --- [2] The Temporal Run ---
+TEST_DURATION = 200
+print(f"[2] Running simulation for {TEST_DURATION} generations...")
+
+for g in range(1, TEST_DURATION + 1):
+    field, mem = step_universe(field, mem)
+    
+    if g % 50 == 0:
+        # Check current beacon area
+        current_beacon = field[0, 0, c:c+5, c:c+5, c:c+5]
+        
+        # Calculate Information Persistence (Gamma)
+        # Gamma = 1.0 means perfect recall; 0.0 means total erasure
+        matching_pixels = (current_beacon == original_beacon).float().sum()
+        total_pixels = 5*5*5
+        gamma = matching_pixels / total_pixels
+        
+        print(f"Gen {g:03d} | Information Persistence (Gamma): {gamma:.4f}")
+
+# --- [3] Final Analysis ---
+final_beacon = field[0, 0, c:c+5, c:c+5, c:c+5]
+final_gamma = (final_beacon == original_beacon).float().sum() / 125.0
+
+print("-" * 60)
+print(f"✅ TEST COMPLETE. Final Persistence: {final_gamma:.4f}")
+if final_gamma > 0.8:
+    print("RESULT: THE PAST IS READABLE. The Immortal Latch is stable.")
+elif final_gamma > 0.5:
+    print("RESULT: SIGNAL DECAY. The Library is becoming lossy.")
+else:
+    print("RESULT: ENTROPIC COLLAPSE. The past has been overwritten.")
