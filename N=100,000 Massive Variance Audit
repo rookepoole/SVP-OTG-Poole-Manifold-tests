@@ -1,0 +1,131 @@
+# =============================================================================
+# POOLE MANIFOLD — Phase 2: N=100,000 Massive Variance Audit
+# BATCH-OPTIMIZED FOR L4 GPU (Evaluates 1,000 universes simultaneously)
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import hashlib
+import json
+import time
+
+# --- 1. THE CANONICAL PHYSICS ENGINE ---
+class PooleEngine:
+    def __init__(self, device=None):
+        self.device = device if device else torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(f"[*] Engine Initialized on: {self.device}")
+        
+        self.B_LOW, self.B_HIGH = 5.0, 7.0 
+        self.S_LOW, self.S_HIGH = 5.0, 9.0
+        self.primes = torch.tensor([2, 3, 5, 7, 11, 13, 17, 19, 23], device=self.device).float()
+        self.sigma_sq = 0.01
+        self.alpha = 0.35
+        self.kernel = torch.ones((1, 1, 3, 3, 3), device=self.device).float()
+        self.kernel[0, 0, 1, 1, 1] = 0.0
+
+    def step(self, f_tensor):
+        """Executes one generation across the ENTIRE batch of universes."""
+        with torch.no_grad():
+            f_float = f_tensor.float()
+            padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='circular')
+            potential = F.conv3d(padded, self.kernel, padding=0)
+            
+            potential_expanded = potential.unsqueeze(-1) 
+            diff_sq = (potential_expanded - self.primes) ** 2
+            resonance = self.alpha * torch.exp(-diff_sq / self.sigma_sq).sum(dim=-1)
+            
+            total_phi = potential + resonance
+            
+            birth = (f_tensor == 0) & (total_phi >= self.B_LOW) & (total_phi <= self.B_HIGH)
+            survive = (f_tensor == 1) & (total_phi >= self.S_LOW) & (total_phi <= self.S_HIGH)
+            
+            return (birth | survive).to(torch.int8)
+
+
+# --- 2. THE MASSIVE BATCH RUNNER ---
+def run_massive_audit():
+    print("\nInitiating Massive N=100,000 Variance Audit...")
+    engine = PooleEngine()
+    
+    TOTAL_SEEDS = 100000
+    BATCH_SIZE = 1000  # Run 1000 universes at a time to maximize GPU VRAM
+    GENERATIONS = 100
+    
+    total_equilibrium_maintained = 0
+    all_final_masses = []
+    
+    start_time = time.time()
+    
+    # Run 100 batches of 1000
+    for batch_idx in range(TOTAL_SEEDS // BATCH_SIZE):
+        batch_start_seed = batch_idx * BATCH_SIZE
+        torch.manual_seed(batch_start_seed) # Set a reproducible seed for the batch
+        
+        # Initialize 1000 blank 50x50x50 universes at once
+        grid = torch.zeros((BATCH_SIZE, 1, 50, 50, 50), device=engine.device, dtype=torch.int8)
+        
+        # Inject random noise into the center of all 1000 universes
+        noise = (torch.rand((BATCH_SIZE, 1, 20, 20, 20), device=engine.device) > 0.9).to(torch.int8)
+        grid[:, :, 15:35, 15:35, 15:35] = noise
+        
+        # Step all 1000 universes forward 100 generations simultaneously
+        for gen in range(GENERATIONS):
+            grid = engine.step(grid)
+            
+        # Calculate the final mass of every universe in the batch
+        # Sum across Depth(2), Height(3), and Width(4)
+        final_masses = grid.sum(dim=(2, 3, 4)).squeeze().cpu()
+        all_final_masses.extend(final_masses.tolist())
+        
+        # Count how many found equilibrium (0 < mass < 125000)
+        equilibrium_mask = (final_masses > 0) & (final_masses < (50*50*50))
+        passed = int(equilibrium_mask.sum().item())
+        total_equilibrium_maintained += passed
+        
+        if batch_idx % 10 == 0:
+            print(f"[*] Processed {batch_idx * BATCH_SIZE} / {TOTAL_SEEDS} universes... (Batch eq rate: {passed}/{BATCH_SIZE})")
+
+    execution_time = time.time() - start_time
+    
+    # --- 3. STATISTICAL ANALYSIS & RECEIPT ---
+    mass_tensor = torch.tensor(all_final_masses, dtype=torch.float32)
+    mean_mass = float(mass_tensor.mean().item())
+    std_mass = float(mass_tensor.std().item())
+    success_rate = (total_equilibrium_maintained / TOTAL_SEEDS) * 100
+    
+    print("\n==================================================")
+    print("              N=100,000 AUDIT COMPLETE            ")
+    print("==================================================")
+    print(f"Execution Time:      {round(execution_time, 2)} seconds")
+    print(f"Universes Tested:    {TOTAL_SEEDS:,}")
+    print(f"Equilibrium Reached: {total_equilibrium_maintained:,} ({success_rate}%)")
+    print(f"Mean Final Mass:     {round(mean_mass, 2)} voxels")
+    print(f"Standard Deviation:  ±{round(std_mass, 2)} voxels")
+    print("==================================================")
+    
+    receipt = {
+        "timestamp": time.time(),
+        "system_telemetry": {
+            "PyTorch_Version": torch.__version__,
+            "CUDA_Available": torch.cuda.is_available(),
+            "Execution_Time_sec": round(execution_time, 2)
+        },
+        "audit_results": {
+            "total_trials": TOTAL_SEEDS,
+            "generations_per_trial": GENERATIONS,
+            "success_rate_percentage": success_rate,
+            "thermodynamic_mean_voxels": round(mean_mass, 2),
+            "thermodynamic_std_dev": round(std_mass, 2)
+        }
+    }
+    
+    receipt_string = json.dumps(receipt, sort_keys=True).encode()
+    receipt["audit_hash"] = hashlib.sha256(receipt_string).hexdigest()
+    
+    with open("Poole_Massive_Audit_Receipt.json", "w") as f:
+        json.dump(receipt, f, indent=2)
+        
+    print(f"\n[+] Massive Audit Receipt Locked: {receipt['audit_hash'][:16]}...")
+
+if __name__ == "__main__":
+    run_massive_audit()
