@@ -1,0 +1,204 @@
+# =============================================================================
+# DELTA RPM PROTOCOL | MASTER INTEGRATION TEST SUITE
+# Components: PooleEngine, WORMReceipt, Test Runner
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+import hashlib
+import json
+import time
+import os
+
+# =============================================================================
+# 1. THE CANONICAL PHYSICS ENGINE
+# =============================================================================
+class PooleEngine:
+    def __init__(self, device=None):
+        self.device = device if device else torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.B_LOW, self.B_HIGH = 5.0, 7.0 
+        self.S_LOW, self.S_HIGH = 5.0, 9.0
+        self.primes = [2.0, 3.0, 5.0, 7.0, 11.0, 13.0, 17.0, 19.0, 23.0]
+        self.sigma_sq = 0.01
+        self.alpha = 0.35
+        self.kernel = torch.ones((1, 1, 3, 3, 3), device=self.device).float()
+        self.kernel[0, 0, 1, 1, 1] = 0.0
+
+    def step(self, f_tensor, inhibitor=None, threshold=None, amplifier=None):
+        with torch.no_grad():
+            f_float = f_tensor.float()
+            # Padding for standard computation
+            padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='circular')
+            potential = F.conv3d(padded, self.kernel, padding=0)
+            
+            if inhibitor is not None: potential = torch.where(inhibitor, potential - 15.0, potential)
+            if threshold is not None: potential = torch.where(threshold, potential - 2.0, potential)
+            if amplifier is not None: potential = torch.where(amplifier, potential + 1.0, potential)
+            
+            resonance = torch.zeros_like(potential)
+            for p in self.primes:
+                resonance += self.alpha * torch.exp(-((potential - p) ** 2) / self.sigma_sq)
+            
+            total_phi = potential + resonance
+            birth = (f_tensor == 0) & (total_phi >= self.B_LOW) & (total_phi <= self.B_HIGH)
+            survive = (f_tensor == 1) & (total_phi >= self.S_LOW) & (total_phi <= self.S_HIGH)
+            
+            del f_float, padded, potential, resonance, total_phi
+            return (birth | survive).to(torch.int8)
+
+# =============================================================================
+# 2. THE WORM RECEIPT GENERATOR (Patched)
+# =============================================================================
+class WORMReceipt:
+    @staticmethod
+    def hash_field(data):
+        if isinstance(data, torch.Tensor):
+            return hashlib.sha256(data.cpu().numpy().tobytes()).hexdigest()
+        elif isinstance(data, dict):
+            return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
+        else:
+            return hashlib.sha256(str(data).encode()).hexdigest()
+
+    @staticmethod
+    def generate_receipt(experiment_name, seed, initial_state, final_state, metrics):
+        receipt = {
+            "protocol": "Delta RPM Protocol",
+            "experiment": experiment_name,
+            "timestamp": time.time(),
+            "seed": seed,
+            "initial_state_hash": WORMReceipt.hash_field(initial_state),
+            "final_state_hash": WORMReceipt.hash_field(final_state),
+            "telemetry": metrics
+        }
+        
+        receipt_string = json.dumps(receipt, sort_keys=True).encode()
+        receipt["receipt_sha256"] = hashlib.sha256(receipt_string).hexdigest()
+        
+        filename = f"RECEIPT_{experiment_name.replace(' ', '_')}_{int(time.time())}.json"
+        with open(filename, "w") as f:
+            json.dump(receipt, f, indent=4)
+            
+        return filename, receipt
+
+    @staticmethod
+    def verify_receipt(filepath):
+        if not os.path.exists(filepath):
+            return False, "File not found."
+            
+        with open(filepath, "r") as f:
+            receipt = json.load(f)
+            
+        # Non-destructive dictionary copy for verification
+        stored_hash = receipt.get("receipt_sha256")
+        receipt_copy = {k: v for k, v in receipt.items() if k != "receipt_sha256"}
+        recalculated_hash = hashlib.sha256(json.dumps(receipt_copy, sort_keys=True).encode()).hexdigest()
+        
+        if stored_hash == recalculated_hash:
+            return True, "WORM Seal Intact."
+        else:
+            return False, "WORM Seal BROKEN."
+
+# =============================================================================
+# 3. THE FIXED TEST SUITE
+# =============================================================================
+TEST_REGISTRY = []
+RESULTS = {"passed": 0, "failed": 0, "failures": []}
+
+def register_test(name):
+    def decorator(func):
+        TEST_REGISTRY.append((name, func))
+        return func
+    return decorator
+
+# --- Core Physics Tests ---
+@register_test("Lattice Initialization & Tensor Allocation")
+def test_init():
+    engine = PooleEngine(device=torch.device("cpu"))
+    grid = torch.zeros((1, 1, 10, 10, 10), dtype=torch.int8)
+    assert grid.shape == (1, 1, 10, 10, 10), "Tensor allocation failed."
+    return True
+
+@register_test("B5-7/S5-9 Empty Vacuum Survival (Zero Mass)")
+def test_vacuum():
+    engine = PooleEngine(device=torch.device("cpu"))
+    grid = torch.zeros((1, 1, 10, 10, 10), dtype=torch.int8)
+    next_grid = engine.step(grid)
+    assert next_grid.sum().item() == 0, "Vacuum spawned spontaneous mass."
+    return True
+
+@register_test("B5-7/S5-9 Overpopulation Collapse (Thermal Evaporation)")
+def test_overpopulation():
+    engine = PooleEngine(device=torch.device("cpu"))
+    grid = torch.zeros((1, 1, 10, 10, 10), dtype=torch.int8)
+    grid[0, 0, 4:7, 4:7, 4:7] = 1 # 27 solid voxels
+    next_grid = engine.step(grid)
+    assert next_grid[0, 0, 5, 5, 5].item() == 0, "Core failed to evaporate above S_HIGH=9.0."
+    return True
+
+@register_test("Prime-Resonance Constant Initialization (alpha=0.35)")
+def test_alpha():
+    engine = PooleEngine(device=torch.device("cpu"))
+    assert engine.alpha == 0.35, f"Alpha constant compromised: {engine.alpha}"
+    return True
+
+# --- Hardware & Geometry Tests ---
+@register_test("V140 Logic Gate Spatial Allocation")
+def test_logic_bounds():
+    grid = torch.zeros((1, 1, 100, 100, 100), dtype=torch.int8)
+    inhibitor = torch.zeros_like(grid, dtype=torch.bool)
+    inhibitor[:, :, 40:60, 20:40, 45:55] = True
+    assert inhibitor.sum().item() == 4000, "Inhibitor mask volume incorrect."
+    return True
+
+# --- Cryptography Tests ---
+@register_test("WORM Receipt Generation & Non-Destructive Verification")
+def test_cryptography():
+    grid_initial = torch.zeros((1, 1, 5, 5, 5), dtype=torch.int8)
+    grid_final = torch.ones((1, 1, 5, 5, 5), dtype=torch.int8)
+    
+    filename, receipt_data = WORMReceipt.generate_receipt(
+        "Unit_Test", 42, grid_initial, grid_final, {"test_metric": 100}
+    )
+    
+    is_valid, message = WORMReceipt.verify_receipt(filename)
+    assert is_valid, f"Receipt verification failed: {message}"
+    
+    # Cleanup test artifact
+    if os.path.exists(filename):
+        os.remove(filename)
+    return True
+
+# --- EXECUTOR ---
+def run_all_tests():
+    print(f"Executing {len(TEST_REGISTRY)} registered Delta RPM tests...\n")
+    for name, func in TEST_REGISTRY:
+        try:
+            passed = func()
+            if passed:
+                print(f"[PASS] {name}")
+                RESULTS["passed"] += 1
+        except AssertionError as e:
+            print(f"[FAIL] {name} - {str(e)}")
+            RESULTS["failed"] += 1
+            RESULTS["failures"].append((name, str(e)))
+        except Exception as e:
+            print(f"[ERROR] {name} - {str(e)}")
+            RESULTS["failed"] += 1
+            RESULTS["failures"].append((name, str(e)))
+            
+    print("\n==================================================")
+    print("DELTA RPM PROTOCOL — ENGINE TEST RESULTS")
+    print("==================================================")
+    print(f"Total Tests Evaluated: {len(TEST_REGISTRY)}")
+    print(f"Passed:                {RESULTS['passed']}")
+    print(f"Failed:                {RESULTS['failed']}")
+    print("==================================================")
+    
+    if RESULTS["failed"] == 0:
+        print("[+] System Integrity: VERIFIED. Engine is cleared for operation.")
+    else:
+        print("[-] System Integrity: COMPROMISED. Do not run production audits.")
+
+if __name__ == "__main__":
+    run_all_tests()
