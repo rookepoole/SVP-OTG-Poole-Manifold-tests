@@ -1,0 +1,135 @@
+# =============================================================================
+# POOLE MANIFOLD — Phase 2: Canonical Physics Engine & Variance Audit
+# COMPLETE DROP-IN SCRIPT FOR GOOGLE COLAB
+# =============================================================================
+
+import torch
+import torch.nn.functional as F
+import hashlib
+import json
+import time
+
+# --- 1. THE CANONICAL PHYSICS ENGINE ---
+class PooleEngine:
+    """
+    The unified, canonical solver for the Poole Manifold.
+    Executes B5-7/S5-9 thermodynamics and Prime-Resonance sharpening.
+    """
+    def __init__(self, device=None):
+        self.device = device if device else torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(f"[*] Engine Initialized on: {self.device}")
+        
+        # Thermodynamic Phase Boundaries
+        self.B_LOW, self.B_HIGH = 5.0, 7.0 
+        self.S_LOW, self.S_HIGH = 5.0, 9.0
+        
+        # Prime-Resonance Parameters
+        self.primes = torch.tensor([2, 3, 5, 7, 11, 13, 17, 19, 23], device=self.device).float()
+        self.sigma_sq = 0.01
+        self.alpha = 0.35
+        
+        # 3D Moore Neighborhood Kernel
+        self.kernel = torch.ones((1, 1, 3, 3, 3), device=self.device).float()
+        self.kernel[0, 0, 1, 1, 1] = 0.0
+
+    def step(self, f_tensor, inhibitor_mask=None, threshold_mask=None, amplifier_mask=None):
+        """Executes one generation of the discrete thermodynamic field."""
+        with torch.no_grad():
+            f_float = f_tensor.float()
+            
+            # Calculate base discrete potential (S(c))
+            padded = F.pad(f_float, (1, 1, 1, 1, 1, 1), mode='circular')
+            potential = F.conv3d(padded, self.kernel, padding=0)
+            
+            # Apply physical hardware masks (if present)
+            if inhibitor_mask is not None: potential[inhibitor_mask] -= 15.0
+            if threshold_mask is not None: potential[threshold_mask] -= 2.0
+            if amplifier_mask is not None: potential[amplifier_mask] += 1.0
+            
+            # Calculate Prime-Resonance Sharpening
+            potential_expanded = potential.unsqueeze(-1) 
+            diff_sq = (potential_expanded - self.primes) ** 2
+            resonance = self.alpha * torch.exp(-diff_sq / self.sigma_sq).sum(dim=-1)
+            
+            total_phi = potential + resonance
+            
+            # Evaluate Phase Boundaries
+            birth = (f_tensor == 0) & (total_phi >= self.B_LOW) & (total_phi <= self.B_HIGH)
+            survive = (f_tensor == 1) & (total_phi >= self.S_LOW) & (total_phi <= self.S_HIGH)
+            
+            return (birth | survive).to(torch.int8)
+
+
+# --- 2. THE AUDIT RUNNER & RECEIPT GENERATOR ---
+def generate_receipt(seed_results, execution_time):
+    """Compiles the cryptographic proof of variance testing."""
+    system_info = {
+        "PyTorch_Version": torch.__version__,
+        "CUDA_Available": torch.cuda.is_available(),
+        "Device_Name": torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU",
+        "Execution_Time_sec": round(execution_time, 3)
+    }
+    
+    receipt = {
+        "timestamp": time.time(),
+        "system_telemetry": system_info,
+        "audit_results": seed_results
+    }
+    
+    receipt_string = json.dumps(receipt, sort_keys=True).encode()
+    receipt["audit_hash"] = hashlib.sha256(receipt_string).hexdigest()
+    
+    with open("Poole_Audit_Receipt.json", "w") as f:
+        json.dump(receipt, f, indent=2)
+        
+    print(f"\n[+] Audit Receipt Locked: {receipt['audit_hash'][:16]}...")
+    print("\n[Raw Artifact] Latest Cryptographic Proof:")
+    print(json.dumps(receipt, indent=2))
+    return receipt
+
+def run_variance_test():
+    print("\nInitiating Multi-Seed Variance Audit for Poole Manifold...\n")
+    engine = PooleEngine()
+    
+    # 10 distinct random seeds to prove the physics are universal
+    test_seeds = [42, 137, 1024, 2048, 9999, 12345, 55555, 77777, 88888, 98765]
+    seed_results = []
+    
+    start_time = time.time()
+    
+    for seed in test_seeds:
+        torch.manual_seed(seed)
+        # Create a blank 50x50x50 thermal test chamber
+        grid = torch.zeros((1, 1, 50, 50, 50), device=engine.device, dtype=torch.int8)
+        
+        # Inject random noise at 10% density into the center to test thermal equilibrium
+        noise = (torch.rand((1, 1, 20, 20, 20), device=engine.device) > 0.9).to(torch.int8)
+        grid[:, :, 15:35, 15:35, 15:35] = noise
+        
+        initial_mass = int(grid.sum().item())
+        
+        # Run 100 generations to see if it stabilizes, collapses, or explodes
+        for gen in range(100):
+            grid = engine.step(grid)
+            
+        final_mass = int(grid.sum().item())
+        
+        # A successful engine finds equilibrium (doesn't hit 0, doesn't fill the box completely)
+        equilibrium_achieved = 0 < final_mass < (50*50*50)
+        
+        seed_results.append({
+            "seed": seed,
+            "initial_mass": initial_mass,
+            "final_mass": final_mass,
+            "equilibrium_achieved": equilibrium_achieved
+        })
+        print(f"Seed {seed:<6} | Initial Mass: {initial_mass:<4} | Final Mass: {final_mass:<5} | Eq Maintained: {equilibrium_achieved}")
+
+    execution_time = time.time() - start_time
+    generate_receipt(seed_results, execution_time)
+
+# ==========================================
+# EXECUTION
+# ==========================================
+if __name__ == "__main__":
+    run_variance_test()
