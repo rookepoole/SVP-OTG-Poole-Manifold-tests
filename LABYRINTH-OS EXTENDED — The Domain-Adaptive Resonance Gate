@@ -1,0 +1,148 @@
+# =============================================================================
+# LABYRINTH-OS EXTENDED — The Domain-Adaptive Resonance Gate
+# Replaces static Sigma Anchors with dynamic, physically-grounded epistemic peaks
+# =============================================================================
+
+import numpy as np
+from dataclasses import dataclass, field
+from typing import Dict, List
+
+@dataclass
+class DomainResonanceProfile:
+    """
+    Replaces the static Sigma Anchors. 
+    Defines the 'epistemic primes' (peaks) where a specific domain operates best.
+    """
+    domain_name: str
+    alpha: float = 0.35      # Maximum resonance amplitude (borrowed from Poole Manifold)
+    sigma_sq: float = 0.01   # Width of the resonance band (tolerance)
+    
+    # Dictionary mapping sensor channels to their ideal operational peaks
+    peaks: Dict[str, List[float]] = field(default_factory=dict)
+
+class PersistentMemoryStore:
+    """
+    Acts as the Inhibitor / Amplifier masks from the Poole Manifold.
+    Applies temporal friction (history of failures) or assistance (history of successes).
+    """
+    def __init__(self):
+        self.historical_failures = [] # Logs vectors of failed proposals
+        self.historical_successes = [] # Logs vectors of successful proposals
+
+    def get_historical_masks(self, proposal_vector: np.ndarray) -> tuple[float, float]:
+        # In production, this would use cosine similarity against the vector DB.
+        # For this logic block, we return synthetic topological weights.
+        inhibitor_drag = 0.0   # Analogous to -15.0 potential in physics engine
+        amplifier_boost = 0.0  # Analogous to +1.0 potential in physics engine
+        
+        return inhibitor_drag, amplifier_boost
+
+class LabyrinthRealityGate:
+    def __init__(self, profile: DomainResonanceProfile, memory: PersistentMemoryStore):
+        self.profile = profile
+        self.memory = memory
+        self.PROMOTION_THRESHOLD = 0.95 # The absolute constitutional floor
+
+    def calculate_channel_resonance(self, channel: str, value: float) -> float:
+        """
+        The Epistemic Engine. 
+        Calculates how close a sensor reading is to its domain's 'prime' ideal state.
+        """
+        if channel not in self.profile.peaks or not self.profile.peaks[channel]:
+            return 0.0 # No resonance if no peaks defined for this channel
+            
+        resonance = 0.0
+        # Gaussian distribution: R = Σ α * exp(-(x - peak)^2 / σ^2)
+        for peak in self.profile.peaks[channel]:
+            diff_sq = (value - peak) ** 2
+            resonance += self.profile.alpha * np.exp(-diff_sq / self.profile.sigma_sq)
+            
+        return resonance
+
+    def evaluate_proposal(self, proposal_id: str, sensor_readings: Dict[str, float]):
+        """
+        Evaluates a generative proposal across the 5 standard channels.
+        Implements Venturi Chokes for structural vetos.
+        """
+        print(f"--- Evaluating Proposal: {proposal_id} [{self.profile.domain_name}] ---")
+        
+        total_epistemic_mass = 0.0
+        base_readings = []
+        
+        # 1. Calculate Base Epistemic Mass
+        for channel, value in sensor_readings.items():
+            res = self.calculate_channel_resonance(channel, value)
+            
+            # =================================================================
+            # The Venturi Choke:
+            # If resonance falls below 0.05, the contradiction is too deep. 
+            # The epistemic wavefunction immediately collapses.
+            # =================================================================
+            if res < 0.05:
+                print(f" > Channel [{channel:<10}] | Value: {value:.3f} | Resonance: {res:.3f} 💥 CHOKE TRIGGERED")
+                print(f"[X] GATE BLOWOUT: Fatal contradiction detected in {channel}. Wave packet collapsed.")
+                return False
+            # =================================================================
+            
+            total_epistemic_mass += res
+            base_readings.append(value)
+            print(f" > Channel [{channel:<10}] | Value: {value:.3f} | Resonance: +{res:.3f}")
+
+        # 2. Apply Physical Masks (Historical Memory)
+        proposal_vector = np.array(base_readings)
+        inhibitor, amplifier = self.memory.get_historical_masks(proposal_vector)
+        
+        final_epistemic_mass = total_epistemic_mass + amplifier - inhibitor
+        
+        print(f" > Memory Modifiers   | Amplifier: +{amplifier:.3f} | Inhibitor: -{inhibitor:.3f}")
+        print(f" > FINAL MASS         | {final_epistemic_mass:.3f} / Threshold: {self.PROMOTION_THRESHOLD}")
+
+        # 3. The Gate Decision
+        if final_epistemic_mass >= self.PROMOTION_THRESHOLD:
+            print("[✓] GATE OPEN: Proposal promoted to execution ledger.")
+            return True
+        else:
+            print("[X] GATE CLOSED: Insufficient epistemic mass. Routing to Healing Loop.")
+            return False
+
+# =============================================================================
+# EXECUTION TEST: Cross-Domain Routing
+# =============================================================================
+if __name__ == "__main__":
+    memory_store = PersistentMemoryStore()
+
+    # 1. Define an LLM Governance Profile
+    llm_profile = DomainResonanceProfile(
+        domain_name="LLM_Agent_Governance",
+        peaks={
+            "confidence": [0.75, 0.85], # High confidence, but not hallucination-level (1.0)
+            "chi": [0.10, 0.20],        # Low contradiction density
+            "tau": [0.80, 0.90]         # High escape ratio
+        }
+    )
+    llm_gate = LabyrinthRealityGate(llm_profile, memory_store)
+    
+    # Simulate an LLM proposal with good confidence but terrible contradiction density (chi)
+    llm_gate.evaluate_proposal(
+        proposal_id="LLM_ACT_092",
+        sensor_readings={"confidence": 0.82, "chi": 0.85, "tau": 0.85}
+    )
+    
+    print("\n")
+    
+    # 2. Define an Autonomous CNC/Robotics Profile
+    cnc_profile = DomainResonanceProfile(
+        domain_name="Industrial_CNC_Controller",
+        peaks={
+            "confidence": [0.95, 0.99], # Absolute physical certainty required
+            "drift": [0.01, 0.05],      # Near-zero parameter drift allowed
+            "betti_1": [1.0, 2.0]       # Standard toolpath topology
+        }
+    )
+    cnc_gate = LabyrinthRealityGate(cnc_profile, memory_store)
+
+    # Simulate a stable CNC toolpath proposal
+    cnc_gate.evaluate_proposal(
+        proposal_id="CNC_PATH_441",
+        sensor_readings={"confidence": 0.96, "drift": 0.02, "betti_1": 1.0}
+    )
